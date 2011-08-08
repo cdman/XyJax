@@ -19,6 +19,11 @@ But, this software is under development, so this release is alpha-quality (often
 In preparation now.
 
 
+## Limitation
+
+- Supported Browsers: Firefox, Safari, Chrome
+- Unsupported Browsers: Internet Explorer, Opera, etc...
+
 ## Contact
 
 If you have any questions about XyJax, please let me know.
