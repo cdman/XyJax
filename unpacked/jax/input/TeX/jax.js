@@ -889,7 +889,10 @@
         gathered:     ['ExtensionEnv',null,'AMSmath'],
         alignat:      ['ExtensionEnv',null,'AMSmath'],
         'alignat*':   ['ExtensionEnv',null,'AMSmath'],
-        alignedat:    ['ExtensionEnv',null,'AMSmath']
+        alignedat:    ['ExtensionEnv',null,'AMSmath'],
+        
+        // isao
+        xy:           ['ExtensionEnv', null, 'XYpic']
       },
       
       p_height: 1.2 / .85   // cmex10 height plus depth over .85
@@ -1728,7 +1731,11 @@
       return math;
     },
     formatError: function (err,math,displaystyle,script) {
-      return MML.merror(err.message.replace(/\n.*/,""));
+      if (err.parseError !== undefined) {
+        return err.toMML();
+      } else {
+        return MML.merror(err.message.replace(/\n.*/,""));
+      }
     },
     Error: function (message) {
       throw MathJax.Hub.Insert(Error(message),{texError: TRUE});

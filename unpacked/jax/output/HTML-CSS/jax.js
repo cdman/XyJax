@@ -1480,6 +1480,15 @@
       }
     });
 
+
+
+
+    // isao
+    MML.xypic.Augment({toHTML: MML.mbase.HTMLautoload});
+
+
+
+
     MML.mi.Augment({
       toHTML: function (span) {
 	span = this.HTMLhandleSize(this.HTMLcreateSpan(span)); span.bbox = null;
