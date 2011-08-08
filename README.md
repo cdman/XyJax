@@ -3,12 +3,15 @@
 ## XyJax = MathJax + Xy-pic
 
 XyJax is a Xy-pic compatible language extension for MathJax.
-This software is under development, so this release is alpha-quality (often buggy).
 
-See <http://homepage.mac.com/oasis/xyjax.html> for details.
+This extension enable us to draw various graphs and diagrams.
 
-MathJax: http://www.mathjax.org/
-Xy-pic: http://www.tug.org/applications/Xy-pic/
+See http://homepage.mac.com/oasis/xyjax.html for more details. And origins
+
+- MathJax: http://www.mathjax.org/ (Mother)
+- Xy-pic: http://www.tug.org/applications/Xy-pic/ (Father)
+
+But, this software is under development, so this release is alpha-quality (often buggy).
 
 
 ## Installation and Usage
