@@ -1908,6 +1908,43 @@ MathJax.ElementJax.mml.Augment({
     toString: function () { return "{" + this.math.toString() + "}"; }
   });
   
+  // <objectbox> ::= '\cir' <radius> '{' <cir> '}'
+  // <radius> ::= <vector>
+  //          | <empty>
+  // <cir> ::= <diag> <orient> <diag>
+  //       | <empty>
+  MML.xypic.ObjectBox.Cir = MML.xypic.ObjectBox.Subclass({
+    Init: function (radius, cir) {
+      this.radius = radius;
+      this.cir = cir;
+    },
+    toString: function () {
+      return "\\cir"+this.radius+"{"+this.cir+"}";
+    }
+  });
+  MML.xypic.ObjectBox.Cir.Radius = MathJax.Object.Subclass({});
+  MML.xypic.ObjectBox.Cir.Radius.Vector = MathJax.Object.Subclass({
+    Init: function (vector) {
+      this.vector = vector;
+    },
+    toString: function () { return this.vector.toString(); }
+  });
+  MML.xypic.ObjectBox.Cir.Radius.Default = MathJax.Object.Subclass({
+    toString: function () { return ""; }
+  });
+  MML.xypic.ObjectBox.Cir.Cir = MathJax.Object.Subclass({});
+  MML.xypic.ObjectBox.Cir.Cir.Segment = MathJax.Object.Subclass({
+    Init: function (startDiag, orient, endDiag) {
+      this.startDiag = startDiag;
+      this.orient = orient;
+      this.endDiag = endDiag;
+    },
+    toString: function () { return this.startDiag.toString()+this.orient+this.endDiag; }
+  });
+  MML.xypic.ObjectBox.Cir.Cir.Full = MathJax.Object.Subclass({
+    toString: function () { return ""; }
+  });
+  
   // <objectbox> ::= '\dir' <variant> '{' <main> '}'
   // <variant> ::= '^' | '_' | '2' | '3' | <empty>
   // <main> ::= <empty> | '--' | '-' | '..' | '.' | '~~' | '~' | '>>|' | '>|' | '>>' | '<<' | '>' | '<' | '(' | ')' | '`' | "'" | '||' | '|-' | '|<' | '|<<' | '|' | '*' | '+' | 'x' | '//' | '/' | 'o' | '==' | '=' | '::' | ':'

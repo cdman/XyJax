@@ -3331,6 +3331,136 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
+  MML.xypic.ObjectBox.Cir.Augment({
+  	drop: function (svg, env, modifiers) {
+      if (env.c === undefined) {
+        // TODO: cが存在しない場合の扱いは？
+        return undefined;
+      }
+      
+    	// modification
+      modifiers.foreach(function (m) { m.preprocess(env); });
+      
+      var r = this.radius.radius(env);
+      var x = env.c.x;
+      var y = env.c.y;
+      c = this.cir.draw(svg, env, x, y, r);
+      
+    	// modification
+    	// TODO: '!'に対応させる。objectの大きさを元に、描画の位置を調整することになるため、ここでは遅い。
+      modifiers.foreach(function (m) { c = m.postprocess(c, env); });
+      return c;
+    },
+  	connect: function (svg, env, modifiers) {
+      // TODO: do nothing?
+      return undefined;
+    }
+  });
+  
+  MML.xypic.ObjectBox.Cir.Radius.Vector.Augment({
+    radius: function (env) {
+      return this.vector.xy(env).x;
+    }
+  });
+  MML.xypic.ObjectBox.Cir.Radius.Default.Augment({
+    radius: function (env) {
+      return env.c.r;
+    }
+  });
+  MML.xypic.ObjectBox.Cir.Cir.Segment.Augment({
+    draw: function (svg, env, x, y, r) {
+      var sd = this.startDiag.toString();
+      var ed = this.endDiag.toString();
+      
+      var sa, ea, large, da, flip;
+      if (this.orient === "^") {
+        sa = this.diagToAngleACW(sd);
+        ea = this.diagToAngleACW(ed, sa);
+        da = ea - sa;
+        da = (da < 0? da + 360 : da);
+        large = (da > 180? "1" : "0");
+        flip = "0";
+      } else {
+        sa = this.diagToAngleCW(sd);
+        ea = this.diagToAngleCW(ed, sa);
+        da = ea - sa;
+        da = (da < 0? da + 360 : da);
+        large = (da > 180? "0" : "1");
+        flip = "1";
+      }
+      
+      var sx = x + r*Math.cos(sa/180*Math.PI);
+      var sy = y + r*Math.sin(sa/180*Math.PI);
+      var ex = x + r*Math.cos(ea/180*Math.PI);
+      var ey = y + r*Math.sin(ea/180*Math.PI);
+      
+      svg.createSVGElement("path", {
+        d:"M"+em2px(sx)+","+em2px(-sy)+" A"+em2px(r)+","+em2px(r)+" 0 "+large+","+flip+" "+em2px(ex)+","+em2px(-ey)
+      });
+      return MML.xypic.Frame.Circle(x, y, r);
+    },
+    diagToAngleACW: function (diag, angle) {
+      switch (diag) {
+        case "l": return 90;
+        case "r": return -90;
+        case "d": return 180;
+        case "u": return 0;
+        case "dl":
+        case "ld":
+          return 135;
+        case "dr":
+        case "rd":
+          return -135;
+        case "ul":
+        case "lu":
+          return 45;
+        case "ur":
+        case "ru":
+          return -45;
+        default:
+          if (angle !== undefined) {
+            return angle + 180;
+          } else {
+            return 0;
+          }
+      }
+    },
+    diagToAngleCW: function (diag, angle) {
+      switch (diag) {
+        case "l": return -90;
+        case "r": return 90;
+        case "d": return 0;
+        case "u": return 180;
+        case "dl":
+        case "ld":
+          return -45;
+        case "dr":
+        case "rd":
+          return 45;
+        case "ul":
+        case "lu":
+          return -135;
+        case "ur":
+        case "ru":
+          return 135;
+        default:
+          if (angle !== undefined) {
+            return angle + 180;
+          } else {
+            return 0;
+          }
+      }
+    },
+  });
+  MML.xypic.ObjectBox.Cir.Cir.Full.Augment({
+    draw: function (svg, env, x, y, r) {
+      svg.createSVGElement("circle", {
+        cx:em2px(x), cy:em2px(-y), r:em2px(r)
+      });
+      return MML.xypic.Frame.Circle(x, y, r);
+    }
+  });
+  
   MML.xypic.ObjectBox.Dir.Augment({
   	drop: function (svg, env, modifiers) {
       if (env.c === undefined) {
@@ -3563,7 +3693,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
           break;
         default:
           svg.firstChild.removeChild(g);
-          // TODO: impl various arrowheads
+          // TODO: impl compound arrowheads
       }
       
       var c = env.c.toRect(box).rotate(env.angle);
@@ -3817,10 +3947,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   });
   
   MML.xypic.ObjectBox.Curve.Augment({
-  	drop: function (svg, env) {
+    drop: function (svg, env, modifiers) {
       return MML.xypic.Frame.Point(env.c.x, env.c.y);
     },
-  	connect: function (svg, env) {
+    connect: function (svg, env, modifiers) {
     	// find object for drop and connect
       var objectForDrop = undefined;
       var objectForConnect = undefined;

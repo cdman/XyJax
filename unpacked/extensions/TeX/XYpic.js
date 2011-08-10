@@ -1139,6 +1139,7 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     // <objectbox> ::= '{' <text> '}'
     //          | '@' <dir>
     //          | '\dir' <dir>
+    //          | '\cir' <radius> '{' <cir> '}'
     //          | <curve>
     objectbox: function () {
       return or(lit("{").andr(p.text).andl(felem("}")).to(function (math) {
@@ -1153,6 +1154,9 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
         }),
         lit("@").andr(p.dir),
         lit("\\dir").andr(p.dir),
+        lit("\\cir").andr(p.radius).andl(flit("{")).and(p.cir).andl(flit("}")).to(function (rc) {
+          return MML.xypic.ObjectBox.Cir(rc.head, rc.tail);
+        }),
         p.curve
       );
     },
@@ -1179,6 +1183,32 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
       return regexLit(/^[\^_23]/).opt().andl(flit('{')).and(fun(regexLit(/^(--|-|\.\.|\.|~~|~|>>\||>\||>>|<<|>|<|\(|\)|`|'|\|\||\|-|\|<|\|<<|\||\*|\+|x|\/\/|\/|o|==|=|::|:)/ /*'*/).opt())).andl(flit('}')).to(function (vm) {
         return MML.xypic.ObjectBox.Dir(vm.head.getOrElse(""), vm.tail.getOrElse(""));
       })
+    },
+    
+    // <radius> ::= <vector>
+    //          | <empty>
+    radius: function () {
+      return or(
+        p.vector().to(function (v) {
+          return MML.xypic.ObjectBox.Cir.Radius.Vector(v);
+        }),
+        MathJax.Parsers.success("default").to(function () {
+        	return MML.xypic.ObjectBox.Cir.Radius.Default();
+        })
+      );
+    },
+    
+    // <cir> ::= <diag> <orient> <diag>
+    //       | <empty>
+    cir: function () {
+      return or(
+        p.diag().and(fun(regexLit(/^[_\^]/))).and(p.diag).to(function (dod) {
+          return MML.xypic.ObjectBox.Cir.Cir.Segment(dod.head.head, dod.head.tail, dod.tail);
+        }),
+        MathJax.Parsers.success("full").to(function () {
+        	return MML.xypic.ObjectBox.Cir.Cir.Full();
+        })
+      );
     },
     
     // <curve> ::= '\crv' <curve-modifier> '{' <curve-object> <poslist> '}'

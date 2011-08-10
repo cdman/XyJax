@@ -890,8 +890,6 @@
         alignat:      ['ExtensionEnv',null,'AMSmath'],
         'alignat*':   ['ExtensionEnv',null,'AMSmath'],
         alignedat:    ['ExtensionEnv',null,'AMSmath'],
-        
-        // isao
         xy:           ['ExtensionEnv', null, 'XYpic']
       },
       
