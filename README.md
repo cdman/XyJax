@@ -21,7 +21,7 @@ THIS INSTALL INSTRUCTION IS TENTATIVE.
 I'm trying to separate XyJax package from the original MathJax's code.
 
 1. Download XyJax's source code.
- + go to the download site.
+ + go to the download site (this page).
  + click the Downloads button on the upper right side, and click Download zip (or tar.gz) button.
 2. Extract the downloaded zip (or tar.gz) file.
 3. Open the extracted folder.
