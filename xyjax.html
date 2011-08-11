@@ -707,6 +707,10 @@ Source code:
 [[Samples]]
 </pre>
 </div>
+<div title="Download" creator="isao" modifier="isao" created="201108081329" modified="201108111426" changecount="2">
+<pre>See https://github.com/sonoisa/XyJax
+</pre>
+</div>
 <div title="FlexibleRuler" creator="isao" modifier="isao" created="201108061605" modified="201108061725" tags="Sample" changecount="15">
 <pre>\[
 \begin{xy}
@@ -728,6 +732,43 @@ Source code:
 ?&lt;/10cm/*@{|} ?&lt;/11cm/*@{|} ?&lt;/12cm/*@{|} ?&lt;/13cm/*@{|}
 \end{xy}
 }}}</pre>
+</div>
+<div title="HowToInstall" creator="isao" modifier="isao" created="201108111428" modified="201108111523" changecount="11">
+<pre>@@THIS INSTALL INSTRUCTION IS TENTATIVE.@@
+@@I'm trying to separate XyJax package from the original MathJax's code.@@
+
+# Download XyJax's source code.
+** go to the [[download site|https://github.com/sonoisa/XyJax]].
+** click the Downloads button on the upper right side, and click Download zip (or tar.gz) button. 
+# Extract the downloaded zip (or tar.gz) file.
+# Open the extracted folder.
+** you can see the following files/directories (selected).
+*** test: samples 
+*** fonts: font images
+*** unpacked: XyJax's and MathJax's source code.
+*** xyjax.html: published as http://homepage.mac.com/oasis/xyjax.html
+# Open test/sample-xyjax.html with Firefox/Safari/Chrome.
+** you can see so-called commutative diagram, if XyJax works.
+# Use XyJax on your own site.
+** like the configuration of the test/sample-xy.jax (and the following code), load unpacked/MathJax.js within pages on your site.
+
+{{{
+&lt;script type=&quot;text/x-mathjax-config&quot;&gt;
+  MathJax.Hub.Config({
+    extensions: [&quot;tex2jax.js&quot;],
+    jax: [&quot;input/TeX&quot;,&quot;output/HTML-CSS&quot;],
+    &quot;HTML-CSS&quot;: {
+      styles: {&quot;.MathJax_Preview&quot;: {visibility: &quot;hidden&quot;}}
+    },
+    tex2jax: {inlineMath: [[&quot;$&quot;,&quot;$&quot;],[&quot;\\(&quot;,&quot;\\)&quot;]]},
+    TeX: {extensions: [&quot;AMSmath.js&quot;,&quot;AMSsymbols.js&quot;]}
+  });
+&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;../unpacked/MathJax.js&quot;&gt;&lt;/script&gt;
+&lt;!--                                   ^^^^^^^^IMPORTANT! load in the unpacked folder. --&gt;
+}}}
+
+ref. http://www.mathjax.org/docs/1.1/installation.html</pre>
 </div>
 <div title="Intersection" creator="isao" modifier="isao" created="201108071136" modified="201108071152" tags="Sample" changecount="24">
 <pre>\[
@@ -900,11 +941,12 @@ Source code:
 \end{xy}
 }}}</pre>
 </div>
-<div title="MainMenu" creator="isao" modifier="isao" created="201105211222" modified="201108090957" changecount="11">
+<div title="MainMenu" creator="isao" modifier="isao" created="201105211222" modified="201108111531" changecount="14">
 <pre>About XyJax
 [[Samples]]
 ToDo
-SourceCode
+[[Download]]
+[[HowToInstall]]
 [[License]]
 [[Contact]]
 
@@ -1221,7 +1263,7 @@ Source code:
 }}}
 </pre>
 </div>
-<div title="QuiverMutation" creator="isao" modifier="isao" created="201108101443" modified="201108101515" tags="Sample" changecount="46">
+<div title="QuiverMutation" creator="isao" modifier="isao" created="201108101443" modified="201108101531" tags="Sample" changecount="51">
 <pre>\[
 \begin{xy}
 &lt;0em,0em&gt;*+&lt;6em&gt;{}=&quot;1&quot;,
@@ -1314,6 +1356,7 @@ Source code:
 &quot;8&quot;;&quot;7&quot; **@{-} ?&gt;*@{&gt;} ?&lt;&gt;*!/l.5em/{2},
 \end{xy}
 \]
+* ref. 黒木玄, &quot;[[量子 dilogarithm 恒等式の作り方|http://genkuroki.web.fc2.com/20101228HowToMakeQDIs.html]]&quot;
 
 Source code:
 {{{
@@ -1417,10 +1460,6 @@ Source code:
 </div>
 <div title="SiteTitle" creator="isao" modifier="isao" created="201105211015" modified="201108061808" changecount="3">
 <pre>XyJax = MathJax + Xy-pic</pre>
-</div>
-<div title="SourceCode" creator="isao" modifier="isao" created="201108081329" changecount="1">
-<pre>See https://github.com/sonoisa/XyJax
-</pre>
 </div>
 <div title="StyleSheet" creator="isao" modifier="isao" created="201105211203" modified="201105211219" changecount="8">
 <pre>body {font-size:0.9em; font-family:arial,helvetica; margin:0; padding:0;}
