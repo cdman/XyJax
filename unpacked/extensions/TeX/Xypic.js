@@ -1,13 +1,13 @@
 /*************************************************************
  *
- *  MathJax/jax/output/HTML-CSS/autoload/xypic.js
- *  
- *  Implements the HTML-CSS output for <xypic> elements.
+ *  MathJax/extensions/TeX/xypic.js
  *
+ *  Implements Xy-pic environment.
+ *  
  *  ---------------------------------------------------------------------
  *  
- *  Copyright (c) 2011 Isao Sonobe <sonoisa@gmail.com>
- *  
+ *  Copyright (c) 2011 Isao Sonobe <sonoisa@gmail.com>.
+ * 
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
@@ -19,7 +19,2141 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
-*/
+ */
+
+
+MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
+  var VERSION = "0.1";
+  
+  var MML = MathJax.ElementJax.mml;
+  var TEX = MathJax.InputJax.TeX;
+  var TEXDEF = TEX.Definitions;
+
+  MathJax.Hub.Insert(TEXDEF, {
+    environment: {
+      xy: ['ExtensionEnv', null, 'XYpic']
+    }
+  });
+  
+  var tex_formatError = TEX.formatError;
+  TEX.formatError = function (err,math,displaystyle,script) {
+    if (err.parseError !== undefined) {
+      return err.toMML();
+    } else {
+      return tex_formatError(err, math, displaystyle, script);
+    }
+  }
+
+  MML.xypic = MML.mbase.Subclass({
+    Init: function (cmd) {
+      this.data = [];
+      this.cmd = cmd;
+    },
+    type: "xypic",
+    inferRow: false,
+    defaults: {
+      mathbackground: MML.INHERIT,
+      mathcolor: MML.INHERIT,
+      notation: MML.NOTATION.LONGDIV,
+      texClass: MML.TEXCLASS.ORD
+    },
+    setTeXclass: MML.mbase.setSeparateTeXclasses,
+    toString: function () { return this.type + "(" + this.cmd + ")"; }
+  });
+  
+  // <pos>
+  MML.xypic.Pos = MathJax.Object.Subclass({});
+  // <pos> ::= <coord> <pos2>*
+  MML.xypic.Pos.Coord = MathJax.Object.Subclass({
+    Init: function (coord, pos2s) {
+      this.coord = coord;
+      this.pos2s = pos2s;
+    },
+    toString: function () {
+      return "Pos(" + this.coord + ", " + this.pos2s.mkString(", ") + ")";
+    }
+  });
+  // <pos2> ::= '+' <coord>
+  MML.xypic.Pos.Plus = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return "+(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= '-' <coord>
+  MML.xypic.Pos.Minus = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return "-(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= ',' <coord>
+  MML.xypic.Pos.Then = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return ",(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= ';' <coord>
+  MML.xypic.Pos.SwapPAndC = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return ";(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= '**' <object>
+  MML.xypic.Pos.ConnectObject = MathJax.Object.Subclass({
+    Init: function (object) {
+      this.object = object;
+    },
+    toString: function () {
+      return "**(" + this.object + ")";
+    }
+  });
+  // <pos2> ::= '*' <object>
+  MML.xypic.Pos.DropObject = MathJax.Object.Subclass({
+    Init: function (object) {
+      this.object = object;
+    },
+    toString: function () {
+      return "*(" + this.object + ")";
+    }
+  });
+  // <pos2> ::= '?' <place>
+  MML.xypic.Pos.Place = MathJax.Object.Subclass({
+    Init: function (place) {
+      this.place = place;
+    },
+    toString: function () {
+      return "?(" + this.place + ")";
+    }
+  });
+  // <pos2> ::= '=' <saving>
+  // <saving> ::= '"' <id> '"'
+  MML.xypic.Pos.SavingPos = MathJax.Object.Subclass({
+    Init: function (id) {
+      this.id = id;
+    },
+    toString: function () {
+      return "=(" + this.id + ")";
+    }
+  });
+	// <saving> ::= '@:"' <id> '"'
+	// <saving> ::= '@' <coord> '"' <id> '"'
+	// <saving> ::= '@@"' <id> '"'
+  // TODO: impl <saving>
+  
+  // <coord> 
+  MML.xypic.Coord = MathJax.Object.Subclass({});
+  // <coord> ::= <vector>
+  MML.xypic.Coord.Vector = MathJax.Object.Subclass({
+    Init: function (vector) {
+      this.vector = vector;
+    },
+    toString: function () {
+      return this.vector.toString();
+    }
+  });
+  // <coord> ::= <empty> | 'c'
+  MML.xypic.Coord.C = MathJax.Object.Subclass({
+    toString: function () {
+      return "c";
+    }
+  });
+  // <coord> ::= 'p'
+  MML.xypic.Coord.P = MathJax.Object.Subclass({
+    toString: function () {
+      return "p";
+    }
+  });
+  // <coord> ::= 'x'
+  MML.xypic.Coord.X = MathJax.Object.Subclass({
+    toString: function () {
+      return "x";
+    }
+  });
+  // <coord> ::= 'y'
+  MML.xypic.Coord.Y = MathJax.Object.Subclass({
+    toString: function () {
+      return "y";
+    }
+  });
+  // <coord> ::= '"' <id> '"'
+  MML.xypic.Coord.Id = MathJax.Object.Subclass({
+    Init: function (id) {
+      this.id = id;
+    },
+    toString: function () {
+      return '"' + this.id + '"';
+    }
+  });
+  
+  // <vector>
+  MML.xypic.Vector = MathJax.Object.Subclass({});
+  // <vector> ::= '(' <factor> ',' <factor> ')'
+  MML.xypic.Vector.InCurBase = MathJax.Object.Subclass({
+    Init: function (x, y) {
+      this.x = x;
+      this.y = y;
+    },
+    toString: function () {
+      return "(" + this.x + ", " + this.y + ")";
+    }
+  });
+  // <vector> ::= '<' <dimen> ',' <dimen> '>'
+  // <vector> ::= '<' <dimen> '>'
+  MML.xypic.Vector.Abs = MathJax.Object.Subclass({
+    Init: function (x, y) {
+      this.x = x;
+      this.y = y;
+    },
+    toString: function () {
+      return "<" + this.x + ", " + this.y + ">";
+    }
+  });
+  // <vector> ::= 'a' '(' <number> ')'
+  MML.xypic.Vector.Angle = MathJax.Object.Subclass({
+    Init: function (degree) {
+      this.degree = degree;
+    },
+    toString: function () {
+      return "a(" + this.degree + ")";
+    }
+  });
+  // <vector> ::= '/' <direction> <dimen> '/'
+  MML.xypic.Vector.Dir = MathJax.Object.Subclass({
+    Init: function (dir, dimen) {
+      this.dir = dir;
+      this.dimen = dimen;
+    },
+    toString: function () {
+      return "/" + this.dir + " " + this.dimen + "/";
+    }
+  });
+  // <vector> ::= <corner>
+  //          |   <corner> '(' <factor> ')'
+  MML.xypic.Vector.Corner = MathJax.Object.Subclass({
+    Init: function (corner, factor) {
+      this.corner = corner;
+      this.factor = factor;
+    },
+    toString: function () {
+      return this.corner.toString() + "(" + this.factor + ")";
+    }
+  });
+  
+  // <corner> ::= 'L' | 'R' | 'D' | 'U'
+  //          | 'CL' | 'CR' | 'CD' | 'CU'
+  //          | 'LD' | 'RD' | 'LU' | 'RU'
+  //          | 'E' | 'P'
+  //          | 'A'
+  MML.xypic.Corner = MathJax.Object.Subclass({});
+  MML.xypic.Corner.L = MathJax.Object.Subclass({
+  	toString: function () { return "L"; }
+  });
+  MML.xypic.Corner.R = MathJax.Object.Subclass({
+  	toString: function () { return "R"; }
+  });
+  MML.xypic.Corner.D = MathJax.Object.Subclass({
+  	toString: function () { return "D"; }
+  });
+  MML.xypic.Corner.U = MathJax.Object.Subclass({
+  	toString: function () { return "U"; }
+  });
+  MML.xypic.Corner.CL = MathJax.Object.Subclass({
+  	toString: function () { return "CL"; }
+  });
+  MML.xypic.Corner.CR = MathJax.Object.Subclass({
+  	toString: function () { return "CR"; }
+  });
+  MML.xypic.Corner.CD = MathJax.Object.Subclass({
+  	toString: function () { return "CD"; }
+  });
+  MML.xypic.Corner.CU = MathJax.Object.Subclass({
+  	toString: function () { return "CU"; }
+  });
+  MML.xypic.Corner.LD = MathJax.Object.Subclass({
+  	toString: function () { return "LD"; }
+  });
+  MML.xypic.Corner.RD = MathJax.Object.Subclass({
+  	toString: function () { return "RD"; }
+  });
+  MML.xypic.Corner.LU = MathJax.Object.Subclass({
+  	toString: function () { return "LU"; }
+  });
+  MML.xypic.Corner.RU = MathJax.Object.Subclass({
+  	toString: function () { return "RU"; }
+  });
+  MML.xypic.Corner.NearestEdgePoint = MathJax.Object.Subclass({
+  	toString: function () { return "E"; }
+  });
+  MML.xypic.Corner.PropEdgePoint = MathJax.Object.Subclass({
+  	toString: function () { return "P"; }
+  });
+  MML.xypic.Corner.Axis = MathJax.Object.Subclass({
+  	toString: function () { return "A"; }
+  });
+  
+  // <place> ::= '<' <place>
+  // <place> ::= '>' <place>
+  // <place> ::= '(' <factor> ')' <place>
+  // <place> ::= '!' '{' <pos> '}' <slide>
+  // <place> ::= <slide>
+  MML.xypic.Place = MathJax.Object.Subclass({
+  	Init: function (shaveP, shaveC, factor, slide) {
+    	this.shaveP = shaveP;
+      this.shaveC = shaveC;
+      this.factor = factor;
+      this.slide = slide;
+    },
+    compound: function (that) {
+    	return MML.xypic.Place(
+      	this.shaveP + that.shaveP,
+        this.shaveC + that.shaveC,
+        (that.factor === undefined? this.factor : that.factor),
+        that.slide);
+    },
+    toString: function () {
+    	var desc = "";
+      for (var l = 0; l < this.shaveP; l++) {
+      	desc += "<";
+      }
+      for (var r = 0; r < this.shaveC; r++) {
+      	desc += ">";
+      }
+      if (this.factor !== undefined) {
+      	desc += "(" + this.factor + ")";
+      }
+      if (this.slide.dimen !== undefined) {
+      	desc += "/" + this.slide.dimen + "/";
+      }
+      return desc;
+    }
+  });
+  MML.xypic.Place.Factor = MathJax.Object.Subclass({
+    Init: function (factor) {
+      this.factor = factor;
+    },
+    isIntercept: false,
+    toString: function () {
+      return this.factor.toString();
+    }
+  });
+  MML.xypic.Place.Intercept = MathJax.Object.Subclass({
+    Init: function (pos) {
+      this.pos = pos;
+    },
+    isIntercept: true,
+    toString: function () {
+      return "!{" + this.pos + "}";
+    }
+  });
+  
+  // <slide> ::= <empty>
+  // <slide> ::= '/' <dimen> '/'
+  MML.xypic.Slide = MathJax.Object.Subclass({
+  	Init: function (dimen) {
+    	this.dimen = dimen;
+    },
+    toString: function () {
+    	if (this.dimen === undefined) {
+      	return "";
+      } else {
+      	return dimen;
+      }
+    }
+  });
+  
+  
+  // <object> ::= <modifier>* <objectbox>
+  MML.xypic.Object = MathJax.Object.Subclass({
+  	Init: function (modifiers, object) {
+    	this.modifiers = modifiers;
+      this.object = object;
+    },
+    dirVariant: function () { return this.object.dirVariant(); },
+    dirMain: function () { return this.object.dirMain(); },
+    isDir: function () { return this.object.isDir(); },
+    toString: function () {
+    	return this.modifiers.mkString() + this.object.toString();
+    }
+  });
+  
+  // <objectbox>
+  MML.xypic.ObjectBox = MathJax.Object.Subclass({});
+  // <objectbox> ::= '{' <text> '}'
+  MML.xypic.ObjectBox.Text = MML.xypic.ObjectBox.Subclass({
+  	Init: function (math) {
+    	this.math = math;
+    },
+    dirVariant: function () { return undefined; },
+    dirMain: function () { return undefined; },
+    isDir: function () { return false; },
+    toString: function () { return "{" + this.math.toString() + "}"; }
+  });
+  
+  // <objectbox> ::= '\cir' <radius> '{' <cir> '}'
+  // <radius> ::= <vector>
+  //          | <empty>
+  // <cir> ::= <diag> <orient> <diag>
+  //       | <empty>
+  MML.xypic.ObjectBox.Cir = MML.xypic.ObjectBox.Subclass({
+    Init: function (radius, cir) {
+      this.radius = radius;
+      this.cir = cir;
+    },
+    toString: function () {
+      return "\\cir"+this.radius+"{"+this.cir+"}";
+    }
+  });
+  MML.xypic.ObjectBox.Cir.Radius = MathJax.Object.Subclass({});
+  MML.xypic.ObjectBox.Cir.Radius.Vector = MathJax.Object.Subclass({
+    Init: function (vector) {
+      this.vector = vector;
+    },
+    toString: function () { return this.vector.toString(); }
+  });
+  MML.xypic.ObjectBox.Cir.Radius.Default = MathJax.Object.Subclass({
+    toString: function () { return ""; }
+  });
+  MML.xypic.ObjectBox.Cir.Cir = MathJax.Object.Subclass({});
+  MML.xypic.ObjectBox.Cir.Cir.Segment = MathJax.Object.Subclass({
+    Init: function (startDiag, orient, endDiag) {
+      this.startDiag = startDiag;
+      this.orient = orient;
+      this.endDiag = endDiag;
+    },
+    toString: function () { return this.startDiag.toString()+this.orient+this.endDiag; }
+  });
+  MML.xypic.ObjectBox.Cir.Cir.Full = MathJax.Object.Subclass({
+    toString: function () { return ""; }
+  });
+  
+  // <objectbox> ::= '\dir' <variant> '{' <main> '}'
+  // <variant> ::= '^' | '_' | '2' | '3' | <empty>
+  // <main> ::= <empty> | '--' | '-' | '..' | '.' | '~~' | '~' | '>>|' | '>|' | '>>' | '<<' | '>' | '<' | '(' | ')' | '`' | "'" | '||' | '|-' | '|<' | '|<<' | '|' | '*' | '+' | 'x' | '//' | '/' | 'o' | '==' | '=' | '::' | ':'
+  MML.xypic.ObjectBox.Dir = MML.xypic.ObjectBox.Subclass({
+  	Init: function (variant, main) {
+    	this.variant = variant;
+    	this.main = main;
+    },
+    dirVariant: function () { return this.variant; },
+    dirMain: function () { return this.main; },
+    isDir: function () { return true; },
+    toString: function () { return "\\dir" + this.variant + "{" + this.main + "}"; }
+  });
+  
+  // <objectbox> ::= '\crv' <curve-modifier> '{' <curve-object> <curve-poslist> '}'
+  MML.xypic.ObjectBox.Curve = MML.xypic.ObjectBox.Subclass({
+  	Init: function (modifiers, objects, poslist) {
+    	this.modifiers = modifiers;
+    	this.objects = objects;
+    	this.poslist = poslist;
+    },
+    dirVariant: function () { return ""; },
+    dirMain: function () { return "-"; },
+    isDir: function () { return false; },
+    toString: function () { return "\\curve"+this.modifiers.mkString(" ")+"{"+this.objects.mkString(" ")+" "+this.poslist.mkString("&")+"}"; }
+  });
+  // <curve-modifier> ::= ( '~' <curve-option> )*
+  // <curve-option> ::= 'p' | 'P' | 'l' | 'L' | 'c' | 'C'
+  //                |   'pc' | 'pC' | 'Pc' | 'PC'
+  //                |   'lc' | 'lC' | 'Lc' | 'LC'
+  //                |   'cC'
+  MML.xypic.ObjectBox.Curve.Modifier = MathJax.Object.Subclass({});
+  MML.xypic.ObjectBox.Curve.Modifier.p = MathJax.Object.Subclass({
+    toString: function () { return "~p"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.P = MathJax.Object.Subclass({
+    toString: function () { return "~P"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.l = MathJax.Object.Subclass({
+    toString: function () { return "~l"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.L = MathJax.Object.Subclass({
+    toString: function () { return "~L"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.c = MathJax.Object.Subclass({
+    toString: function () { return "~c"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.C = MathJax.Object.Subclass({
+    toString: function () { return "~C"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.pc = MathJax.Object.Subclass({
+    toString: function () { return "~pc"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.pC = MathJax.Object.Subclass({
+    toString: function () { return "~pC"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.Pc = MathJax.Object.Subclass({
+    toString: function () { return "~Pc"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.PC = MathJax.Object.Subclass({
+    toString: function () { return "~PC"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.lc = MathJax.Object.Subclass({
+    toString: function () { return "~lc"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.lC = MathJax.Object.Subclass({
+    toString: function () { return "~lC"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.Lc = MathJax.Object.Subclass({
+    toString: function () { return "~Lc"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.LC = MathJax.Object.Subclass({
+    toString: function () { return "~LC"; }
+  });
+  MML.xypic.ObjectBox.Curve.Modifier.cC = MathJax.Object.Subclass({
+    toString: function () { return "~cC"; }
+  });
+  // <curve-object> ::= <empty>
+  //                |   '~*' <object> <curve-object>
+  //                |   '~**' <object> <curve-object>
+  MML.xypic.ObjectBox.Curve.Object = MathJax.Object.Subclass({});
+  MML.xypic.ObjectBox.Curve.Object.Drop = MathJax.Object.Subclass({
+  	Init: function (object) {
+    	this.object = object;
+    },
+    toString: function () { return "~*" + this.object; }
+  });
+  MML.xypic.ObjectBox.Curve.Object.Connect = MathJax.Object.Subclass({
+  	Init: function (object) {
+    	this.object = object;
+    },
+    toString: function () { return "~**" + this.object; }
+  });
+  // <curve-poslist> ::= <empty> ^^ Empty List
+  //           |   '&' <curve-poslist2> ^^ (c, <poslist>)
+  //           |   <nonemptyPos> ^^ (<nonemptyPos>, Nil)
+  //           |   <nonemptyPos> '&' <curve-poslist2> ^^ (<nonemptyPos>, <poslist>)
+  //           |   '~@' ^^ (~@, Nil)
+  //           |   '~@' '&' <curve-poslist2> ^^ (~@, <poslist>)
+  // <curve-poslist2> ::= <empty> ^^ (c, Nil)
+  //           |   '&' <curve-poslist2> ^^ (c, <poslist>)
+  //           |   <nonemptyPos> ^^ (<nonemptyPos>, Nil)
+  //           |   <nonemptyPos> '&' <curve-poslist2> ^^ (<nonemptyPos>, <poslist>)
+  //           |   '~@' ^^ (~@, Nil)
+  //           |   '~@' '&' <curve-poslist2> ^^ (~@, <poslist>)
+  MML.xypic.ObjectBox.Curve.PosList = MathJax.Object.Subclass({});
+  MML.xypic.ObjectBox.Curve.PosList.CurPos = MathJax.Object.Subclass({
+    toString: function () { return ""; }
+  });
+  MML.xypic.ObjectBox.Curve.PosList.Pos = MathJax.Object.Subclass({
+  	Init: function (pos) {
+    	this.pos = pos;
+    },
+    toString: function () { return this.pos.toString(); }
+  });
+  MML.xypic.ObjectBox.Curve.PosList.AddStack = MathJax.Object.Subclass({
+    toString: function () { return "~@"; }
+  });
+  
+  // <modifier>
+  MML.xypic.Modifier = MathJax.Object.Subclass({});
+  // <modifier> ::= '!' <vector>
+  MML.xypic.Modifier.Vector = MathJax.Object.Subclass({
+  	Init: function (vector) {
+    	this.vector = vector;
+    },
+    toString: function () { return "!" + this.vector; }
+  });
+  // <modifier> ::= <add-op> <size>
+  // <add-op> ::= '+' | '-' | '=' | '+=' | '-='
+  // <size> ::= <vector> | <empty>
+  MML.xypic.Modifier.AddOp = MathJax.Object.Subclass({
+  	Init: function (op, size) {
+    	this.op = op;
+      this.size = size;
+    },
+    toString: function () { return this.op.toString() + " " + this.size; }
+  });
+  MML.xypic.Modifier.AddOp.Grow = MathJax.Object.Subclass({
+    toString: function () { return '+'; }
+  });
+  MML.xypic.Modifier.AddOp.Shrink = MathJax.Object.Subclass({
+    toString: function () { return '-'; }
+  });
+  MML.xypic.Modifier.AddOp.Set = MathJax.Object.Subclass({
+    toString: function () { return '='; }
+  });
+  MML.xypic.Modifier.AddOp.GrowTo = MathJax.Object.Subclass({
+    toString: function () { return '+='; }
+  });
+  MML.xypic.Modifier.AddOp.ShrinkTo = MathJax.Object.Subclass({
+    toString: function () { return '-='; }
+  });
+  MML.xypic.Modifier.AddOp.VactorSize = MathJax.Object.Subclass({
+    Init: function (vector) {
+      this.vector = vector;
+    },
+    isDefault: false,
+    toString: function () { return this.vector.toString(); }
+  });
+  MML.xypic.Modifier.AddOp.DefaultSize = MathJax.Object.Subclass({
+    isDefault: true,
+    toString: function () { return ""; }
+  });
+  
+  // <modifier> ::= '[' <shape> ']'
+  // <shape> ::= '.' | 'o' | 'l' | 'r' | 'u' | 'd' | 'c' | <empty>
+  MML.xypic.Modifier.Shape = MathJax.Object.Subclass({
+  	Init: function (shape) {
+    	this.shape = shape;
+    },
+    toString: function () { return "[" + this.shape + "]"; }
+  });
+  MML.xypic.Modifier.Shape.Point = MathJax.Object.Subclass({
+  	toString: function () { return "."; }
+  });
+  MML.xypic.Modifier.Shape.Rect = MathJax.Object.Subclass({
+  	toString: function () { return ""; }
+  });
+  MML.xypic.Modifier.Shape.Circle = MathJax.Object.Subclass({
+  	toString: function () { return "o"; }
+  });
+  MML.xypic.Modifier.Shape.L = MathJax.Object.Subclass({
+  	toString: function () { return "l"; }
+  });
+  MML.xypic.Modifier.Shape.R = MathJax.Object.Subclass({
+  	toString: function () { return "r"; }
+  });
+  MML.xypic.Modifier.Shape.U = MathJax.Object.Subclass({
+  	toString: function () { return "u"; }
+  });
+  MML.xypic.Modifier.Shape.D = MathJax.Object.Subclass({
+  	toString: function () { return "d"; }
+  });
+  MML.xypic.Modifier.Shape.C = MathJax.Object.Subclass({
+  	toString: function () { return "c"; }
+  });
+  
+  // <direction>
+  MML.xypic.Direction = MathJax.Object.Subclass({});
+  // <direction> ::= <direction0> <direction1>*
+  MML.xypic.Direction.Compound = MathJax.Object.Subclass({
+  	Init: function (dir, rots) {
+    	this.dir = dir;
+      this.rots = rots;
+    },
+    toString: function () {
+    	return this.dir.toString() + this.rots.mkString();
+    }
+  });
+  // <direction0> ::= <diag>
+  MML.xypic.Direction.Diag = MathJax.Object.Subclass({
+  	Init: function (diag) {
+    	this.diag = diag;
+    },
+    toString: function () { return this.diag.toString(); }
+  });
+  // <direction0> ::= 'v' <vector>
+  MML.xypic.Direction.Vector = MathJax.Object.Subclass({
+  	Init: function (vector) {
+    	this.vector = vector;
+    },
+    toString: function () { return "v" + this.vector.toString(); }
+  });
+  // <direction1> ::= ':' <vector>
+  MML.xypic.Direction.RotVector = MathJax.Object.Subclass({
+  	Init: function (vector) {
+    	this.vector = vector;
+    },
+    toString: function () { return ":" + this.vector.toString(); }
+  });
+  // <direction1> ::= '_'
+  MML.xypic.Direction.RotCW = MathJax.Object.Subclass({
+    toString: function () { return "_"; }
+  });
+  // <direction1> ::= '^'
+  MML.xypic.Direction.RotAntiCW = MathJax.Object.Subclass({
+    toString: function () { return "^"; }
+  });
+  // <direction0> ::=  'q' '{' <pos> <decor> '}'
+  // TODO: impl <direction> ::= q {<pos> <decor>}
+  
+  // <diag>
+  MML.xypic.Diag = MathJax.Object.Subclass({});
+  // <diag> ::= <empty>
+  MML.xypic.Diag.Default = MathJax.Object.Subclass({
+  	toString: function () { return ""; }
+  });
+  // <diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
+  MML.xypic.Diag.Angle = MathJax.Object.Subclass({
+  	Init: function (symbol, angle) {
+    	this.symbol = symbol;
+      this.ang = angle;
+    },
+  	toString: function () { return this.symbol; }
+  });
+  
+  
+/************ Matcher **************/
+MathJax.Matcher = MathJax.Object.Subclass({
+	Init: function () { this.cases = []; },
+	Case: function (klass, f) {
+		this.cases.push([klass, f]);
+		return this;
+	},
+	match: function (x) {
+		if (x instanceof Object && "isa" in x) {
+			var i, count, klass, op;
+			i = 0;
+			count = this.cases.length;
+			while (i < count) {
+				klass = this.cases[i][0];
+				if (x.isa(klass)) {
+					op = klass.unapply(x);
+					if (op.isDefined) {
+						return this.cases[i][1](op.get);
+					}
+				}
+				i = i + 1;
+			}
+		}
+		throw MathJax.MatchError(x);
+	}
+});
+
+
+/************ Option **************/
+MathJax.Option = MathJax.Object.Subclass({});
+
+MathJax.Option.Some = MathJax.Option.Subclass({
+	Init: function (value) {
+		this.get = value;
+	},
+	isEmpty: false,
+	isDefined: true,
+  getOrElse: function (ignore) { return this.get; },
+	toString: function () {
+		return "Some(" + this.get + ")";
+	}
+}, {
+	unapply: function (x) { return MathJax.Option.Some(x.get); }
+});
+
+MathJax.Option.None = MathJax.Option.Subclass({
+	Init: function () {},
+	isEmpty: true,
+	isDefined: false,
+  getOrElse: function (value) { return value; },
+	toString: function () { return "None"; }
+}, {
+	unapply: function (x) { return MathJax.Option.Some(x); }
+});
+
+MathJax.Option.Augment({}, {
+	empty: MathJax.Option.None()
+});
+
+
+/************ List **************/
+MathJax.List = MathJax.Object.Subclass({});
+
+MathJax.List.Cons = MathJax.List.Subclass({
+	Init: function (head, tail) {
+		this.head = head;
+		this.tail = tail;
+	},
+	isEmpty: false,
+	foldLeft: function (x0, f) {
+		var r, c;
+		r = f(x0, this.head);
+		c = this.tail;
+		while (!c.isEmpty) {
+			r = f(r, c.head);
+			c = c.tail;
+		}
+		return r;
+	},
+	foldRight: function (x0, f) {
+		if (this.tail.isEmpty) {
+			return f(this.head, x0);
+		} else {
+			return f(this.head, this.tail.foldRight(x0, f));
+		}
+	},
+  foreach: function (f) {
+  	var e = this;
+    while (!e.isEmpty) {
+    	f(e.head);
+      e = e.tail;
+    }
+  },
+  mkString: function () {
+  	var open, delim, close;
+  	switch (arguments.length) {
+    	case 0:
+      	open = delim = close = "";
+        break;
+    	case 1:
+      	delim = arguments[0];
+        open = close = "";
+      	break;
+      case 2:
+      	open = arguments[0];
+      	delim = arguments[1];
+        close = "";
+        break;
+      default:
+      	open = arguments[0];
+      	delim = arguments[1];
+      	close = arguments[2];
+        break;
+    }
+		var desc, nxt;
+		desc = open + this.head.toString();
+		nxt = this.tail;
+		while (nxt.isa(MathJax.List.Cons)) {
+			desc += delim + nxt.head.toString(); 
+			nxt = nxt.tail;
+		}
+		desc += close;
+		return desc;
+  },
+	toString: function () {
+  	return this.mkString("[", ", ", "]");
+	}
+}, {
+	unapply: function (x) { return MathJax.Option.Some([x.head, x.tail]); }
+});
+
+MathJax.List.Nil = MathJax.List.Subclass({
+	isEmpty: true,
+	foldLeft: function (x0, f) { return x0; },
+	foldRight: function (x0, f) { return x0; },
+  foreach: function (f) {},
+  mkString: function () {
+  	switch (arguments.length) {
+    	case 0:
+    	case 1:
+      	return "";
+      case 2:
+      	return arguments[0]
+      default:
+      	return arguments[0]+arguments[2];
+    }
+  },
+	toString: function () { return '[]'; }
+}, {
+	unapply: function (x) { return MathJax.Option.Some(x); }
+});
+
+MathJax.List.Augment({}, {
+	empty: MathJax.List.Nil(),
+	fromArray: function (as) {
+		var list, i;
+		list = MathJax.List.empty;
+		i = as.length - 1;
+		while (i >= 0) {
+			list = MathJax.List.Cons(as[i], list);
+			i -= 1;
+		}
+		return list;
+	}
+});
+
+
+/************ MatchError **************/
+MathJax.MatchError = MathJax.Object.Subclass({
+	Init: function (obj) { this.obj = obj; },
+//	getMessage: function () {
+//		if (this.obj === null) {
+//			return "null"
+//		} else {
+//			return obj.toString() + " (of class " + obj. + ")"
+//		}
+//	}
+	toString: function () { return "MatchError(" + this.obj + ")"; }
+});
+
+
+/************ OffsetPosition **************/
+MathJax.OffsetPosition = MathJax.Object.Subclass({
+	Init: function (source, offset) {
+		// assert(source.length >= offset)
+		this.source = source;
+		if (offset === undefined) { this.offset = 0; } else { this.offset = offset; }	
+		this._index = null;
+		this._line = null;
+	},
+	index: function () {
+		if (this._index !== null) { return this._index; }
+		this._index = [];
+		this._index.push(0);
+		var i = 0;
+		while (i < this.source.length) {
+			if (this.source.charAt(i) === '\n') { this._index.push(i + 1); }
+			i += 1;
+		}
+		this._index.push(this.source.length);
+		return this._index;
+	},
+	line: function () {
+		var lo, hi, mid;
+		if (this._line !== null) { return this._line; }
+		lo = 0;
+		hi = this.index().length - 1;
+		while (lo + 1 < hi) {
+			mid = (hi + lo) >> 1;
+			if (this.offset < this.index()[mid]) {
+				hi = mid;
+			} else {
+				lo = mid;
+			}
+		}
+		this._line = lo + 1;
+		return this._line;
+	},
+	column: function () {
+		return this.offset - this.index()[this.line() - 1] + 1;
+	},
+	lineContents: function () {
+		var i, l;
+		i = this.index();
+		l = this.line();
+		return this.source.substring(i[l - 1], i[l]);
+	},
+	toString: function () { return this.line().toString() + '.' + this.column(); },
+	longString: function () {
+		var desc, i;
+		desc = this.lineContents() + '\n';
+		i = 0;
+		while (i < this.column()) {
+			if (this.lineContents().charAt(i) === '\t') {
+				desc += '\t';
+			} else {
+				desc += ' ';
+			}
+			i += 1;
+		}
+		desc += '^';
+		return desc;
+	},
+	isLessThan: function (that) {
+		if (that.isa(MathJax.OffsetPosition)) {
+			return this.offset < that.offset;
+		} else {
+			return (
+				this.line() < that.line() || 
+				(this.line() === that.line() && this.column() < that.column())
+			);
+		}
+	} 
+});
+
+
+/************ StringReader **************/
+MathJax.StringReader = MathJax.Object.Subclass({
+	Init: function (source, offset) {
+		this.source = source;
+		if (offset === undefined) { this.offset = 0; } else { this.offset = offset; }	
+	},
+	first: function () {
+		if (this.offset < this.source.length) {
+			return this.source.charAt(this.offset);
+		} else {
+			return MathJax.StringReader.EofCh;
+		}
+	},
+	rest: function () {
+		if (this.offset < this.source.length) {
+			return MathJax.StringReader(this.source, this.offset + 1);
+		} else {
+			return this;
+		}
+	},
+	pos: function () { return MathJax.OffsetPosition(this.source, this.offset); },
+	atEnd: function () { return this.offset >= this.source.length; },
+	drop: function (n) {
+		var r, count;
+		r = this;
+		count = n;
+		while (count > 0) {
+			r = r.rest();
+			count -= 1;
+		}
+		return r;
+	}
+}, {
+	EofCh: '\x03'
+});
+
+
+/************ Parsers **************/
+MathJax.Parsers = MathJax.Object.Subclass({}, {
+	parse: function (p, input) {
+		return p.apply(input);
+	},
+	parseAll: function (p, input) {
+		return p.andl(function () { return MathJax.Parsers.eos(); }).apply(input);
+	},
+	parseString: function (p, str) {
+		var input = MathJax.StringReader(str);
+		return MathJax.Parsers.parse(p, input);
+	},
+	parseAllString: function (p, str) {
+		var input = MathJax.StringReader(str);
+		return MathJax.Parsers.parseAll(p, input);
+	},
+	whiteSpaceRegex: /^\s+/,
+	handleWhiteSpace: function (source, offset) {
+		var m = MathJax.Parsers.whiteSpaceRegex.exec(source.substring(offset, source.length));
+		if (m !== null) {
+			return offset + m[0].length;
+		} else {
+			return offset;
+		}
+	},
+	whiteSpace: function () {
+  	return MathJax.Parsers.regex(MathJax.Parsers.whiteSpaceRegex);
+  },
+	literal: function (str) {
+		return MathJax.Parsers.Parser(function (input) {
+			var source, offset, start, i, j, found;
+			source = input.source;
+			offset = input.offset;
+			start = MathJax.Parsers.handleWhiteSpace(source, offset);
+			i = 0;
+			j = start;
+			while (i < str.length && j < source.length && 
+					str.charAt(i) === source.charAt(j)) {
+				i += 1;
+				j += 1;
+			}
+			if (i === str.length) {
+				return MathJax.Parsers.Success(str, input.drop(j - offset));
+			} else {
+				if (start === source.length) {
+					found = "end of source";
+				} else {
+					found = "`" + source.charAt(start) + "'";
+				}
+				return MathJax.Parsers.Failure(
+					"`" + str + "' expected but " + found + " found",
+					input.drop(start - offset)
+				);
+			}
+		});
+	},
+	regex: function (rx /* must start with ^ */) {
+		if (rx.toString().substring(0, 2) !== "/^") {
+			throw ("regex must start with `^' but " + rx);
+		}
+		return MathJax.Parsers.Parser(function (input) {
+			var source, offset, m, found;
+			source = input.source;
+			offset = input.offset;
+			m = rx.exec(source.substring(offset, source.length));
+			if (m !== null) {
+				return MathJax.Parsers.Success(m[0], input.drop(m[0].length));
+			} else {
+				if (offset === source.length) {
+					found = "end of source";
+				} else {
+					found = "`" + source.charAt(offset) + "'";
+				}
+				return MathJax.Parsers.Failure(
+					"string matching regex " + rx + " expected but " + found + " found",
+					input
+				);
+			}
+		});
+	},
+	regexLiteral: function (rx /* must start with ^ */) {
+		if (rx.toString().substring(0, 2) !== "/^") {
+			throw ("regex must start with `^' but " + rx);
+		}
+		return MathJax.Parsers.Parser(function (input) {
+			var source, offset, start, m, found;
+			source = input.source;
+			offset = input.offset;
+			start = MathJax.Parsers.handleWhiteSpace(source, offset);
+			m = rx.exec(source.substring(start, source.length));
+			if (m !== null) {
+				return MathJax.Parsers.Success(m[0], input.drop(start + m[0].length - offset));
+			} else {
+				if (start === source.length) {
+					found = "end of source";
+				} else {
+					found = "`" + source.charAt(start) + "'";
+				}
+				return MathJax.Parsers.Failure(
+					"string matching regex " + rx + " expected but " + found + " found",
+					input.drop(start - offset)
+				);
+			}
+		});
+	},
+	eos: function () {
+		return MathJax.Parsers.Parser(function (input) {
+			var source, offset, start;
+			source = input.source;
+			offset = input.offset;
+			start = MathJax.Parsers.handleWhiteSpace(source, offset);
+			if (source.length === start) {
+				return MathJax.Parsers.Success("", input);
+			} else {
+				return MathJax.Parsers.Failure("end of source expected but `" + 
+					source.charAt(start) + "' found", input);
+			}
+		});
+	},
+	commit: function (/*lazy*/ p) {
+		return MathJax.Parsers.Parser(function (input) {
+			var res = p()(input);
+			return (MathJax.Matcher()
+				.Case(MathJax.Parsers.Success, function (x) { return res; })
+				.Case(MathJax.Parsers.Error, function (x) { return res; })
+				.Case(MathJax.Parsers.Failure, function (x) {
+					return MathJax.Parsers.Error(x[0], x[1]);
+				}).match(res)
+			);
+		});
+	},
+	//elem: function (kind, p)
+	elem: function (e) { return MathJax.Parsers.accept(e).named('"' + e + '"'); },
+	accept: function (e) {
+		return MathJax.Parsers.acceptIf(
+			function (x) { return x === e; },
+			function (x) { return "`" + e + "' expected but `" + x + "' found"; }
+		);
+	},
+	acceptIf: function (p, err) {
+		return MathJax.Parsers.Parser(function (input) {
+			if (p(input.first())) {
+				return MathJax.Parsers.Success(input.first(), input.rest());
+			} else {
+				return MathJax.Parsers.Failure(err(input.first()), input);
+			}
+		});
+	},
+	//acceptMatch: function (expected, f)
+	//acceptSeq: function (es)
+	failure: function (msg) {
+		return MathJax.Parsers.Parser(function (input) {
+			return MathJax.Parsers.Failure(msg, input);
+		});
+	},
+	err: function (msg) {
+		return MathJax.Parsers.Parser(function (input) {
+			return MathJax.Parsers.Error(msg, input);
+		});
+	},
+	success: function (v) {
+		return MathJax.Parsers.Parser(function (input) {
+			return MathJax.Parsers.Success(v, input);
+		});
+	},
+	log: function (/*lazy*/ p, name) {
+		return MathJax.Parsers.Parser(function (input) {
+			console.log("trying " + name + " at " + input);
+			var r = p().apply(input);
+			console.log(name + " --> " + r);
+			return r;
+		});
+	},
+	rep: function (/*lazy*/ p) {
+		var s = MathJax.Parsers.success(MathJax.List.empty);
+		return MathJax.Parsers.rep1(p).or(function () { return s; });
+	},
+	rep1: function (/*lazy*/ p) {
+		return MathJax.Parsers.Parser(function (input) {
+			var elems, i, p0, res;
+			elems = [];
+			i = input;
+			p0 = p();
+			res = p0.apply(input);
+			if (res.isa(MathJax.Parsers.Success)) {
+				while (res.isa(MathJax.Parsers.Success)) {
+					elems.push(res.result);
+					i = res.next;
+					res = p0.apply(i);
+				}
+				return MathJax.Parsers.Success(MathJax.List.fromArray(elems), i);
+			} else {
+				return res;
+			}
+		});
+	},
+	//rep1: function (/*lazy*/ first, /*lazy*/ p)
+	repN: function (num, /*lazy*/ p) {
+		if (num === 0) {
+			return MathJax.Parsers.success(MathJax.List.empty);
+		}
+		return MathJax.Parsers.Parser(function (input) {
+			var elems, i, p0, res;
+			elems = [];
+			i = input;
+			p0 = p();
+			res = p0.apply(i);
+			while (res.isa(MathJax.Parsers.Success)) {
+				elems.push(res.result);
+				i = res.next;
+				if (num === elems.length) {
+					return MathJax.Parsers.Success(MathJax.List.fromArray(elems), i);
+				}
+				res = p0.apply(i);
+			}
+			return res; // NoSuccess
+		});
+	},
+	repsep: function (/*lazy*/ p, /*lazy*/ q) {
+		var s = MathJax.Parsers.success(MathJax.List.empty);
+		return MathJax.Parsers.rep1sep(p, q).or(function () { return s; });
+	},
+	rep1sep: function (/*lazy*/ p, /*lazy*/ q) {
+		return p().and(MathJax.Parsers.rep(q().andr(p))).to(function (res) {
+			return MathJax.List.Cons(res.head, res.tail);
+		});
+	},
+//	chainl1: function (/*lazy*/ p, /*lazy*/ q) {
+//		return this.chainl1(p, p, q)
+//	},
+	chainl1: function (/*lazy*/ first, /*lazy*/ p, /*lazy*/ q) {
+		return first().and(MathJax.Parsers.rep(q().and(p))).to(function (res) {
+			return res.tail.foldLeft(res.head, function (a, fb) { return fb.head(a, fb.tail); });
+		});
+	},
+	chainr1: function (/*lazy*/ p, /*lazy*/ q, combine, first) {
+		return p().and(this.rep(q().and(p))).to(function (res) {
+			return MathJax.List.Cons(MathJax.Parsers.Pair(combine, res.head),
+				res.tail).foldRight(first, function (fa, b) { return fa.head(fa.tail, b); }
+				);
+		});
+	},
+	opt: function (/*lazy*/ p) {
+		return p().to(function (x) {
+			return MathJax.Option.Some(x);
+		}).or(function () {
+			return MathJax.Parsers.success(MathJax.Option.empty);
+		});
+	},
+	not: function (/*lazy*/ p) {
+		return MathJax.Parsers.Parser(function (input) {
+			var r = p().apply(input);
+			if (r.successful) {
+				return MathJax.Parsers.Failure("Expected failure", input);
+			} else {
+				return MathJax.Parsers.Success(MathJax.Option.empty, input);
+			}
+		});
+	},
+	guard: function (/*lazy*/ p) {
+		return MathJax.Parsers.Parser(function (input) {
+			var r = p().apply(input);
+			if (r.successful) {
+				return MathJax.Parsers.Success(r.result, input);
+			} else {
+				return r;
+			}
+		});
+	},
+	//positioned: function (/*lazy*/ p)
+	//phrase: function (p)
+	mkList: function (pair) { return MathJax.List.Cons(pair.head, pair.tail); },
+	fun: function (x) { return function () { return x; }; },
+	lazyParser: function (x) {
+		var lit, r;
+		if (x instanceof String || (typeof x) === "string") {
+			lit = MathJax.Parsers.literal(x);
+			return function () { return lit; };
+		} else if (x instanceof Function) {
+			// x is deemed to be a function which has the return value as Parser. 
+			return x;
+		} else if (x instanceof Object) {
+			if("isa" in x && x.isa(MathJax.Parsers.Parser)) {
+				return function () { return x; };
+			} else if (x instanceof RegExp) {
+				r = MathJax.Parsers.regexLiteral(x);
+				return function () { return r; };
+			} else {
+				return MathJax.Parsers.err("unhandlable type");
+			}
+		} else {
+			return MathJax.Parsers.err("unhandlable type");
+		}
+	},
+	seq: function () {
+		var count, parser, i;
+		count = arguments.length;
+		if (count === 0) { return MathJax.Parsers.err("at least one element must be specified"); }
+		parser = MathJax.Parsers.lazyParser(arguments[0])();
+		i = 1;
+		while (i < count) {
+			parser = parser.and(MathJax.Parsers.lazyParser(arguments[i]));
+			i += 1;
+		}
+		return parser;
+	},
+	or: function () {
+  	// TODO: バグ？バックトラックしないようだ。
+		var count, parser, i;
+		count = arguments.length;
+		if (count === 0) { return MathJax.Parsers.err("at least one element must be specified"); }
+		parser = MathJax.Parsers.lazyParser(arguments[0])();
+		i = 1;
+		while (i < count) {
+			parser = parser.or(MathJax.Parsers.lazyParser(arguments[i]));
+			i += 1;
+		}
+		return parser;
+	}
+});
+
+
+/************ Pair **************/
+MathJax.Parsers.Pair = MathJax.List.Subclass({
+	Init: function (head, tail) {
+		this.head = head;
+		this.tail = tail;
+	},
+	toString: function () { return '(' + this.head + '~' + this.tail + ')'; }
+}, {
+	unapply: function (x) { return MathJax.Option.Some([x.head, x.tail]); }
+});
+
+
+/************ ParseResult **************/
+MathJax.Parsers.ParseResult = MathJax.Object.Subclass({
+	Init: function () {},
+	isEmpty: function () { return !this.successful; },
+	getOrElse: function (/*lazy*/ defaultValue) {
+		if (this.isEmpty) { return defaultValue(); } else { return this.get(); }
+	} 
+});
+
+
+/************ Success **************/
+MathJax.Parsers.Success = MathJax.Parsers.ParseResult.Subclass({
+	Init: function (result, next) {
+		this.result = result;
+		this.next = next;
+	},
+	map: function (f) { return MathJax.Parsers.Success(f(this.result), this.next); },
+	mapPartial: function (f, err) {
+		try {
+			return MathJax.Parsers.Success(f(this.result), this.next);
+		} catch (e) {
+			if ("isa" in e && e.isa(MathJax.MatchError)) {
+				return MathJax.Parsers.Failure(err(this.result), this.next);
+			} else {
+				throw e;
+			}
+		}
+	},
+	flatMapWithNext: function (f) { return f(this.result).apply(this.next); },
+	append: function (/*lazy*/ a) { return this; },
+	get: function () { return this.result; },
+	successful: true,
+	toString: function () { return '[' + this.next.pos() + '] parsed: ' + this.result; }
+}, {
+	unapply: function (x) { return MathJax.Option.Some([x.result, x.next]); }
+});
+
+
+/************ NoSuccess **************/
+MathJax.Parsers.NoSuccess = MathJax.Parsers.ParseResult.Subclass({
+	Init: function () {},
+	map: function (f) { return this; },
+	mapPartial: function (f, error) { return this; },
+	flatMapWithNext: function (f) { return this; },
+	get: function () { return MathJax.Parsers.error("No result when parsing failed"); },
+	successful: false
+});
+
+
+/************ Failure **************/
+MathJax.Parsers.Failure = MathJax.Parsers.NoSuccess.Subclass({
+	Init: function (msg, next) {
+		this.msg = msg;
+		this.next = next;
+//		if (!(PARSERS.lastNoSuccess != null && 
+//			this.next.pos().isLessThan(PARSERS.lastNoSuccess.next.pos()))) {
+//			PARSERS.lastNoSuccess = this;
+//		}
+	},
+	append: function (/*lazy*/ a) {
+		var alt = a();
+		if (alt.isa(MathJax.Parsers.Success)) {
+			return alt;
+		} else if (alt.isa(MathJax.Parsers.NoSuccess)) {
+			if (alt.next.pos().isLessThan(this.next.pos())) {
+				return this;
+			} else {
+				return alt;
+			}
+		} else {
+			throw MathJax.MatchError(alt);
+		}
+	},
+	toString: function () { return ('[' + this.next.pos() + '] failure: ' + 
+		this.msg + '\n\n' + this.next.pos().longString()); }
+}, {
+	unapply: function (x) { return MathJax.Option.Some([x.msg, x.next]); }
+});
+
+
+/************ Error **************/
+MathJax.Parsers.Error = MathJax.Parsers.NoSuccess.Subclass({
+	Init: function (msg, next) {
+		this.msg = msg;
+		this.next = next;
+//		if (!(PARSERS.lastNoSuccess != null && 
+//			this.next.pos().isLessThan(PARSERS.lastNoSuccess.next.pos()))) {
+//			PARSERS.lastNoSuccess = this;
+//		}
+	},
+	append: function (/*lazy*/ a) { return this; },
+	toString: function () { return ('[' + this.next.pos() + '] error: ' + 
+		this.msg + '\n\n' + this.next.pos().longString()); }
+}, {
+	unapply: function (x) { return MathJax.Option.Some([x.msg, x.next]); }
+});
+
+
+/************ Parser **************/
+MathJax.Parsers.Parser = MathJax.Object.Subclass({
+	Init: function (f) { this.apply = f; },
+	name: '',
+	named: function (name) { this.name = name; return this; },
+	toString: function () { return 'Parser (' + this.name + ')'; },
+	flatMap: function (f) {
+		var app = this.apply;
+		return MathJax.Parsers.Parser(function (input) {
+			return app(input).flatMapWithNext(f);
+		});
+	},
+	map: function (f) {
+		var app = this.apply;
+		return MathJax.Parsers.Parser(function (input) {
+			return app(input).map(f);
+		});
+	},
+	append: function (/*lazy*/ p) {
+		var app = this.apply;
+		return MathJax.Parsers.Parser(function (input) {
+			return app(input).append(function () {
+				return p().apply(input);
+			});
+		});
+	},
+	and: function (/*lazy*/ p) {
+		return this.flatMap(function (a) {
+			return p().map(function (b) {
+				return MathJax.Parsers.Pair(a, b);
+			});
+		}).named('~');
+	},
+	andr: function (/*lazy*/ p) {
+		return this.flatMap(function (a) {
+			return p().map(function (b) {
+				return b;
+			});
+		}).named('~>');
+	},
+	andl: function (/*lazy*/ p) {
+		return this.flatMap(function (a) {
+			return p().map(function (b) {
+				return a;
+			});
+		}).named('<~');
+	},
+	or: function (/*lazy*/ q) { return this.append(q).named("|"); },
+	andOnce: function (/*lazy*/ p) {
+		var flatMap = this.flatMap;
+		return MathJax.Parsers.OnceParser(function () {
+			return flatMap(function (a) {
+				return MathJax.Parsers.commit(p).map(function (b) {
+					return MathJax.Parsers.Pair(a, b);
+				});
+			}).named('~!');
+		});
+	},
+	longestOr: function (/*lazy*/ q0) {
+		var app = this.apply;
+		return MathJax.Parsers.Parser(function (input) {
+			var res1, res2;
+			res1 = app(input);
+			res2 = q0()(input);
+			if (res1.successful) {
+				if (res2.successful) {
+					if (res2.next.pos().isLessThan(res1.next.pos())) {
+						return res1;
+					} else {
+						return res2;
+					}
+				} else {
+					return res1;
+				}
+			} else if (res2.successful) {
+				return res2;
+			} else if (res1.isa(MathJax.Parsers.Error)) {
+				return res1;
+			} else {
+				if (res2.next.pos().isLessThan(res1.next.pos())) {
+					return res1;
+				} else {
+					return res2;
+				}
+			}
+		}).named("|||");
+	},
+	to: function (f) { return this.map(f).named(this.toString() + '^^'); },
+	ret: function (/*lazy*/ v) {
+		var app = this.apply;
+		return MathJax.Parsers.Parser(function (input) {
+			return app(input).map(function (x) { return v(); });
+		}).named(this.toString() + "^^^");
+	},
+	toIfPossible: function (f, error) {
+		if (error === undefined) {
+			error = function (r) { return "Constructor function not defined at " + r; };
+		}
+		var app = this.apply;
+		return MathJax.Parsers.Parser(function (input) {
+			return app(input).mapPartial(f, error);
+		}).named(this.toString() + "^?");
+	},
+	into: function (fq) { return this.flatMap(fq); },
+	rep: function () {
+		var p = this;
+		return MathJax.Parsers.rep(function () { return p; });
+	},
+	chain: function (/*lazy*/ sep) {
+		var p, lp;
+		p = this;
+		lp = function () { return p; };
+		return MathJax.Parsers.chainl1(lp, lp, sep);
+	},
+	rep1: function () {
+		var p = this;
+		return MathJax.Parsers.rep1(function () { return p; });
+	},
+	opt: function () {
+		var p = this;
+		return MathJax.Parsers.opt(function () { return p; });
+	}
+});
+
+
+/************ OnceParser **************/
+MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
+	Init: function (f) { this.apply = f; },
+	and: function (p) {
+		var flatMap = this.flatMap;
+		return MathJax.Parsers.OnceParser(function () {
+			return flatMap(function (a) {
+				return MathJax.Parsers.commit(p).map(function (b) {
+					return MathJax.Parsers.Pair(a, b);
+				});
+			});
+		}).named('~');
+	}
+});
+
+
+
+  var fun = MathJax.Parsers.fun;
+  var elem = MathJax.Parsers.elem;
+  var felem = function (x) { return fun(MathJax.Parsers.elem(x)); }
+  var lit = MathJax.Parsers.literal;
+  var regex = MathJax.Parsers.regex;
+  var regexLit = MathJax.Parsers.regexLiteral;
+  var flit = function (x) { return fun(MathJax.Parsers.literal(x)); }
+  var seq = MathJax.Parsers.seq;
+  var or = MathJax.Parsers.or;
+  var rep = function (x) { return MathJax.Parsers.lazyParser(x)().rep(); }
+  
+  var p = MathJax.Parsers.Subclass({
+    // <pos> '\end' '{' 'xy' '}'
+    xy: function () {
+      return p.pos().into(function (pos) {
+        return MathJax.Parsers.guard(function() { return lit('\\end').andl(flit('{')).andl(flit('xy')).andl(flit('}')).to(function () {
+          return pos;
+        })});
+      });
+    },
+    
+    // <pos> ::= <coord> <pos2>*
+    pos: function () {
+      return seq(p.coord, rep(p.pos2)).to(function (cps) {
+        return MML.xypic.Pos.Coord(cps.head, cps.tail);
+      });
+    },
+    
+    // <nonemptyPos> ::= <coord> <pos2>*
+    nonemptyPos: function () {
+      return seq(p.nonemptyCoord, rep(p.pos2)).to(function (cps) {
+        return MML.xypic.Pos.Coord(cps.head, cps.tail);
+      });
+    },
+    
+    // <pos2> ::= ';' <coord>
+    //        |   '**' <object>
+    //        |   '*' <object>
+    //        |   '?' <place>
+    //        |   '=' <saving>
+    pos2: function () {
+      return or(
+        lit('+').andr(p.coord).to(function (c) { return MML.xypic.Pos.Plus(c); }),
+        lit('-').andr(p.coord).to(function (c) { return MML.xypic.Pos.Minus(c); }),
+        lit(',').andr(p.coord).to(function (c) { return MML.xypic.Pos.Then(c); }),
+        lit(';').andr(p.coord).to(function (c) { return MML.xypic.Pos.SwapPAndC(c); }),
+        lit('**').andr(p.object).to(function (o) { return MML.xypic.Pos.ConnectObject(o); }),
+        lit('*').andr(p.object).to(function (o) { return MML.xypic.Pos.DropObject(o); }),
+        lit('?').andr(p.place).to(function (o) { return MML.xypic.Pos.Place(o); }),
+        lit('=').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (o) { return MML.xypic.Pos.SavingPos(o); })
+      );
+    },
+    
+    // <coord> ::= <nonemptyCoord> | <empty>
+    coord: function () {
+      return or(
+        p.nonemptyCoord,
+        MathJax.Parsers.success('empty').to(function () { return MML.xypic.Coord.C(); })
+      );
+    },
+    
+    // <nonemptyCoord> ::= 'c' | 'p' | 'x' | 'y'
+    //         |   <vector>
+    //         |   '"' <id> '"'
+    nonemptyCoord: function () {
+      return or(
+        lit('c').to(function () { return MML.xypic.Coord.C(); }), 
+        lit('p').to(function () { return MML.xypic.Coord.P(); }), 
+        lit('x').to(function () { return MML.xypic.Coord.X(); }), 
+        lit('y').to(function () { return MML.xypic.Coord.Y(); }),
+        p.vector().to(function (v) { return MML.xypic.Coord.Vector(v); }), 
+        lit('"').andr(p.id).andl(felem('"')).to(function (id) { return MML.xypic.Coord.Id(id) })
+      );
+    },
+    
+    // <vector> ::= '(' <factor> ',' <factor> ')'
+    //          |   '<' <dimen> ',' <dimen> '>'
+    //          |   '<' <dimen> '>'
+    //          |   'a' '(' <number> ')'
+    //          |   '/' <direction> <loose-dimen> '/'
+    //          |   0
+    //          |   <corner>
+    //          |   <corner> '(' <factor> ')'
+    vector: function () {
+      return or(
+        lit('(').andr(p.factor).andl(flit(',')).and(p.factor).andl(flit(')')).to(
+          function (xy) {
+            return MML.xypic.Vector.InCurBase(xy.head, xy.tail);
+          }
+        ),
+        lit('<').andr(p.dimen).andl(flit(',')).and(p.dimen).andl(flit('>')).to(
+          function (xy) {
+            return MML.xypic.Vector.Abs(xy.head, xy.tail);
+          }
+        ),
+        lit('<').andr(p.dimen).andl(flit('>')).to(
+          function (x) {
+            return MML.xypic.Vector.Abs(x, x);
+          }
+        ),
+        lit('a').andr(flit('(')).andr(p.number).andl(flit(')')).to(
+          function (d) {
+            return MML.xypic.Vector.Angle(d);
+          }
+        ),
+        lit('/').andr(p.direction).and(p.looseDimen).andl(flit('/')).to(
+          function (dd) {
+            return MML.xypic.Vector.Dir(dd.head, dd.tail);
+          }
+        ),
+        lit('0').to(function (x) { return MML.xypic.Vector.InCurBase(0, 0); }),
+        function () { return p.corner().and(fun(MathJax.Parsers.opt(
+        	fun(lit('(').andr(p.factor).andl(flit(')')))).to(function (f) {
+          	return f.getOrElse(1);
+          }))).to(function (cf) {
+          	return MML.xypic.Vector.Corner(cf.head, cf.tail);
+        	})
+        }
+      );
+    },
+    
+    // <corner> ::= 'L' | 'R' | 'D' | 'U'
+    //          | 'CL' | 'CR' | 'CD' | 'CU' | 'LC' | 'RC' | 'DC' | 'UC'
+    //          | 'LD' | 'RD' | 'LU' | 'RU' | 'DL' | 'DR' | 'UL' | 'UR'
+    //          | 'E' | 'P'
+    //          | 'A'
+    corner: function () {
+    	return or(
+      	regexLit(/^(CL|LC)/).to(function () { return MML.xypic.Corner.CL(); }),
+      	regexLit(/^(CR|RC)/).to(function () { return MML.xypic.Corner.CR(); }),
+      	regexLit(/^(CD|DC)/).to(function () { return MML.xypic.Corner.CD(); }),
+      	regexLit(/^(CU|UC)/).to(function () { return MML.xypic.Corner.CU(); }),
+      	regexLit(/^(LD|DL)/).to(function () { return MML.xypic.Corner.LD(); }),
+      	regexLit(/^(RD|DR)/).to(function () { return MML.xypic.Corner.RD(); }),
+      	regexLit(/^(LU|UL)/).to(function () { return MML.xypic.Corner.LU(); }),
+      	regexLit(/^(RU|UR)/).to(function () { return MML.xypic.Corner.RU(); }),
+      	lit('L').to(function () { return MML.xypic.Corner.L(); }),
+      	lit('R').to(function () { return MML.xypic.Corner.R(); }),
+      	lit('D').to(function () { return MML.xypic.Corner.D(); }),
+      	lit('U').to(function () { return MML.xypic.Corner.U(); }),
+      	lit('E').to(function () { return MML.xypic.Corner.NearestEdgePoint(); }),
+      	lit('P').to(function () { return MML.xypic.Corner.PropEdgePoint(); }),
+      	lit('A').to(function () { return MML.xypic.Corner.Axis(); })
+      );
+    },
+    
+    // <place> ::= '<' <place>
+    //         | '>' <place>
+    //         | '(' <factor> ')' <place>
+    //         | '!' '{' <pos> '}' <slide>
+    //         | <slide>
+    place: function () {
+      return or(
+        lit('<').andr(p.place).to(function (pl) {
+          return MML.xypic.Place(1, 0, undefined, undefined).compound(pl);
+        }), 
+        lit('>').andr(p.place).to(function (pl) {
+          return MML.xypic.Place(0, 1, undefined, undefined).compound(pl);
+        }), 
+        lit('(').andr(p.factor).andl(flit(')')).and(p.place).to(function (pl) {
+          return MML.xypic.Place(0, 0, MML.xypic.Place.Factor(pl.head), undefined).compound(pl.tail);
+        }), 
+        lit('!').andr(flit('{')).andr(p.pos).andl(flit('}')).and(p.slide).to(function (ps) {
+          return MML.xypic.Place(0, 0, MML.xypic.Place.Intercept(ps.head), ps.tail);
+        }),
+        function () { return p.slide().to(function (s) {
+          return MML.xypic.Place(0, 0, undefined, s);
+        }) }
+      );
+    },
+    
+    // <slide> ::= '/' <dimen> '/'
+    //         | <empty>
+    slide: function () {
+      return or(
+        lit('/').andr(p.dimen).andl(flit('/')).to(function (d) {
+          return MML.xypic.Slide(d);
+        }),
+        MathJax.Parsers.success("no slide").to(function () {
+          return MML.xypic.Slide(undefined);
+        })
+      );
+    },
+    
+    // <factor>
+    factor: fun(regexLit(/^[+\-]?(\d+(\.\d*)?|\d*\.\d+)/).to(
+      function (v) { return parseFloat(v); })
+    ),
+    
+    // <number>
+    number: fun(regexLit(/^[+\-]?\d+/).to(
+      function (n) { return parseInt(n); })
+    ),
+    
+    unit: fun(regexLit(/^(em|ex|px|pt|pc|in|cm|mm|mu)/).opt().to(function (d) {
+        return d.getOrElse("mm");
+    })),
+    
+    // <dimen> ::= <factor> ( 'em' | 'ex' | 'px' | 'pt' | 'pc' | 'in' | 'cm' | 'mm' | 'mu' )?
+    dimen: function () {
+      return p.factor().and(p.unit).to(function (x) {
+        return x.head.toString() + x.tail;
+      })
+    },
+    
+    // <loose-dimen> ::= <loose-factor> 
+    looseDimen: function () {
+      return p.looseFactor().and(p.unit).to(function (x) {
+        return x.head.toString() + x.tail;
+      })
+    },
+    
+    // <loose-factor>
+    // makeshift against /^ 3.5mm/ is converted to /^ 3 .5mm/ by MathJax.InputJax.TeX.prefilterMath()
+    looseFactor: fun(or(
+      regexLit(/^(\d \d*(\.\d*))/).to(function (v) {
+        return parseFloat(v.replace(/ /, ""));
+      }),
+      regexLit(/^[+\-]?(\d+(\.\d*)?|\d*\.\d+)/).to(function (v) {
+        return parseFloat(v);
+      })
+    )),
+    
+    // <id>
+    id: fun(regex(/^[^"]+/)), // " TODO: IDの文字領域は？
+    
+    // <object> ::= <modifier>* <objectbox>
+    object: function () {
+      return or(
+        rep(p.modifier).and(p.objectbox).to(function (mso) {
+          return MML.xypic.Object(mso.head, mso.tail);
+        })
+      );
+    },
+    
+    // <objectbox> ::= '{' <text> '}'
+    //          | '@' <dir>
+    //          | '\dir' <dir>
+    //          | '\cir' <radius> '{' <cir> '}'
+    //          | <curve>
+    objectbox: function () {
+      return or(lit("{").andr(p.text).andl(felem("}")).to(function (math) {
+          var mml = TEX.Parse(math).mml();
+          if (mml.inferred) {
+            mml = MML.apply(MathJax.ElementJax,mml.data);
+          } else {
+            mml = MML(mml);
+          }
+          TEX.combineRelations(mml.root);
+          return MML.xypic.ObjectBox.Text(mml.root);
+        }),
+        lit("@").andr(p.dir),
+        lit("\\dir").andr(p.dir),
+        lit("\\cir").andr(p.radius).andl(flit("{")).and(p.cir).andl(flit("}")).to(function (rc) {
+          return MML.xypic.ObjectBox.Cir(rc.head, rc.tail);
+        }),
+        p.curve
+      );
+    },
+    
+    // <text> ::= /[^{}]*/ ( '{' <text> '}' /[^{}]*/ )*
+    text: function () {
+      return regex(/^[^{}]*/).and(function () {
+        return (elem("{").andr(p.text).andl(felem("}")).and(fun(regex(/^[^{}]*/)))).rep().to(function (xs) {
+          var res = "";
+          xs.foreach(function (x) {
+            res += "{" + x.head + "}" + x.tail;
+          });
+          return res;
+        })
+      }).to(function (x) {
+        return x.head + x.tail
+      });
+    },
+		
+    // <dir> ::= <variant> '{' <main> '}'
+    // <variant> ::= '^' | '_' | '2' | '3' | <empty>
+    // <main> ::= <empty> | '--' | '-' | '..' | '.' | '~~' | '~' | '>>|' | '>|' | '>>' | '<<' | '>' | '<' | '(' | ')' | '`' | "'" | '||' | '|-' | '|<' | '|<<' | '|' | '*' | '+' | 'x' | '//' | '/' | 'o' | '==' | '=' | '::' | ':'
+    dir: function () {
+      return regexLit(/^[\^_23]/).opt().andl(flit('{')).and(fun(regexLit(/^(--|-|\.\.|\.|~~|~|>>\||>\||>>|<<|>|<|\(|\)|`|'|\|\||\|-|\|<|\|<<|\||\*|\+|x|\/\/|\/|o|==|=|::|:)/ /*'*/).opt())).andl(flit('}')).to(function (vm) {
+        return MML.xypic.ObjectBox.Dir(vm.head.getOrElse(""), vm.tail.getOrElse(""));
+      })
+    },
+    
+    // <radius> ::= <vector>
+    //          | <empty>
+    radius: function () {
+      return or(
+        p.vector().to(function (v) {
+          return MML.xypic.ObjectBox.Cir.Radius.Vector(v);
+        }),
+        MathJax.Parsers.success("default").to(function () {
+        	return MML.xypic.ObjectBox.Cir.Radius.Default();
+        })
+      );
+    },
+    
+    // <cir> ::= <diag> <orient> <diag>
+    //       | <empty>
+    cir: function () {
+      return or(
+        p.diag().and(fun(regexLit(/^[_\^]/))).and(p.diag).to(function (dod) {
+          return MML.xypic.ObjectBox.Cir.Cir.Segment(dod.head.head, dod.head.tail, dod.tail);
+        }),
+        MathJax.Parsers.success("full").to(function () {
+        	return MML.xypic.ObjectBox.Cir.Cir.Full();
+        })
+      );
+    },
+    
+    // <curve> ::= '\crv' <curve-modifier> '{' <curve-object> <poslist> '}'
+    curve: function () {
+    	return lit("\\crv").andr(p.curveModifier).andl(flit("{")).and(p.curveObject).and(p.curvePoslist).andl(flit("}")).to(function (mop) {
+      	return MML.xypic.ObjectBox.Curve(mop.head.head, mop.head.tail, mop.tail);
+      });
+    },
+    
+	  // <curve-modifier> ::= ( '~' <curve-option> )*
+    curveModifier: function () {
+    	return rep(fun(lit("~").andr(p.curveOption)));
+    },
+    
+    // <curve-option> ::= 'p' | 'P' | 'l' | 'L' | 'c' | 'C'
+    //                |   'pc' | 'pC' | 'Pc' | 'PC'
+    //                |   'lc' | 'lC' | 'Lc' | 'LC'
+    //                |   'cC'
+    curveOption: function () {
+    	return or(
+      	lit("p").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.p(); }),
+      	lit("P").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.P(); }),
+      	lit("l").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.l(); }),
+      	lit("L").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.L(); }),
+      	lit("c").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.c(); }),
+      	lit("C").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.C(); }),
+      	lit("pc").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.pc(); }),
+      	lit("pC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.pC(); }),
+      	lit("Pc").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.Pc(); }),
+      	lit("PC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.PC(); }),
+      	lit("lc").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.lc(); }),
+      	lit("lC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.lC(); }),
+      	lit("Lc").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.Lc(); }),
+      	lit("LC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.LC(); }),
+      	lit("cC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.cC(); })
+      );
+    },
+    
+    // <curve-object> ::= <empty>
+    //                |   '~*' <object> <curve-object>
+    //                |   '~**' <object> <curve-object>
+    curveObject: function () {
+    	return rep(or(
+      	lit("~*").andr(p.object).to(function (obj) {
+        	return MML.xypic.ObjectBox.Curve.Object.Drop(obj);
+        }),
+      	lit("~**").andr(p.object).to(function (obj) {
+        	return MML.xypic.ObjectBox.Curve.Object.Connect(obj);
+        })
+      ));
+    },
+    
+    // <curve-poslist> ::= <empty> ^^ Empty List
+    //           |   '&' <curve-poslist2> ^^ (c, <poslist>)
+    //           |   <nonemptyPos> ^^ (<nonemptyPos>, Nil)
+    //           |   <nonemptyPos> '&' <curve-poslist2> ^^ (<nonemptyPos>, <poslist>)
+    //           |   '~@' ^^ (~@, Nil)
+    //           |   '~@' '&' <curve-poslist2> ^^ (~@, <poslist>)
+    // <curve-poslist2> ::= <empty> ^^ (c, Nil)
+    //           |   '&' <curve-poslist2> ^^ (c, <poslist>)
+    //           |   <nonemptyPos> ^^ (<nonemptyPos>, Nil)
+    //           |   <nonemptyPos> '&' <curve-poslist2> ^^ (<nonemptyPos>, <poslist>)
+    //           |   '~@' ^^ (~@, Nil)
+    //           |   '~@' '&' <curve-poslist2> ^^ (~@, <poslist>)
+    curvePoslist: function () {
+    	return or(
+      	lit("&").andr(p.curvePoslist2).to(function (ps) {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.CurPos(), ps);
+        }),
+      	lit("~@").andr(flit("&")).andr(p.curvePoslist2).to(function (ps) {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.AddStack(), ps);
+        }),
+      	lit("~@").to(function () {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.AddStack(), MathJax.List.empty);
+        }),
+      	p.pos().andl(flit("&")).and(p.curvePoslist2).to(function (pps) {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.Pos(pps.head), pps.tail);
+        }),
+      	p.nonemptyPos().to(function (p) {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.Pos(p), MathJax.List.empty);
+        }),
+        MathJax.Parsers.success("empty").to(function () {
+        	return MathJax.List.empty;
+        })
+      );
+    },
+    curvePoslist2: function () {
+    	return or(
+      	lit("&").andr(p.curvePoslist2).to(function (ps) {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.CurPos(), ps);
+        }),
+      	lit("~@").andr(flit("&")).andr(p.curvePoslist2).to(function (ps) {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.AddStack(), ps);
+        }),
+      	lit("~@").to(function () {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.AddStack(), MathJax.List.empty);
+        }),
+      	p.nonemptyPos().andl(flit("&")).and(p.curvePoslist2).to(function (pps) {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.Pos(pps.head), pps.tail);
+        }),
+      	p.nonemptyPos().to(function (p) {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.Pos(p), MathJax.List.empty);
+        }),
+        MathJax.Parsers.success("empty").to(function () {
+        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.CurPos(), MathJax.List.empty);
+        })
+      );
+    },
+    
+    // <modifier> ::= '!' <vector>
+    //            |   '[' <shape> ']'
+    //            |   <add-op> <size>
+    modifier: function () {
+    	return or(
+        lit("!").andr(p.vector).to(function (v) {
+          return MML.xypic.Modifier.Vector(v);
+        }),
+        lit("[").andr(p.shape).andl(flit("]")).to(function (s) {
+        	return MML.xypic.Modifier.Shape(s);
+        }),
+        function () {
+          return p.addOp().and(p.size).to(function (os) {
+            return MML.xypic.Modifier.AddOp(os.head, os.tail);
+          })
+        }
+      );
+    },
+    
+    // <add-op> ::= '+' | '-' | '=' | '+=' | '-='
+    addOp: function () {
+    	return or(
+      	lit("+=").to(function () { return MML.xypic.Modifier.AddOp.GrowTo(); }),
+      	lit("-=").to(function () { return MML.xypic.Modifier.AddOp.ShrinkTo(); }),
+      	lit("+").to(function () { return MML.xypic.Modifier.AddOp.Grow(); }),
+      	lit("-").to(function () { return MML.xypic.Modifier.AddOp.Shrink(); }),
+      	lit("=").to(function () { return MML.xypic.Modifier.AddOp.Set(); })
+      );
+    },
+    
+    // <size> ::= <vector> | <empty>
+    size: function () {
+    	return or(
+      	function () { return p.vector().to(function (v) {
+          return MML.xypic.Modifier.AddOp.VactorSize(v);
+        }) },
+      	MathJax.Parsers.success("default size").to(function () {
+          return MML.xypic.Modifier.AddOp.DefaultSize();
+        })
+      );
+    },
+    
+    // <shape> ::= '.' | 'o' | 'l' | 'r' | 'u' | 'd' | 'c' | <empty>
+    shape: function () {
+    	return or(
+      	lit(".").to(function () { return MML.xypic.Modifier.Shape.Point(); }),
+      	lit("o").to(function () { return MML.xypic.Modifier.Shape.Circle(); }),
+      	lit("l").to(function () { return MML.xypic.Modifier.Shape.L(); }),
+      	lit("r").to(function () { return MML.xypic.Modifier.Shape.R(); }),
+      	lit("u").to(function () { return MML.xypic.Modifier.Shape.U(); }),
+      	lit("d").to(function () { return MML.xypic.Modifier.Shape.D(); }),
+      	lit("c").to(function () { return MML.xypic.Modifier.Shape.C(); }),
+      	MathJax.Parsers.success("rect").to(function () { return MML.xypic.Modifier.Shape.Rect(); })
+      );
+    },
+    
+    // <direction> ::= <direction0> <direction1>*
+    // <direction0> ::= <diag>
+    //              | 'v' <vector>
+    // <direction1> | ':' <vector>
+    //              | '_'
+    //              | '^'
+    direction: function () {
+      return seq(p.direction0, rep(p.direction1)).to(function (drs){
+        return MML.xypic.Direction.Compound(drs.head, drs.tail);
+      });
+    },
+    direction0: function () {
+      return or(
+        lit('v').andr(p.vector).to(function (v) {
+          return MML.xypic.Direction.Vector(v);
+        }),
+        p.diag().to(function (d) {
+          return MML.xypic.Direction.Diag(d);
+        })
+      );
+    },
+    direction1: function () {
+      return or(
+        lit(':').andr(p.vector).to(function (v) {
+          return MML.xypic.Direction.RotVector(v);
+        }),
+        lit('_').to(function (x) {
+          return MML.xypic.Direction.RotCW();
+        }),
+        lit('^').to(function (x) {
+          return MML.xypic.Direction.RotAntiCW();
+        })
+      );
+    },
+    
+    // <diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
+    //        | <empty>
+    diag: fun(or(
+      regexLit(/^(ld|dl)/).to(function (x) { return MML.xypic.Diag.Angle('ld', -3*Math.PI/4); }),
+      regexLit(/^(rd|dr)/).to(function (x) { return MML.xypic.Diag.Angle('rd', -Math.PI/4); }),
+      regexLit(/^(lu|ul)/).to(function (x) { return MML.xypic.Diag.Angle('lu', 3*Math.PI/4); }),
+      regexLit(/^(ru|ur)/).to(function (x) { return MML.xypic.Diag.Angle('ru', Math.PI/4); }),
+      lit('l').to(function (x) { return MML.xypic.Diag.Angle('l', Math.PI); }),
+      lit('r').to(function (x) { return MML.xypic.Diag.Angle('r', 0); }),
+      lit('d').to(function (x) { return MML.xypic.Diag.Angle('d', -Math.PI/2); }),
+      lit('u').to(function (x) { return MML.xypic.Diag.Angle('u', Math.PI/2); }),
+      MathJax.Parsers.success("empty").to(function (x) {
+        return MML.xypic.Diag.Default();
+      })
+    )),
+  })();
+
+  MathJax.Hub.Insert(TEXDEF,{
+    environment: {
+      xy:            ['XY', null]
+    }
+  });
+  
+  MathJax.Parsers.ParseError = MathJax.Object.Subclass({
+    Init: function (parseResult) {
+      this.parseResult = parseResult;
+    },
+    toMML: function () {
+      var pos = this.parseResult.next.pos();
+      var lineContents = pos.lineContents();
+      var col = pos.column();
+      var left = lineContents.substring(0, col-1);
+      var mid = lineContents.substring(col-1, col);
+      var right = lineContents.substring(col);
+      return MML.merror(MML.mtext('parse error at or near "'), MML.mtext(left).With({color:"black"}), MML.mtext(mid).With({color:"red"}), MML.mtext(right).With({color:"black"}), MML.mtext('"'));
+    },
+    texError: true,
+    parseError: true
+  });
+  
+  TEX.Parse.Augment({
+    /*
+     * Handle XY environment
+     */
+    XY: function(begin) {
+      try {
+      	var input = MathJax.StringReader(this.string, this.i);
+        var result = MathJax.Parsers.parse(p.xy(), input);
+        this.i = result.next.offset;
+//        console.log(result.toString());
+      } catch (e) {
+        console.log(e.toString());
+        throw e;
+      }
+      
+      if (result.successful) {
+        if (supportGraphics) {
+          this.Push(MML.xypic(result.result));
+        } else {
+          this.Push(MML.merror("Unsupported Browser. Please open with Firefox/Safari/Chrome"));
+        }
+      } else {
+        throw MathJax.Parsers.ParseError(result);
+      }
+      
+      return begin;
+    }
+  });
+  
+  var supportGraphics = false;
+  MathJax.Hub.Browser.Select({
+    Firefox: function (browser) {
+      supportGraphics = true;
+    },
+    Safari: function (browser) {
+      supportGraphics = true;
+    },
+    Chrome: function (browser) {
+      supportGraphics = true;
+    }
+  });
+  
+  MathJax.Hub.Startup.signal.Post("TeX Xy-pic Ready");
+});
 
 MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   var VERSION = "0.1";
@@ -4539,7 +6673,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MathJax.Hub.Startup.signal.Post("HTML-CSS xypic Ready");
-  MathJax.Ajax.loadComplete(HTMLCSS.autoloadDir+"/xypic.js");
+  MathJax.Hub.Startup.signal.Post("HTML-CSS Xy-pic Ready");
 });
 
+MathJax.Ajax.loadComplete("[MathJax]/extensions/TeX/Xypic.js");
