@@ -21,6 +21,11 @@
  *  limitations under the License.
  */
 
+MathJax.Extension.xypic = {
+  // TODO: Parserをここに移動する。
+  
+  
+};
 
 MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   var VERSION = "0.1";
@@ -28,7 +33,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   var MML = MathJax.ElementJax.mml;
   var TEX = MathJax.InputJax.TeX;
   var TEXDEF = TEX.Definitions;
-
+  
   MathJax.Hub.Insert(TEXDEF, {
     environment: {
       xy: ['ExtensionEnv', null, 'XYpic']
@@ -669,11 +674,11 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     toString: function () { return ":" + this.vector.toString(); }
   });
   // <direction1> ::= '_'
-  MML.xypic.Direction.RotCW = MathJax.Object.Subclass({
+  MML.xypic.Direction.RotAntiCW = MathJax.Object.Subclass({
     toString: function () { return "_"; }
   });
   // <direction1> ::= '^'
-  MML.xypic.Direction.RotAntiCW = MathJax.Object.Subclass({
+  MML.xypic.Direction.RotCW = MathJax.Object.Subclass({
     toString: function () { return "^"; }
   });
   // <direction0> ::=  'q' '{' <pos> <decor> '}'
@@ -2062,10 +2067,10 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
           return MML.xypic.Direction.RotVector(v);
         }),
         lit('_').to(function (x) {
-          return MML.xypic.Direction.RotCW();
+          return MML.xypic.Direction.RotAntiCW();
         }),
         lit('^').to(function (x) {
-          return MML.xypic.Direction.RotAntiCW();
+          return MML.xypic.Direction.RotCW();
         })
       );
     },
@@ -6489,7 +6494,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   MML.xypic.Modifier.Vector.Augment({
   	preprocess: function (env) {
     	var d = this.vector.xy(env);
-      env.c = env.c.move(env.c.x + d.x, env.c.y + d.y);
+      env.c = env.c.move(env.c.x - d.x, env.c.y - d.y);
     },
     postprocess: function (c, env) {
     	return c;
@@ -6651,13 +6656,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   
   MML.xypic.Direction.RotCW.Augment({
   	rotate: function (angle, env) {
-      return angle - Math.PI/2;
+      return angle + Math.PI/2;
     }
   });
   
   MML.xypic.Direction.RotAntiCW.Augment({
   	rotate: function (angle, env) {
-      return angle + Math.PI/2;
+      return angle - Math.PI/2;
     }
   });
   
