@@ -733,7 +733,7 @@ Source code:
 \end{xy}
 }}}</pre>
 </div>
-<div title="HowToInstall" creator="isao" modifier="isao" created="201108111428" modified="201108210855" changecount="20">
+<div title="HowToInstall" creator="isao" modifier="isao" created="201108111428" modified="201108211451" changecount="21">
 <pre>@@THIS INSTALL INSTRUCTION IS TENTATIVE.@@
 @@I'm trying to separate XyJax package from the original MathJax's code.@@
 
@@ -762,7 +762,7 @@ Source code:
       styles: {&quot;.MathJax_Preview&quot;: {visibility: &quot;hidden&quot;}}
     },
     tex2jax: {inlineMath: [[&quot;$&quot;,&quot;$&quot;],[&quot;\\(&quot;,&quot;\\)&quot;]]},
-    TeX: {extensions: [&quot;xypic.js&quot;, &quot;AMSmath.js&quot;,&quot;AMSsymbols.js&quot;]}
+    TeX: {extensions: [&quot;xypic.js&quot;,&quot;AMSmath.js&quot;,&quot;AMSsymbols.js&quot;]}
     //                  ^^^^^^^^load xypic.js
   });
 &lt;/script&gt;
@@ -1032,7 +1032,7 @@ Source code:
 \end{xy}
 }}}</pre>
 </div>
-<div title="PluginMathJax" modifier="isao" created="201009232141" modified="201108210850" tags="systemConfig" changecount="25" server.type="file" server.host="http://www.almapater.org/courses/mat-521-001-2011-spring/mat-521-001-2011-spring.html" server.page.revision="201012021914">
+<div title="PluginMathJax" modifier="YourName" created="201009232141" modified="201108211448" tags="systemConfig" changecount="33" server.type="file" server.host="http://www.almapater.org/courses/mat-521-001-2011-spring/mat-521-001-2011-spring.html" server.page.revision="201012021914">
 <pre>/***
 |''Name''|PluginMathJax|
 |''Description''|Displays TeX math using MathJax|
@@ -1085,7 +1085,7 @@ if(!version.extensions.PluginMathJax) {
             mjscript.type = &quot;text/javascript&quot;;
             
             // ***** Use the location of your MathJax! ***** :
-            mjscript.src = &quot;unpacked/MathJax.js&quot;;
+            mjscript.src = &quot;unpacked/MathJax.js?config=TeX-AMS_HTML&quot;;
             
             var mjconfig = 'MathJax.Hub.Config({' +
             'jax: [&quot;input/TeX&quot;,&quot;output/HTML-CSS&quot;],' +
@@ -1094,9 +1094,23 @@ if(!version.extensions.PluginMathJax) {
             '&quot;HTML-CSS&quot;: {' +
                 'scale: 115' +
                 '},' +
-		&quot;tex2jax: {inlineMath: [['$','$']]}&quot; +
+            &quot;tex2jax: {inlineMath: [['$','$']]}&quot; +
             '});' +
-            'MathJax.Hub.Startup.onload();';
+            'MathJax.Hub.Startup.onload();'+
+            'MathJax.Hub.Register.LoadHook(&quot;[MathJax]/extensions/TeX/AMSmath.js&quot;, function () {MathJax.Hub.Startup.signal.Post(&quot;*** AMSmath Loaded ***&quot;)});'+
+            'MathJax.Hub.Register.LoadHook(&quot;[MathJax]/extensions/TeX/xypic.js&quot;, function () {MathJax.Hub.Startup.signal.Post(&quot;*** Xy-pic Loaded ***&quot;)});'+
+            'MathJax.Hub.Startup.signal.Post(&quot;*** In Startup Configuration code ***&quot;);'+
+            'MathJax.Hub.Register.StartupHook(&quot;onLoad&quot;,function () {'+
+            '    window.Message(&quot;*** The onLoad handler has run, page is ready to process ***&quot;);'+
+            '});'+
+            'MathJax.Hub.Queue(function () {window.Message(&quot;*** MathJax is done ***&quot;)});'+
+            'MathJax.Hub.Startup.signal.Interest(function (message) {window.Message(&quot;Startup: &quot;+message)});'+
+            'MathJax.Hub.signal.Interest(function (message) {window.Message(&quot;Hub: &quot;+message)});'+
+            'window.Message(&quot;##### events above this have already occurred #####&quot;);';
+            
+            window.Message = function (message) {
+                console.log(message);
+            };
             
             var ie9RegExp = /^9\./;
             var UseInnerHTML = (config.browser.isOpera || 

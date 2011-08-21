@@ -21,17 +21,15 @@
  *  limitations under the License.
  */
 
-MathJax.Extension.xypic = {
-  version: "0.1",
-  AST: {}
-};
-
-MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
+MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   var FP = MathJax.Extension.fp;
   var MML = MathJax.ElementJax.mml;
   var TEX = MathJax.InputJax.TeX;
   var TEXDEF = TEX.Definitions;
-  var AST = MathJax.Extension.xypic.AST;
+  var xypic = MathJax.Extension.xypic = {
+    version: "0.1"
+  };
+  var AST = xypic.AST = MathJax.Object.Subclass({});
   
   MathJax.Hub.Insert(TEXDEF, {
     environment: {
@@ -47,7 +45,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       return tex_formatError(err, math, displaystyle, script);
     }
   }
-
+  
   AST.xypic = MML.mbase.Subclass({
     Init: function (cmd) {
       this.data = [];
@@ -1298,12 +1296,24 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   
-  MathJax.Hub.Startup.signal.Post("TeX Xy-pic Ready");
+/*  MathJax.Hub.Startup.signal.Post("TeX Xy-pic Ready");
 });
 
-MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
-  var VERSION = "0.1";
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {*/
   var FP = MathJax.Extension.fp;
   var MML = MathJax.ElementJax.mml;
   var HTMLCSS = MathJax.OutputJax["HTML-CSS"];

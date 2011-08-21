@@ -21,12 +21,10 @@
  *  limitations under the License.
  */
 
-
-MathJax.Extension.fp = {
-  version: "0.1"
-};
-
-MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
+MathJax.Hub.Register.StartupHook("End Extensions",function () {
+  MathJax.Extension.fp = {
+    version: "0.1"
+  };
   var FP = MathJax.Extension.fp;
   
   /************ Matcher **************/
