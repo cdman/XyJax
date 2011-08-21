@@ -22,17 +22,16 @@
  */
 
 MathJax.Extension.xypic = {
-  // TODO: Parserをここに移動する。
-  
-  
+  version: "0.1",
+  AST: {}
 };
 
 MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
-  var VERSION = "0.1";
-  
+  var FP = MathJax.Extension.fp;
   var MML = MathJax.ElementJax.mml;
   var TEX = MathJax.InputJax.TeX;
   var TEXDEF = TEX.Definitions;
+  var AST = MathJax.Extension.xypic.AST;
   
   MathJax.Hub.Insert(TEXDEF, {
     environment: {
@@ -49,7 +48,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   }
 
-  MML.xypic = MML.mbase.Subclass({
+  AST.xypic = MML.mbase.Subclass({
     Init: function (cmd) {
       this.data = [];
       this.cmd = cmd;
@@ -67,9 +66,9 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   });
   
   // <pos>
-  MML.xypic.Pos = MathJax.Object.Subclass({});
+  AST.Pos = MathJax.Object.Subclass({});
   // <pos> ::= <coord> <pos2>*
-  MML.xypic.Pos.Coord = MathJax.Object.Subclass({
+  AST.Pos.Coord = MathJax.Object.Subclass({
     Init: function (coord, pos2s) {
       this.coord = coord;
       this.pos2s = pos2s;
@@ -79,7 +78,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <pos2> ::= '+' <coord>
-  MML.xypic.Pos.Plus = MathJax.Object.Subclass({
+  AST.Pos.Plus = MathJax.Object.Subclass({
     Init: function (coord) {
       this.coord = coord;
     },
@@ -88,7 +87,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <pos2> ::= '-' <coord>
-  MML.xypic.Pos.Minus = MathJax.Object.Subclass({
+  AST.Pos.Minus = MathJax.Object.Subclass({
     Init: function (coord) {
       this.coord = coord;
     },
@@ -97,7 +96,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <pos2> ::= ',' <coord>
-  MML.xypic.Pos.Then = MathJax.Object.Subclass({
+  AST.Pos.Then = MathJax.Object.Subclass({
     Init: function (coord) {
       this.coord = coord;
     },
@@ -106,7 +105,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <pos2> ::= ';' <coord>
-  MML.xypic.Pos.SwapPAndC = MathJax.Object.Subclass({
+  AST.Pos.SwapPAndC = MathJax.Object.Subclass({
     Init: function (coord) {
       this.coord = coord;
     },
@@ -115,7 +114,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <pos2> ::= '**' <object>
-  MML.xypic.Pos.ConnectObject = MathJax.Object.Subclass({
+  AST.Pos.ConnectObject = MathJax.Object.Subclass({
     Init: function (object) {
       this.object = object;
     },
@@ -124,7 +123,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <pos2> ::= '*' <object>
-  MML.xypic.Pos.DropObject = MathJax.Object.Subclass({
+  AST.Pos.DropObject = MathJax.Object.Subclass({
     Init: function (object) {
       this.object = object;
     },
@@ -133,7 +132,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <pos2> ::= '?' <place>
-  MML.xypic.Pos.Place = MathJax.Object.Subclass({
+  AST.Pos.Place = MathJax.Object.Subclass({
     Init: function (place) {
       this.place = place;
     },
@@ -143,7 +142,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   });
   // <pos2> ::= '=' <saving>
   // <saving> ::= '"' <id> '"'
-  MML.xypic.Pos.SavingPos = MathJax.Object.Subclass({
+  AST.Pos.SavingPos = MathJax.Object.Subclass({
     Init: function (id) {
       this.id = id;
     },
@@ -157,9 +156,9 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   // TODO: impl <saving>
   
   // <coord> 
-  MML.xypic.Coord = MathJax.Object.Subclass({});
+  AST.Coord = MathJax.Object.Subclass({});
   // <coord> ::= <vector>
-  MML.xypic.Coord.Vector = MathJax.Object.Subclass({
+  AST.Coord.Vector = MathJax.Object.Subclass({
     Init: function (vector) {
       this.vector = vector;
     },
@@ -168,31 +167,31 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <coord> ::= <empty> | 'c'
-  MML.xypic.Coord.C = MathJax.Object.Subclass({
+  AST.Coord.C = MathJax.Object.Subclass({
     toString: function () {
       return "c";
     }
   });
   // <coord> ::= 'p'
-  MML.xypic.Coord.P = MathJax.Object.Subclass({
+  AST.Coord.P = MathJax.Object.Subclass({
     toString: function () {
       return "p";
     }
   });
   // <coord> ::= 'x'
-  MML.xypic.Coord.X = MathJax.Object.Subclass({
+  AST.Coord.X = MathJax.Object.Subclass({
     toString: function () {
       return "x";
     }
   });
   // <coord> ::= 'y'
-  MML.xypic.Coord.Y = MathJax.Object.Subclass({
+  AST.Coord.Y = MathJax.Object.Subclass({
     toString: function () {
       return "y";
     }
   });
   // <coord> ::= '"' <id> '"'
-  MML.xypic.Coord.Id = MathJax.Object.Subclass({
+  AST.Coord.Id = MathJax.Object.Subclass({
     Init: function (id) {
       this.id = id;
     },
@@ -202,9 +201,9 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   });
   
   // <vector>
-  MML.xypic.Vector = MathJax.Object.Subclass({});
+  AST.Vector = MathJax.Object.Subclass({});
   // <vector> ::= '(' <factor> ',' <factor> ')'
-  MML.xypic.Vector.InCurBase = MathJax.Object.Subclass({
+  AST.Vector.InCurBase = MathJax.Object.Subclass({
     Init: function (x, y) {
       this.x = x;
       this.y = y;
@@ -215,7 +214,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   });
   // <vector> ::= '<' <dimen> ',' <dimen> '>'
   // <vector> ::= '<' <dimen> '>'
-  MML.xypic.Vector.Abs = MathJax.Object.Subclass({
+  AST.Vector.Abs = MathJax.Object.Subclass({
     Init: function (x, y) {
       this.x = x;
       this.y = y;
@@ -225,7 +224,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <vector> ::= 'a' '(' <number> ')'
-  MML.xypic.Vector.Angle = MathJax.Object.Subclass({
+  AST.Vector.Angle = MathJax.Object.Subclass({
     Init: function (degree) {
       this.degree = degree;
     },
@@ -234,7 +233,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <vector> ::= '/' <direction> <dimen> '/'
-  MML.xypic.Vector.Dir = MathJax.Object.Subclass({
+  AST.Vector.Dir = MathJax.Object.Subclass({
     Init: function (dir, dimen) {
       this.dir = dir;
       this.dimen = dimen;
@@ -245,7 +244,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   });
   // <vector> ::= <corner>
   //          |   <corner> '(' <factor> ')'
-  MML.xypic.Vector.Corner = MathJax.Object.Subclass({
+  AST.Vector.Corner = MathJax.Object.Subclass({
     Init: function (corner, factor) {
       this.corner = corner;
       this.factor = factor;
@@ -260,50 +259,50 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   //          | 'LD' | 'RD' | 'LU' | 'RU'
   //          | 'E' | 'P'
   //          | 'A'
-  MML.xypic.Corner = MathJax.Object.Subclass({});
-  MML.xypic.Corner.L = MathJax.Object.Subclass({
+  AST.Corner = MathJax.Object.Subclass({});
+  AST.Corner.L = MathJax.Object.Subclass({
   	toString: function () { return "L"; }
   });
-  MML.xypic.Corner.R = MathJax.Object.Subclass({
+  AST.Corner.R = MathJax.Object.Subclass({
   	toString: function () { return "R"; }
   });
-  MML.xypic.Corner.D = MathJax.Object.Subclass({
+  AST.Corner.D = MathJax.Object.Subclass({
   	toString: function () { return "D"; }
   });
-  MML.xypic.Corner.U = MathJax.Object.Subclass({
+  AST.Corner.U = MathJax.Object.Subclass({
   	toString: function () { return "U"; }
   });
-  MML.xypic.Corner.CL = MathJax.Object.Subclass({
+  AST.Corner.CL = MathJax.Object.Subclass({
   	toString: function () { return "CL"; }
   });
-  MML.xypic.Corner.CR = MathJax.Object.Subclass({
+  AST.Corner.CR = MathJax.Object.Subclass({
   	toString: function () { return "CR"; }
   });
-  MML.xypic.Corner.CD = MathJax.Object.Subclass({
+  AST.Corner.CD = MathJax.Object.Subclass({
   	toString: function () { return "CD"; }
   });
-  MML.xypic.Corner.CU = MathJax.Object.Subclass({
+  AST.Corner.CU = MathJax.Object.Subclass({
   	toString: function () { return "CU"; }
   });
-  MML.xypic.Corner.LD = MathJax.Object.Subclass({
+  AST.Corner.LD = MathJax.Object.Subclass({
   	toString: function () { return "LD"; }
   });
-  MML.xypic.Corner.RD = MathJax.Object.Subclass({
+  AST.Corner.RD = MathJax.Object.Subclass({
   	toString: function () { return "RD"; }
   });
-  MML.xypic.Corner.LU = MathJax.Object.Subclass({
+  AST.Corner.LU = MathJax.Object.Subclass({
   	toString: function () { return "LU"; }
   });
-  MML.xypic.Corner.RU = MathJax.Object.Subclass({
+  AST.Corner.RU = MathJax.Object.Subclass({
   	toString: function () { return "RU"; }
   });
-  MML.xypic.Corner.NearestEdgePoint = MathJax.Object.Subclass({
+  AST.Corner.NearestEdgePoint = MathJax.Object.Subclass({
   	toString: function () { return "E"; }
   });
-  MML.xypic.Corner.PropEdgePoint = MathJax.Object.Subclass({
+  AST.Corner.PropEdgePoint = MathJax.Object.Subclass({
   	toString: function () { return "P"; }
   });
-  MML.xypic.Corner.Axis = MathJax.Object.Subclass({
+  AST.Corner.Axis = MathJax.Object.Subclass({
   	toString: function () { return "A"; }
   });
   
@@ -312,7 +311,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   // <place> ::= '(' <factor> ')' <place>
   // <place> ::= '!' '{' <pos> '}' <slide>
   // <place> ::= <slide>
-  MML.xypic.Place = MathJax.Object.Subclass({
+  AST.Place = MathJax.Object.Subclass({
   	Init: function (shaveP, shaveC, factor, slide) {
     	this.shaveP = shaveP;
       this.shaveC = shaveC;
@@ -320,7 +319,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       this.slide = slide;
     },
     compound: function (that) {
-    	return MML.xypic.Place(
+    	return AST.Place(
       	this.shaveP + that.shaveP,
         this.shaveC + that.shaveC,
         (that.factor === undefined? this.factor : that.factor),
@@ -343,7 +342,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       return desc;
     }
   });
-  MML.xypic.Place.Factor = MathJax.Object.Subclass({
+  AST.Place.Factor = MathJax.Object.Subclass({
     Init: function (factor) {
       this.factor = factor;
     },
@@ -352,7 +351,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       return this.factor.toString();
     }
   });
-  MML.xypic.Place.Intercept = MathJax.Object.Subclass({
+  AST.Place.Intercept = MathJax.Object.Subclass({
     Init: function (pos) {
       this.pos = pos;
     },
@@ -364,7 +363,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   
   // <slide> ::= <empty>
   // <slide> ::= '/' <dimen> '/'
-  MML.xypic.Slide = MathJax.Object.Subclass({
+  AST.Slide = MathJax.Object.Subclass({
   	Init: function (dimen) {
     	this.dimen = dimen;
     },
@@ -379,7 +378,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   
   
   // <object> ::= <modifier>* <objectbox>
-  MML.xypic.Object = MathJax.Object.Subclass({
+  AST.Object = MathJax.Object.Subclass({
   	Init: function (modifiers, object) {
     	this.modifiers = modifiers;
       this.object = object;
@@ -393,9 +392,9 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   });
   
   // <objectbox>
-  MML.xypic.ObjectBox = MathJax.Object.Subclass({});
+  AST.ObjectBox = MathJax.Object.Subclass({});
   // <objectbox> ::= '{' <text> '}'
-  MML.xypic.ObjectBox.Text = MML.xypic.ObjectBox.Subclass({
+  AST.ObjectBox.Text = AST.ObjectBox.Subclass({
   	Init: function (math) {
     	this.math = math;
     },
@@ -410,7 +409,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   //          | <empty>
   // <cir> ::= <diag> <orient> <diag>
   //       | <empty>
-  MML.xypic.ObjectBox.Cir = MML.xypic.ObjectBox.Subclass({
+  AST.ObjectBox.Cir = AST.ObjectBox.Subclass({
     Init: function (radius, cir) {
       this.radius = radius;
       this.cir = cir;
@@ -419,18 +418,18 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       return "\\cir"+this.radius+"{"+this.cir+"}";
     }
   });
-  MML.xypic.ObjectBox.Cir.Radius = MathJax.Object.Subclass({});
-  MML.xypic.ObjectBox.Cir.Radius.Vector = MathJax.Object.Subclass({
+  AST.ObjectBox.Cir.Radius = MathJax.Object.Subclass({});
+  AST.ObjectBox.Cir.Radius.Vector = MathJax.Object.Subclass({
     Init: function (vector) {
       this.vector = vector;
     },
     toString: function () { return this.vector.toString(); }
   });
-  MML.xypic.ObjectBox.Cir.Radius.Default = MathJax.Object.Subclass({
+  AST.ObjectBox.Cir.Radius.Default = MathJax.Object.Subclass({
     toString: function () { return ""; }
   });
-  MML.xypic.ObjectBox.Cir.Cir = MathJax.Object.Subclass({});
-  MML.xypic.ObjectBox.Cir.Cir.Segment = MathJax.Object.Subclass({
+  AST.ObjectBox.Cir.Cir = MathJax.Object.Subclass({});
+  AST.ObjectBox.Cir.Cir.Segment = MathJax.Object.Subclass({
     Init: function (startDiag, orient, endDiag) {
       this.startDiag = startDiag;
       this.orient = orient;
@@ -438,14 +437,14 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     },
     toString: function () { return this.startDiag.toString()+this.orient+this.endDiag; }
   });
-  MML.xypic.ObjectBox.Cir.Cir.Full = MathJax.Object.Subclass({
+  AST.ObjectBox.Cir.Cir.Full = MathJax.Object.Subclass({
     toString: function () { return ""; }
   });
   
   // <objectbox> ::= '\dir' <variant> '{' <main> '}'
   // <variant> ::= '^' | '_' | '2' | '3' | <empty>
   // <main> ::= <empty> | '--' | '-' | '..' | '.' | '~~' | '~' | '>>|' | '>|' | '>>' | '<<' | '>' | '<' | '(' | ')' | '`' | "'" | '||' | '|-' | '|<' | '|<<' | '|' | '*' | '+' | 'x' | '//' | '/' | 'o' | '==' | '=' | '::' | ':'
-  MML.xypic.ObjectBox.Dir = MML.xypic.ObjectBox.Subclass({
+  AST.ObjectBox.Dir = AST.ObjectBox.Subclass({
   	Init: function (variant, main) {
     	this.variant = variant;
     	this.main = main;
@@ -457,7 +456,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   });
   
   // <objectbox> ::= '\crv' <curve-modifier> '{' <curve-object> <curve-poslist> '}'
-  MML.xypic.ObjectBox.Curve = MML.xypic.ObjectBox.Subclass({
+  AST.ObjectBox.Curve = AST.ObjectBox.Subclass({
   	Init: function (modifiers, objects, poslist) {
     	this.modifiers = modifiers;
     	this.objects = objects;
@@ -473,63 +472,63 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   //                |   'pc' | 'pC' | 'Pc' | 'PC'
   //                |   'lc' | 'lC' | 'Lc' | 'LC'
   //                |   'cC'
-  MML.xypic.ObjectBox.Curve.Modifier = MathJax.Object.Subclass({});
-  MML.xypic.ObjectBox.Curve.Modifier.p = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier = MathJax.Object.Subclass({});
+  AST.ObjectBox.Curve.Modifier.p = MathJax.Object.Subclass({
     toString: function () { return "~p"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.P = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.P = MathJax.Object.Subclass({
     toString: function () { return "~P"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.l = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.l = MathJax.Object.Subclass({
     toString: function () { return "~l"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.L = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.L = MathJax.Object.Subclass({
     toString: function () { return "~L"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.c = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.c = MathJax.Object.Subclass({
     toString: function () { return "~c"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.C = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.C = MathJax.Object.Subclass({
     toString: function () { return "~C"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.pc = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.pc = MathJax.Object.Subclass({
     toString: function () { return "~pc"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.pC = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.pC = MathJax.Object.Subclass({
     toString: function () { return "~pC"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.Pc = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.Pc = MathJax.Object.Subclass({
     toString: function () { return "~Pc"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.PC = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.PC = MathJax.Object.Subclass({
     toString: function () { return "~PC"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.lc = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.lc = MathJax.Object.Subclass({
     toString: function () { return "~lc"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.lC = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.lC = MathJax.Object.Subclass({
     toString: function () { return "~lC"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.Lc = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.Lc = MathJax.Object.Subclass({
     toString: function () { return "~Lc"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.LC = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.LC = MathJax.Object.Subclass({
     toString: function () { return "~LC"; }
   });
-  MML.xypic.ObjectBox.Curve.Modifier.cC = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Modifier.cC = MathJax.Object.Subclass({
     toString: function () { return "~cC"; }
   });
   // <curve-object> ::= <empty>
   //                |   '~*' <object> <curve-object>
   //                |   '~**' <object> <curve-object>
-  MML.xypic.ObjectBox.Curve.Object = MathJax.Object.Subclass({});
-  MML.xypic.ObjectBox.Curve.Object.Drop = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Object = MathJax.Object.Subclass({});
+  AST.ObjectBox.Curve.Object.Drop = MathJax.Object.Subclass({
   	Init: function (object) {
     	this.object = object;
     },
     toString: function () { return "~*" + this.object; }
   });
-  MML.xypic.ObjectBox.Curve.Object.Connect = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.Object.Connect = MathJax.Object.Subclass({
   	Init: function (object) {
     	this.object = object;
     },
@@ -547,24 +546,24 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   //           |   <nonemptyPos> '&' <curve-poslist2> ^^ (<nonemptyPos>, <poslist>)
   //           |   '~@' ^^ (~@, Nil)
   //           |   '~@' '&' <curve-poslist2> ^^ (~@, <poslist>)
-  MML.xypic.ObjectBox.Curve.PosList = MathJax.Object.Subclass({});
-  MML.xypic.ObjectBox.Curve.PosList.CurPos = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.PosList = MathJax.Object.Subclass({});
+  AST.ObjectBox.Curve.PosList.CurPos = MathJax.Object.Subclass({
     toString: function () { return ""; }
   });
-  MML.xypic.ObjectBox.Curve.PosList.Pos = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.PosList.Pos = MathJax.Object.Subclass({
   	Init: function (pos) {
     	this.pos = pos;
     },
     toString: function () { return this.pos.toString(); }
   });
-  MML.xypic.ObjectBox.Curve.PosList.AddStack = MathJax.Object.Subclass({
+  AST.ObjectBox.Curve.PosList.AddStack = MathJax.Object.Subclass({
     toString: function () { return "~@"; }
   });
   
   // <modifier>
-  MML.xypic.Modifier = MathJax.Object.Subclass({});
+  AST.Modifier = MathJax.Object.Subclass({});
   // <modifier> ::= '!' <vector>
-  MML.xypic.Modifier.Vector = MathJax.Object.Subclass({
+  AST.Modifier.Vector = MathJax.Object.Subclass({
   	Init: function (vector) {
     	this.vector = vector;
     },
@@ -573,77 +572,77 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   // <modifier> ::= <add-op> <size>
   // <add-op> ::= '+' | '-' | '=' | '+=' | '-='
   // <size> ::= <vector> | <empty>
-  MML.xypic.Modifier.AddOp = MathJax.Object.Subclass({
+  AST.Modifier.AddOp = MathJax.Object.Subclass({
   	Init: function (op, size) {
     	this.op = op;
       this.size = size;
     },
     toString: function () { return this.op.toString() + " " + this.size; }
   });
-  MML.xypic.Modifier.AddOp.Grow = MathJax.Object.Subclass({
+  AST.Modifier.AddOp.Grow = MathJax.Object.Subclass({
     toString: function () { return '+'; }
   });
-  MML.xypic.Modifier.AddOp.Shrink = MathJax.Object.Subclass({
+  AST.Modifier.AddOp.Shrink = MathJax.Object.Subclass({
     toString: function () { return '-'; }
   });
-  MML.xypic.Modifier.AddOp.Set = MathJax.Object.Subclass({
+  AST.Modifier.AddOp.Set = MathJax.Object.Subclass({
     toString: function () { return '='; }
   });
-  MML.xypic.Modifier.AddOp.GrowTo = MathJax.Object.Subclass({
+  AST.Modifier.AddOp.GrowTo = MathJax.Object.Subclass({
     toString: function () { return '+='; }
   });
-  MML.xypic.Modifier.AddOp.ShrinkTo = MathJax.Object.Subclass({
+  AST.Modifier.AddOp.ShrinkTo = MathJax.Object.Subclass({
     toString: function () { return '-='; }
   });
-  MML.xypic.Modifier.AddOp.VactorSize = MathJax.Object.Subclass({
+  AST.Modifier.AddOp.VactorSize = MathJax.Object.Subclass({
     Init: function (vector) {
       this.vector = vector;
     },
     isDefault: false,
     toString: function () { return this.vector.toString(); }
   });
-  MML.xypic.Modifier.AddOp.DefaultSize = MathJax.Object.Subclass({
+  AST.Modifier.AddOp.DefaultSize = MathJax.Object.Subclass({
     isDefault: true,
     toString: function () { return ""; }
   });
   
   // <modifier> ::= '[' <shape> ']'
   // <shape> ::= '.' | 'o' | 'l' | 'r' | 'u' | 'd' | 'c' | <empty>
-  MML.xypic.Modifier.Shape = MathJax.Object.Subclass({
+  AST.Modifier.Shape = MathJax.Object.Subclass({
   	Init: function (shape) {
     	this.shape = shape;
     },
     toString: function () { return "[" + this.shape + "]"; }
   });
-  MML.xypic.Modifier.Shape.Point = MathJax.Object.Subclass({
+  AST.Modifier.Shape.Point = MathJax.Object.Subclass({
   	toString: function () { return "."; }
   });
-  MML.xypic.Modifier.Shape.Rect = MathJax.Object.Subclass({
+  AST.Modifier.Shape.Rect = MathJax.Object.Subclass({
   	toString: function () { return ""; }
   });
-  MML.xypic.Modifier.Shape.Circle = MathJax.Object.Subclass({
+  AST.Modifier.Shape.Circle = MathJax.Object.Subclass({
   	toString: function () { return "o"; }
   });
-  MML.xypic.Modifier.Shape.L = MathJax.Object.Subclass({
+  AST.Modifier.Shape.L = MathJax.Object.Subclass({
   	toString: function () { return "l"; }
   });
-  MML.xypic.Modifier.Shape.R = MathJax.Object.Subclass({
+  AST.Modifier.Shape.R = MathJax.Object.Subclass({
   	toString: function () { return "r"; }
   });
-  MML.xypic.Modifier.Shape.U = MathJax.Object.Subclass({
+  AST.Modifier.Shape.U = MathJax.Object.Subclass({
   	toString: function () { return "u"; }
   });
-  MML.xypic.Modifier.Shape.D = MathJax.Object.Subclass({
+  AST.Modifier.Shape.D = MathJax.Object.Subclass({
   	toString: function () { return "d"; }
   });
-  MML.xypic.Modifier.Shape.C = MathJax.Object.Subclass({
+  AST.Modifier.Shape.C = MathJax.Object.Subclass({
   	toString: function () { return "c"; }
   });
   
   // <direction>
-  MML.xypic.Direction = MathJax.Object.Subclass({});
+  AST.Direction = MathJax.Object.Subclass({});
   // <direction> ::= <direction0> <direction1>*
-  MML.xypic.Direction.Compound = MathJax.Object.Subclass({
+  AST.Direction.Compound = MathJax.Object.Subclass({
   	Init: function (dir, rots) {
     	this.dir = dir;
       this.rots = rots;
@@ -653,45 +652,45 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     }
   });
   // <direction0> ::= <diag>
-  MML.xypic.Direction.Diag = MathJax.Object.Subclass({
+  AST.Direction.Diag = MathJax.Object.Subclass({
   	Init: function (diag) {
     	this.diag = diag;
     },
     toString: function () { return this.diag.toString(); }
   });
   // <direction0> ::= 'v' <vector>
-  MML.xypic.Direction.Vector = MathJax.Object.Subclass({
+  AST.Direction.Vector = MathJax.Object.Subclass({
   	Init: function (vector) {
     	this.vector = vector;
     },
     toString: function () { return "v" + this.vector.toString(); }
   });
   // <direction1> ::= ':' <vector>
-  MML.xypic.Direction.RotVector = MathJax.Object.Subclass({
+  AST.Direction.RotVector = MathJax.Object.Subclass({
   	Init: function (vector) {
     	this.vector = vector;
     },
     toString: function () { return ":" + this.vector.toString(); }
   });
   // <direction1> ::= '_'
-  MML.xypic.Direction.RotAntiCW = MathJax.Object.Subclass({
+  AST.Direction.RotAntiCW = MathJax.Object.Subclass({
     toString: function () { return "_"; }
   });
   // <direction1> ::= '^'
-  MML.xypic.Direction.RotCW = MathJax.Object.Subclass({
+  AST.Direction.RotCW = MathJax.Object.Subclass({
     toString: function () { return "^"; }
   });
   // <direction0> ::=  'q' '{' <pos> <decor> '}'
   // TODO: impl <direction> ::= q {<pos> <decor>}
   
   // <diag>
-  MML.xypic.Diag = MathJax.Object.Subclass({});
+  AST.Diag = MathJax.Object.Subclass({});
   // <diag> ::= <empty>
-  MML.xypic.Diag.Default = MathJax.Object.Subclass({
+  AST.Diag.Default = MathJax.Object.Subclass({
   	toString: function () { return ""; }
   });
   // <diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
-  MML.xypic.Diag.Angle = MathJax.Object.Subclass({
+  AST.Diag.Angle = MathJax.Object.Subclass({
   	Init: function (symbol, angle) {
     	this.symbol = symbol;
       this.ang = angle;
@@ -699,890 +698,23 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   	toString: function () { return this.symbol; }
   });
   
+
+  var fun = FP.Parsers.fun;
+  var elem = FP.Parsers.elem;
+  var felem = function (x) { return fun(FP.Parsers.elem(x)); }
+  var lit = FP.Parsers.literal;
+  var regex = FP.Parsers.regex;
+  var regexLit = FP.Parsers.regexLiteral;
+  var flit = function (x) { return fun(FP.Parsers.literal(x)); }
+  var seq = FP.Parsers.seq;
+  var or = FP.Parsers.or;
+  var rep = function (x) { return FP.Parsers.lazyParser(x)().rep(); }
   
-/************ Matcher **************/
-MathJax.Matcher = MathJax.Object.Subclass({
-	Init: function () { this.cases = []; },
-	Case: function (klass, f) {
-		this.cases.push([klass, f]);
-		return this;
-	},
-	match: function (x) {
-		if (x instanceof Object && "isa" in x) {
-			var i, count, klass, op;
-			i = 0;
-			count = this.cases.length;
-			while (i < count) {
-				klass = this.cases[i][0];
-				if (x.isa(klass)) {
-					op = klass.unapply(x);
-					if (op.isDefined) {
-						return this.cases[i][1](op.get);
-					}
-				}
-				i = i + 1;
-			}
-		}
-		throw MathJax.MatchError(x);
-	}
-});
-
-
-/************ Option **************/
-MathJax.Option = MathJax.Object.Subclass({});
-
-MathJax.Option.Some = MathJax.Option.Subclass({
-	Init: function (value) {
-		this.get = value;
-	},
-	isEmpty: false,
-	isDefined: true,
-  getOrElse: function (ignore) { return this.get; },
-	toString: function () {
-		return "Some(" + this.get + ")";
-	}
-}, {
-	unapply: function (x) { return MathJax.Option.Some(x.get); }
-});
-
-MathJax.Option.None = MathJax.Option.Subclass({
-	Init: function () {},
-	isEmpty: true,
-	isDefined: false,
-  getOrElse: function (value) { return value; },
-	toString: function () { return "None"; }
-}, {
-	unapply: function (x) { return MathJax.Option.Some(x); }
-});
-
-MathJax.Option.Augment({}, {
-	empty: MathJax.Option.None()
-});
-
-
-/************ List **************/
-MathJax.List = MathJax.Object.Subclass({});
-
-MathJax.List.Cons = MathJax.List.Subclass({
-	Init: function (head, tail) {
-		this.head = head;
-		this.tail = tail;
-	},
-	isEmpty: false,
-	foldLeft: function (x0, f) {
-		var r, c;
-		r = f(x0, this.head);
-		c = this.tail;
-		while (!c.isEmpty) {
-			r = f(r, c.head);
-			c = c.tail;
-		}
-		return r;
-	},
-	foldRight: function (x0, f) {
-		if (this.tail.isEmpty) {
-			return f(this.head, x0);
-		} else {
-			return f(this.head, this.tail.foldRight(x0, f));
-		}
-	},
-  foreach: function (f) {
-  	var e = this;
-    while (!e.isEmpty) {
-    	f(e.head);
-      e = e.tail;
-    }
-  },
-  mkString: function () {
-  	var open, delim, close;
-  	switch (arguments.length) {
-    	case 0:
-      	open = delim = close = "";
-        break;
-    	case 1:
-      	delim = arguments[0];
-        open = close = "";
-      	break;
-      case 2:
-      	open = arguments[0];
-      	delim = arguments[1];
-        close = "";
-        break;
-      default:
-      	open = arguments[0];
-      	delim = arguments[1];
-      	close = arguments[2];
-        break;
-    }
-		var desc, nxt;
-		desc = open + this.head.toString();
-		nxt = this.tail;
-		while (nxt.isa(MathJax.List.Cons)) {
-			desc += delim + nxt.head.toString(); 
-			nxt = nxt.tail;
-		}
-		desc += close;
-		return desc;
-  },
-	toString: function () {
-  	return this.mkString("[", ", ", "]");
-	}
-}, {
-	unapply: function (x) { return MathJax.Option.Some([x.head, x.tail]); }
-});
-
-MathJax.List.Nil = MathJax.List.Subclass({
-	isEmpty: true,
-	foldLeft: function (x0, f) { return x0; },
-	foldRight: function (x0, f) { return x0; },
-  foreach: function (f) {},
-  mkString: function () {
-  	switch (arguments.length) {
-    	case 0:
-    	case 1:
-      	return "";
-      case 2:
-      	return arguments[0]
-      default:
-      	return arguments[0]+arguments[2];
-    }
-  },
-	toString: function () { return '[]'; }
-}, {
-	unapply: function (x) { return MathJax.Option.Some(x); }
-});
-
-MathJax.List.Augment({}, {
-	empty: MathJax.List.Nil(),
-	fromArray: function (as) {
-		var list, i;
-		list = MathJax.List.empty;
-		i = as.length - 1;
-		while (i >= 0) {
-			list = MathJax.List.Cons(as[i], list);
-			i -= 1;
-		}
-		return list;
-	}
-});
-
-
-/************ MatchError **************/
-MathJax.MatchError = MathJax.Object.Subclass({
-	Init: function (obj) { this.obj = obj; },
-//	getMessage: function () {
-//		if (this.obj === null) {
-//			return "null"
-//		} else {
-//			return obj.toString() + " (of class " + obj. + ")"
-//		}
-//	}
-	toString: function () { return "MatchError(" + this.obj + ")"; }
-});
-
-
-/************ OffsetPosition **************/
-MathJax.OffsetPosition = MathJax.Object.Subclass({
-	Init: function (source, offset) {
-		// assert(source.length >= offset)
-		this.source = source;
-		if (offset === undefined) { this.offset = 0; } else { this.offset = offset; }	
-		this._index = null;
-		this._line = null;
-	},
-	index: function () {
-		if (this._index !== null) { return this._index; }
-		this._index = [];
-		this._index.push(0);
-		var i = 0;
-		while (i < this.source.length) {
-			if (this.source.charAt(i) === '\n') { this._index.push(i + 1); }
-			i += 1;
-		}
-		this._index.push(this.source.length);
-		return this._index;
-	},
-	line: function () {
-		var lo, hi, mid;
-		if (this._line !== null) { return this._line; }
-		lo = 0;
-		hi = this.index().length - 1;
-		while (lo + 1 < hi) {
-			mid = (hi + lo) >> 1;
-			if (this.offset < this.index()[mid]) {
-				hi = mid;
-			} else {
-				lo = mid;
-			}
-		}
-		this._line = lo + 1;
-		return this._line;
-	},
-	column: function () {
-		return this.offset - this.index()[this.line() - 1] + 1;
-	},
-	lineContents: function () {
-		var i, l;
-		i = this.index();
-		l = this.line();
-		return this.source.substring(i[l - 1], i[l]);
-	},
-	toString: function () { return this.line().toString() + '.' + this.column(); },
-	longString: function () {
-		var desc, i;
-		desc = this.lineContents() + '\n';
-		i = 0;
-		while (i < this.column()) {
-			if (this.lineContents().charAt(i) === '\t') {
-				desc += '\t';
-			} else {
-				desc += ' ';
-			}
-			i += 1;
-		}
-		desc += '^';
-		return desc;
-	},
-	isLessThan: function (that) {
-		if (that.isa(MathJax.OffsetPosition)) {
-			return this.offset < that.offset;
-		} else {
-			return (
-				this.line() < that.line() || 
-				(this.line() === that.line() && this.column() < that.column())
-			);
-		}
-	} 
-});
-
-
-/************ StringReader **************/
-MathJax.StringReader = MathJax.Object.Subclass({
-	Init: function (source, offset) {
-		this.source = source;
-		if (offset === undefined) { this.offset = 0; } else { this.offset = offset; }	
-	},
-	first: function () {
-		if (this.offset < this.source.length) {
-			return this.source.charAt(this.offset);
-		} else {
-			return MathJax.StringReader.EofCh;
-		}
-	},
-	rest: function () {
-		if (this.offset < this.source.length) {
-			return MathJax.StringReader(this.source, this.offset + 1);
-		} else {
-			return this;
-		}
-	},
-	pos: function () { return MathJax.OffsetPosition(this.source, this.offset); },
-	atEnd: function () { return this.offset >= this.source.length; },
-	drop: function (n) {
-		var r, count;
-		r = this;
-		count = n;
-		while (count > 0) {
-			r = r.rest();
-			count -= 1;
-		}
-		return r;
-	}
-}, {
-	EofCh: '\x03'
-});
-
-
-/************ Parsers **************/
-MathJax.Parsers = MathJax.Object.Subclass({}, {
-	parse: function (p, input) {
-		return p.apply(input);
-	},
-	parseAll: function (p, input) {
-		return p.andl(function () { return MathJax.Parsers.eos(); }).apply(input);
-	},
-	parseString: function (p, str) {
-		var input = MathJax.StringReader(str);
-		return MathJax.Parsers.parse(p, input);
-	},
-	parseAllString: function (p, str) {
-		var input = MathJax.StringReader(str);
-		return MathJax.Parsers.parseAll(p, input);
-	},
-	whiteSpaceRegex: /^\s+/,
-	handleWhiteSpace: function (source, offset) {
-		var m = MathJax.Parsers.whiteSpaceRegex.exec(source.substring(offset, source.length));
-		if (m !== null) {
-			return offset + m[0].length;
-		} else {
-			return offset;
-		}
-	},
-	whiteSpace: function () {
-  	return MathJax.Parsers.regex(MathJax.Parsers.whiteSpaceRegex);
-  },
-	literal: function (str) {
-		return MathJax.Parsers.Parser(function (input) {
-			var source, offset, start, i, j, found;
-			source = input.source;
-			offset = input.offset;
-			start = MathJax.Parsers.handleWhiteSpace(source, offset);
-			i = 0;
-			j = start;
-			while (i < str.length && j < source.length && 
-					str.charAt(i) === source.charAt(j)) {
-				i += 1;
-				j += 1;
-			}
-			if (i === str.length) {
-				return MathJax.Parsers.Success(str, input.drop(j - offset));
-			} else {
-				if (start === source.length) {
-					found = "end of source";
-				} else {
-					found = "`" + source.charAt(start) + "'";
-				}
-				return MathJax.Parsers.Failure(
-					"`" + str + "' expected but " + found + " found",
-					input.drop(start - offset)
-				);
-			}
-		});
-	},
-	regex: function (rx /* must start with ^ */) {
-		if (rx.toString().substring(0, 2) !== "/^") {
-			throw ("regex must start with `^' but " + rx);
-		}
-		return MathJax.Parsers.Parser(function (input) {
-			var source, offset, m, found;
-			source = input.source;
-			offset = input.offset;
-			m = rx.exec(source.substring(offset, source.length));
-			if (m !== null) {
-				return MathJax.Parsers.Success(m[0], input.drop(m[0].length));
-			} else {
-				if (offset === source.length) {
-					found = "end of source";
-				} else {
-					found = "`" + source.charAt(offset) + "'";
-				}
-				return MathJax.Parsers.Failure(
-					"string matching regex " + rx + " expected but " + found + " found",
-					input
-				);
-			}
-		});
-	},
-	regexLiteral: function (rx /* must start with ^ */) {
-		if (rx.toString().substring(0, 2) !== "/^") {
-			throw ("regex must start with `^' but " + rx);
-		}
-		return MathJax.Parsers.Parser(function (input) {
-			var source, offset, start, m, found;
-			source = input.source;
-			offset = input.offset;
-			start = MathJax.Parsers.handleWhiteSpace(source, offset);
-			m = rx.exec(source.substring(start, source.length));
-			if (m !== null) {
-				return MathJax.Parsers.Success(m[0], input.drop(start + m[0].length - offset));
-			} else {
-				if (start === source.length) {
-					found = "end of source";
-				} else {
-					found = "`" + source.charAt(start) + "'";
-				}
-				return MathJax.Parsers.Failure(
-					"string matching regex " + rx + " expected but " + found + " found",
-					input.drop(start - offset)
-				);
-			}
-		});
-	},
-	eos: function () {
-		return MathJax.Parsers.Parser(function (input) {
-			var source, offset, start;
-			source = input.source;
-			offset = input.offset;
-			start = MathJax.Parsers.handleWhiteSpace(source, offset);
-			if (source.length === start) {
-				return MathJax.Parsers.Success("", input);
-			} else {
-				return MathJax.Parsers.Failure("end of source expected but `" + 
-					source.charAt(start) + "' found", input);
-			}
-		});
-	},
-	commit: function (/*lazy*/ p) {
-		return MathJax.Parsers.Parser(function (input) {
-			var res = p()(input);
-			return (MathJax.Matcher()
-				.Case(MathJax.Parsers.Success, function (x) { return res; })
-				.Case(MathJax.Parsers.Error, function (x) { return res; })
-				.Case(MathJax.Parsers.Failure, function (x) {
-					return MathJax.Parsers.Error(x[0], x[1]);
-				}).match(res)
-			);
-		});
-	},
-	//elem: function (kind, p)
-	elem: function (e) { return MathJax.Parsers.accept(e).named('"' + e + '"'); },
-	accept: function (e) {
-		return MathJax.Parsers.acceptIf(
-			function (x) { return x === e; },
-			function (x) { return "`" + e + "' expected but `" + x + "' found"; }
-		);
-	},
-	acceptIf: function (p, err) {
-		return MathJax.Parsers.Parser(function (input) {
-			if (p(input.first())) {
-				return MathJax.Parsers.Success(input.first(), input.rest());
-			} else {
-				return MathJax.Parsers.Failure(err(input.first()), input);
-			}
-		});
-	},
-	//acceptMatch: function (expected, f)
-	//acceptSeq: function (es)
-	failure: function (msg) {
-		return MathJax.Parsers.Parser(function (input) {
-			return MathJax.Parsers.Failure(msg, input);
-		});
-	},
-	err: function (msg) {
-		return MathJax.Parsers.Parser(function (input) {
-			return MathJax.Parsers.Error(msg, input);
-		});
-	},
-	success: function (v) {
-		return MathJax.Parsers.Parser(function (input) {
-			return MathJax.Parsers.Success(v, input);
-		});
-	},
-	log: function (/*lazy*/ p, name) {
-		return MathJax.Parsers.Parser(function (input) {
-			console.log("trying " + name + " at " + input);
-			var r = p().apply(input);
-			console.log(name + " --> " + r);
-			return r;
-		});
-	},
-	rep: function (/*lazy*/ p) {
-		var s = MathJax.Parsers.success(MathJax.List.empty);
-		return MathJax.Parsers.rep1(p).or(function () { return s; });
-	},
-	rep1: function (/*lazy*/ p) {
-		return MathJax.Parsers.Parser(function (input) {
-			var elems, i, p0, res;
-			elems = [];
-			i = input;
-			p0 = p();
-			res = p0.apply(input);
-			if (res.isa(MathJax.Parsers.Success)) {
-				while (res.isa(MathJax.Parsers.Success)) {
-					elems.push(res.result);
-					i = res.next;
-					res = p0.apply(i);
-				}
-				return MathJax.Parsers.Success(MathJax.List.fromArray(elems), i);
-			} else {
-				return res;
-			}
-		});
-	},
-	//rep1: function (/*lazy*/ first, /*lazy*/ p)
-	repN: function (num, /*lazy*/ p) {
-		if (num === 0) {
-			return MathJax.Parsers.success(MathJax.List.empty);
-		}
-		return MathJax.Parsers.Parser(function (input) {
-			var elems, i, p0, res;
-			elems = [];
-			i = input;
-			p0 = p();
-			res = p0.apply(i);
-			while (res.isa(MathJax.Parsers.Success)) {
-				elems.push(res.result);
-				i = res.next;
-				if (num === elems.length) {
-					return MathJax.Parsers.Success(MathJax.List.fromArray(elems), i);
-				}
-				res = p0.apply(i);
-			}
-			return res; // NoSuccess
-		});
-	},
-	repsep: function (/*lazy*/ p, /*lazy*/ q) {
-		var s = MathJax.Parsers.success(MathJax.List.empty);
-		return MathJax.Parsers.rep1sep(p, q).or(function () { return s; });
-	},
-	rep1sep: function (/*lazy*/ p, /*lazy*/ q) {
-		return p().and(MathJax.Parsers.rep(q().andr(p))).to(function (res) {
-			return MathJax.List.Cons(res.head, res.tail);
-		});
-	},
-//	chainl1: function (/*lazy*/ p, /*lazy*/ q) {
-//		return this.chainl1(p, p, q)
-//	},
-	chainl1: function (/*lazy*/ first, /*lazy*/ p, /*lazy*/ q) {
-		return first().and(MathJax.Parsers.rep(q().and(p))).to(function (res) {
-			return res.tail.foldLeft(res.head, function (a, fb) { return fb.head(a, fb.tail); });
-		});
-	},
-	chainr1: function (/*lazy*/ p, /*lazy*/ q, combine, first) {
-		return p().and(this.rep(q().and(p))).to(function (res) {
-			return MathJax.List.Cons(MathJax.Parsers.Pair(combine, res.head),
-				res.tail).foldRight(first, function (fa, b) { return fa.head(fa.tail, b); }
-				);
-		});
-	},
-	opt: function (/*lazy*/ p) {
-		return p().to(function (x) {
-			return MathJax.Option.Some(x);
-		}).or(function () {
-			return MathJax.Parsers.success(MathJax.Option.empty);
-		});
-	},
-	not: function (/*lazy*/ p) {
-		return MathJax.Parsers.Parser(function (input) {
-			var r = p().apply(input);
-			if (r.successful) {
-				return MathJax.Parsers.Failure("Expected failure", input);
-			} else {
-				return MathJax.Parsers.Success(MathJax.Option.empty, input);
-			}
-		});
-	},
-	guard: function (/*lazy*/ p) {
-		return MathJax.Parsers.Parser(function (input) {
-			var r = p().apply(input);
-			if (r.successful) {
-				return MathJax.Parsers.Success(r.result, input);
-			} else {
-				return r;
-			}
-		});
-	},
-	//positioned: function (/*lazy*/ p)
-	//phrase: function (p)
-	mkList: function (pair) { return MathJax.List.Cons(pair.head, pair.tail); },
-	fun: function (x) { return function () { return x; }; },
-	lazyParser: function (x) {
-		var lit, r;
-		if (x instanceof String || (typeof x) === "string") {
-			lit = MathJax.Parsers.literal(x);
-			return function () { return lit; };
-		} else if (x instanceof Function) {
-			// x is deemed to be a function which has the return value as Parser. 
-			return x;
-		} else if (x instanceof Object) {
-			if("isa" in x && x.isa(MathJax.Parsers.Parser)) {
-				return function () { return x; };
-			} else if (x instanceof RegExp) {
-				r = MathJax.Parsers.regexLiteral(x);
-				return function () { return r; };
-			} else {
-				return MathJax.Parsers.err("unhandlable type");
-			}
-		} else {
-			return MathJax.Parsers.err("unhandlable type");
-		}
-	},
-	seq: function () {
-		var count, parser, i;
-		count = arguments.length;
-		if (count === 0) { return MathJax.Parsers.err("at least one element must be specified"); }
-		parser = MathJax.Parsers.lazyParser(arguments[0])();
-		i = 1;
-		while (i < count) {
-			parser = parser.and(MathJax.Parsers.lazyParser(arguments[i]));
-			i += 1;
-		}
-		return parser;
-	},
-	or: function () {
-  	// TODO: バグ？バックトラックしないようだ。
-		var count, parser, i;
-		count = arguments.length;
-		if (count === 0) { return MathJax.Parsers.err("at least one element must be specified"); }
-		parser = MathJax.Parsers.lazyParser(arguments[0])();
-		i = 1;
-		while (i < count) {
-			parser = parser.or(MathJax.Parsers.lazyParser(arguments[i]));
-			i += 1;
-		}
-		return parser;
-	}
-});
-
-
-/************ Pair **************/
-MathJax.Parsers.Pair = MathJax.List.Subclass({
-	Init: function (head, tail) {
-		this.head = head;
-		this.tail = tail;
-	},
-	toString: function () { return '(' + this.head + '~' + this.tail + ')'; }
-}, {
-	unapply: function (x) { return MathJax.Option.Some([x.head, x.tail]); }
-});
-
-
-/************ ParseResult **************/
-MathJax.Parsers.ParseResult = MathJax.Object.Subclass({
-	Init: function () {},
-	isEmpty: function () { return !this.successful; },
-	getOrElse: function (/*lazy*/ defaultValue) {
-		if (this.isEmpty) { return defaultValue(); } else { return this.get(); }
-	} 
-});
-
-
-/************ Success **************/
-MathJax.Parsers.Success = MathJax.Parsers.ParseResult.Subclass({
-	Init: function (result, next) {
-		this.result = result;
-		this.next = next;
-	},
-	map: function (f) { return MathJax.Parsers.Success(f(this.result), this.next); },
-	mapPartial: function (f, err) {
-		try {
-			return MathJax.Parsers.Success(f(this.result), this.next);
-		} catch (e) {
-			if ("isa" in e && e.isa(MathJax.MatchError)) {
-				return MathJax.Parsers.Failure(err(this.result), this.next);
-			} else {
-				throw e;
-			}
-		}
-	},
-	flatMapWithNext: function (f) { return f(this.result).apply(this.next); },
-	append: function (/*lazy*/ a) { return this; },
-	get: function () { return this.result; },
-	successful: true,
-	toString: function () { return '[' + this.next.pos() + '] parsed: ' + this.result; }
-}, {
-	unapply: function (x) { return MathJax.Option.Some([x.result, x.next]); }
-});
-
-
-/************ NoSuccess **************/
-MathJax.Parsers.NoSuccess = MathJax.Parsers.ParseResult.Subclass({
-	Init: function () {},
-	map: function (f) { return this; },
-	mapPartial: function (f, error) { return this; },
-	flatMapWithNext: function (f) { return this; },
-	get: function () { return MathJax.Parsers.error("No result when parsing failed"); },
-	successful: false
-});
-
-
-/************ Failure **************/
-MathJax.Parsers.Failure = MathJax.Parsers.NoSuccess.Subclass({
-	Init: function (msg, next) {
-		this.msg = msg;
-		this.next = next;
-//		if (!(PARSERS.lastNoSuccess != null && 
-//			this.next.pos().isLessThan(PARSERS.lastNoSuccess.next.pos()))) {
-//			PARSERS.lastNoSuccess = this;
-//		}
-	},
-	append: function (/*lazy*/ a) {
-		var alt = a();
-		if (alt.isa(MathJax.Parsers.Success)) {
-			return alt;
-		} else if (alt.isa(MathJax.Parsers.NoSuccess)) {
-			if (alt.next.pos().isLessThan(this.next.pos())) {
-				return this;
-			} else {
-				return alt;
-			}
-		} else {
-			throw MathJax.MatchError(alt);
-		}
-	},
-	toString: function () { return ('[' + this.next.pos() + '] failure: ' + 
-		this.msg + '\n\n' + this.next.pos().longString()); }
-}, {
-	unapply: function (x) { return MathJax.Option.Some([x.msg, x.next]); }
-});
-
-
-/************ Error **************/
-MathJax.Parsers.Error = MathJax.Parsers.NoSuccess.Subclass({
-	Init: function (msg, next) {
-		this.msg = msg;
-		this.next = next;
-//		if (!(PARSERS.lastNoSuccess != null && 
-//			this.next.pos().isLessThan(PARSERS.lastNoSuccess.next.pos()))) {
-//			PARSERS.lastNoSuccess = this;
-//		}
-	},
-	append: function (/*lazy*/ a) { return this; },
-	toString: function () { return ('[' + this.next.pos() + '] error: ' + 
-		this.msg + '\n\n' + this.next.pos().longString()); }
-}, {
-	unapply: function (x) { return MathJax.Option.Some([x.msg, x.next]); }
-});
-
-
-/************ Parser **************/
-MathJax.Parsers.Parser = MathJax.Object.Subclass({
-	Init: function (f) { this.apply = f; },
-	name: '',
-	named: function (name) { this.name = name; return this; },
-	toString: function () { return 'Parser (' + this.name + ')'; },
-	flatMap: function (f) {
-		var app = this.apply;
-		return MathJax.Parsers.Parser(function (input) {
-			return app(input).flatMapWithNext(f);
-		});
-	},
-	map: function (f) {
-		var app = this.apply;
-		return MathJax.Parsers.Parser(function (input) {
-			return app(input).map(f);
-		});
-	},
-	append: function (/*lazy*/ p) {
-		var app = this.apply;
-		return MathJax.Parsers.Parser(function (input) {
-			return app(input).append(function () {
-				return p().apply(input);
-			});
-		});
-	},
-	and: function (/*lazy*/ p) {
-		return this.flatMap(function (a) {
-			return p().map(function (b) {
-				return MathJax.Parsers.Pair(a, b);
-			});
-		}).named('~');
-	},
-	andr: function (/*lazy*/ p) {
-		return this.flatMap(function (a) {
-			return p().map(function (b) {
-				return b;
-			});
-		}).named('~>');
-	},
-	andl: function (/*lazy*/ p) {
-		return this.flatMap(function (a) {
-			return p().map(function (b) {
-				return a;
-			});
-		}).named('<~');
-	},
-	or: function (/*lazy*/ q) { return this.append(q).named("|"); },
-	andOnce: function (/*lazy*/ p) {
-		var flatMap = this.flatMap;
-		return MathJax.Parsers.OnceParser(function () {
-			return flatMap(function (a) {
-				return MathJax.Parsers.commit(p).map(function (b) {
-					return MathJax.Parsers.Pair(a, b);
-				});
-			}).named('~!');
-		});
-	},
-	longestOr: function (/*lazy*/ q0) {
-		var app = this.apply;
-		return MathJax.Parsers.Parser(function (input) {
-			var res1, res2;
-			res1 = app(input);
-			res2 = q0()(input);
-			if (res1.successful) {
-				if (res2.successful) {
-					if (res2.next.pos().isLessThan(res1.next.pos())) {
-						return res1;
-					} else {
-						return res2;
-					}
-				} else {
-					return res1;
-				}
-			} else if (res2.successful) {
-				return res2;
-			} else if (res1.isa(MathJax.Parsers.Error)) {
-				return res1;
-			} else {
-				if (res2.next.pos().isLessThan(res1.next.pos())) {
-					return res1;
-				} else {
-					return res2;
-				}
-			}
-		}).named("|||");
-	},
-	to: function (f) { return this.map(f).named(this.toString() + '^^'); },
-	ret: function (/*lazy*/ v) {
-		var app = this.apply;
-		return MathJax.Parsers.Parser(function (input) {
-			return app(input).map(function (x) { return v(); });
-		}).named(this.toString() + "^^^");
-	},
-	toIfPossible: function (f, error) {
-		if (error === undefined) {
-			error = function (r) { return "Constructor function not defined at " + r; };
-		}
-		var app = this.apply;
-		return MathJax.Parsers.Parser(function (input) {
-			return app(input).mapPartial(f, error);
-		}).named(this.toString() + "^?");
-	},
-	into: function (fq) { return this.flatMap(fq); },
-	rep: function () {
-		var p = this;
-		return MathJax.Parsers.rep(function () { return p; });
-	},
-	chain: function (/*lazy*/ sep) {
-		var p, lp;
-		p = this;
-		lp = function () { return p; };
-		return MathJax.Parsers.chainl1(lp, lp, sep);
-	},
-	rep1: function () {
-		var p = this;
-		return MathJax.Parsers.rep1(function () { return p; });
-	},
-	opt: function () {
-		var p = this;
-		return MathJax.Parsers.opt(function () { return p; });
-	}
-});
-
-
-/************ OnceParser **************/
-MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
-	Init: function (f) { this.apply = f; },
-	and: function (p) {
-		var flatMap = this.flatMap;
-		return MathJax.Parsers.OnceParser(function () {
-			return flatMap(function (a) {
-				return MathJax.Parsers.commit(p).map(function (b) {
-					return MathJax.Parsers.Pair(a, b);
-				});
-			});
-		}).named('~');
-	}
-});
-
-
-
-  var fun = MathJax.Parsers.fun;
-  var elem = MathJax.Parsers.elem;
-  var felem = function (x) { return fun(MathJax.Parsers.elem(x)); }
-  var lit = MathJax.Parsers.literal;
-  var regex = MathJax.Parsers.regex;
-  var regexLit = MathJax.Parsers.regexLiteral;
-  var flit = function (x) { return fun(MathJax.Parsers.literal(x)); }
-  var seq = MathJax.Parsers.seq;
-  var or = MathJax.Parsers.or;
-  var rep = function (x) { return MathJax.Parsers.lazyParser(x)().rep(); }
-  
-  var p = MathJax.Parsers.Subclass({
+  var p = FP.Parsers.Subclass({
     // <pos> '\end' '{' 'xy' '}'
     xy: function () {
       return p.pos().into(function (pos) {
-        return MathJax.Parsers.guard(function() { return lit('\\end').andl(flit('{')).andl(flit('xy')).andl(flit('}')).to(function () {
+        return FP.Parsers.guard(function() { return lit('\\end').andl(flit('{')).andl(flit('xy')).andl(flit('}')).to(function () {
           return pos;
         })});
       });
@@ -1591,14 +723,14 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     // <pos> ::= <coord> <pos2>*
     pos: function () {
       return seq(p.coord, rep(p.pos2)).to(function (cps) {
-        return MML.xypic.Pos.Coord(cps.head, cps.tail);
+        return AST.Pos.Coord(cps.head, cps.tail);
       });
     },
     
     // <nonemptyPos> ::= <coord> <pos2>*
     nonemptyPos: function () {
       return seq(p.nonemptyCoord, rep(p.pos2)).to(function (cps) {
-        return MML.xypic.Pos.Coord(cps.head, cps.tail);
+        return AST.Pos.Coord(cps.head, cps.tail);
       });
     },
     
@@ -1609,14 +741,14 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     //        |   '=' <saving>
     pos2: function () {
       return or(
-        lit('+').andr(p.coord).to(function (c) { return MML.xypic.Pos.Plus(c); }),
-        lit('-').andr(p.coord).to(function (c) { return MML.xypic.Pos.Minus(c); }),
-        lit(',').andr(p.coord).to(function (c) { return MML.xypic.Pos.Then(c); }),
-        lit(';').andr(p.coord).to(function (c) { return MML.xypic.Pos.SwapPAndC(c); }),
-        lit('**').andr(p.object).to(function (o) { return MML.xypic.Pos.ConnectObject(o); }),
-        lit('*').andr(p.object).to(function (o) { return MML.xypic.Pos.DropObject(o); }),
-        lit('?').andr(p.place).to(function (o) { return MML.xypic.Pos.Place(o); }),
-        lit('=').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (o) { return MML.xypic.Pos.SavingPos(o); })
+        lit('+').andr(p.coord).to(function (c) { return AST.Pos.Plus(c); }),
+        lit('-').andr(p.coord).to(function (c) { return AST.Pos.Minus(c); }),
+        lit(',').andr(p.coord).to(function (c) { return AST.Pos.Then(c); }),
+        lit(';').andr(p.coord).to(function (c) { return AST.Pos.SwapPAndC(c); }),
+        lit('**').andr(p.object).to(function (o) { return AST.Pos.ConnectObject(o); }),
+        lit('*').andr(p.object).to(function (o) { return AST.Pos.DropObject(o); }),
+        lit('?').andr(p.place).to(function (o) { return AST.Pos.Place(o); }),
+        lit('=').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (o) { return AST.Pos.SavingPos(o); })
       );
     },
     
@@ -1624,7 +756,7 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     coord: function () {
       return or(
         p.nonemptyCoord,
-        MathJax.Parsers.success('empty').to(function () { return MML.xypic.Coord.C(); })
+        FP.Parsers.success('empty').to(function () { return AST.Coord.C(); })
       );
     },
     
@@ -1633,12 +765,12 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     //         |   '"' <id> '"'
     nonemptyCoord: function () {
       return or(
-        lit('c').to(function () { return MML.xypic.Coord.C(); }), 
-        lit('p').to(function () { return MML.xypic.Coord.P(); }), 
-        lit('x').to(function () { return MML.xypic.Coord.X(); }), 
-        lit('y').to(function () { return MML.xypic.Coord.Y(); }),
-        p.vector().to(function (v) { return MML.xypic.Coord.Vector(v); }), 
-        lit('"').andr(p.id).andl(felem('"')).to(function (id) { return MML.xypic.Coord.Id(id) })
+        lit('c').to(function () { return AST.Coord.C(); }), 
+        lit('p').to(function () { return AST.Coord.P(); }), 
+        lit('x').to(function () { return AST.Coord.X(); }), 
+        lit('y').to(function () { return AST.Coord.Y(); }),
+        p.vector().to(function (v) { return AST.Coord.Vector(v); }), 
+        lit('"').andr(p.id).andl(felem('"')).to(function (id) { return AST.Coord.Id(id) })
       );
     },
     
@@ -1654,35 +786,35 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
       return or(
         lit('(').andr(p.factor).andl(flit(',')).and(p.factor).andl(flit(')')).to(
           function (xy) {
-            return MML.xypic.Vector.InCurBase(xy.head, xy.tail);
+            return AST.Vector.InCurBase(xy.head, xy.tail);
           }
         ),
         lit('<').andr(p.dimen).andl(flit(',')).and(p.dimen).andl(flit('>')).to(
           function (xy) {
-            return MML.xypic.Vector.Abs(xy.head, xy.tail);
+            return AST.Vector.Abs(xy.head, xy.tail);
           }
         ),
         lit('<').andr(p.dimen).andl(flit('>')).to(
           function (x) {
-            return MML.xypic.Vector.Abs(x, x);
+            return AST.Vector.Abs(x, x);
           }
         ),
         lit('a').andr(flit('(')).andr(p.number).andl(flit(')')).to(
           function (d) {
-            return MML.xypic.Vector.Angle(d);
+            return AST.Vector.Angle(d);
           }
         ),
         lit('/').andr(p.direction).and(p.looseDimen).andl(flit('/')).to(
           function (dd) {
-            return MML.xypic.Vector.Dir(dd.head, dd.tail);
+            return AST.Vector.Dir(dd.head, dd.tail);
           }
         ),
-        lit('0').to(function (x) { return MML.xypic.Vector.InCurBase(0, 0); }),
-        function () { return p.corner().and(fun(MathJax.Parsers.opt(
+        lit('0').to(function (x) { return AST.Vector.InCurBase(0, 0); }),
+        function () { return p.corner().and(fun(FP.Parsers.opt(
         	fun(lit('(').andr(p.factor).andl(flit(')')))).to(function (f) {
           	return f.getOrElse(1);
           }))).to(function (cf) {
-          	return MML.xypic.Vector.Corner(cf.head, cf.tail);
+          	return AST.Vector.Corner(cf.head, cf.tail);
         	})
         }
       );
@@ -1695,21 +827,21 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     //          | 'A'
     corner: function () {
     	return or(
-      	regexLit(/^(CL|LC)/).to(function () { return MML.xypic.Corner.CL(); }),
-      	regexLit(/^(CR|RC)/).to(function () { return MML.xypic.Corner.CR(); }),
-      	regexLit(/^(CD|DC)/).to(function () { return MML.xypic.Corner.CD(); }),
-      	regexLit(/^(CU|UC)/).to(function () { return MML.xypic.Corner.CU(); }),
-      	regexLit(/^(LD|DL)/).to(function () { return MML.xypic.Corner.LD(); }),
-      	regexLit(/^(RD|DR)/).to(function () { return MML.xypic.Corner.RD(); }),
-      	regexLit(/^(LU|UL)/).to(function () { return MML.xypic.Corner.LU(); }),
-      	regexLit(/^(RU|UR)/).to(function () { return MML.xypic.Corner.RU(); }),
-      	lit('L').to(function () { return MML.xypic.Corner.L(); }),
-      	lit('R').to(function () { return MML.xypic.Corner.R(); }),
-      	lit('D').to(function () { return MML.xypic.Corner.D(); }),
-      	lit('U').to(function () { return MML.xypic.Corner.U(); }),
-      	lit('E').to(function () { return MML.xypic.Corner.NearestEdgePoint(); }),
-      	lit('P').to(function () { return MML.xypic.Corner.PropEdgePoint(); }),
-      	lit('A').to(function () { return MML.xypic.Corner.Axis(); })
+      	regexLit(/^(CL|LC)/).to(function () { return AST.Corner.CL(); }),
+      	regexLit(/^(CR|RC)/).to(function () { return AST.Corner.CR(); }),
+      	regexLit(/^(CD|DC)/).to(function () { return AST.Corner.CD(); }),
+      	regexLit(/^(CU|UC)/).to(function () { return AST.Corner.CU(); }),
+      	regexLit(/^(LD|DL)/).to(function () { return AST.Corner.LD(); }),
+      	regexLit(/^(RD|DR)/).to(function () { return AST.Corner.RD(); }),
+      	regexLit(/^(LU|UL)/).to(function () { return AST.Corner.LU(); }),
+      	regexLit(/^(RU|UR)/).to(function () { return AST.Corner.RU(); }),
+      	lit('L').to(function () { return AST.Corner.L(); }),
+      	lit('R').to(function () { return AST.Corner.R(); }),
+      	lit('D').to(function () { return AST.Corner.D(); }),
+      	lit('U').to(function () { return AST.Corner.U(); }),
+      	lit('E').to(function () { return AST.Corner.NearestEdgePoint(); }),
+      	lit('P').to(function () { return AST.Corner.PropEdgePoint(); }),
+      	lit('A').to(function () { return AST.Corner.Axis(); })
       );
     },
     
@@ -1721,19 +853,19 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     place: function () {
       return or(
         lit('<').andr(p.place).to(function (pl) {
-          return MML.xypic.Place(1, 0, undefined, undefined).compound(pl);
+          return AST.Place(1, 0, undefined, undefined).compound(pl);
         }), 
         lit('>').andr(p.place).to(function (pl) {
-          return MML.xypic.Place(0, 1, undefined, undefined).compound(pl);
+          return AST.Place(0, 1, undefined, undefined).compound(pl);
         }), 
         lit('(').andr(p.factor).andl(flit(')')).and(p.place).to(function (pl) {
-          return MML.xypic.Place(0, 0, MML.xypic.Place.Factor(pl.head), undefined).compound(pl.tail);
+          return AST.Place(0, 0, AST.Place.Factor(pl.head), undefined).compound(pl.tail);
         }), 
         lit('!').andr(flit('{')).andr(p.pos).andl(flit('}')).and(p.slide).to(function (ps) {
-          return MML.xypic.Place(0, 0, MML.xypic.Place.Intercept(ps.head), ps.tail);
+          return AST.Place(0, 0, AST.Place.Intercept(ps.head), ps.tail);
         }),
         function () { return p.slide().to(function (s) {
-          return MML.xypic.Place(0, 0, undefined, s);
+          return AST.Place(0, 0, undefined, s);
         }) }
       );
     },
@@ -1743,10 +875,10 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     slide: function () {
       return or(
         lit('/').andr(p.dimen).andl(flit('/')).to(function (d) {
-          return MML.xypic.Slide(d);
+          return AST.Slide(d);
         }),
-        MathJax.Parsers.success("no slide").to(function () {
-          return MML.xypic.Slide(undefined);
+        FP.Parsers.success("no slide").to(function () {
+          return AST.Slide(undefined);
         })
       );
     },
@@ -1780,7 +912,7 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     },
     
     // <loose-factor>
-    // makeshift against /^ 3.5mm/ is converted to /^ 3 .5mm/ by MathJax.InputJax.TeX.prefilterMath()
+    // makeshift against /^ 3.5mm/ converted to /^ 3 .5mm/ by MathJax.InputJax.TeX.prefilterMath()
     looseFactor: fun(or(
       regexLit(/^(\d \d*(\.\d*))/).to(function (v) {
         return parseFloat(v.replace(/ /, ""));
@@ -1797,7 +929,7 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     object: function () {
       return or(
         rep(p.modifier).and(p.objectbox).to(function (mso) {
-          return MML.xypic.Object(mso.head, mso.tail);
+          return AST.Object(mso.head, mso.tail);
         })
       );
     },
@@ -1816,12 +948,12 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
             mml = MML(mml);
           }
           TEX.combineRelations(mml.root);
-          return MML.xypic.ObjectBox.Text(mml.root);
+          return AST.ObjectBox.Text(mml.root);
         }),
         lit("@").andr(p.dir),
         lit("\\dir").andr(p.dir),
         lit("\\cir").andr(p.radius).andl(flit("{")).and(p.cir).andl(flit("}")).to(function (rc) {
-          return MML.xypic.ObjectBox.Cir(rc.head, rc.tail);
+          return AST.ObjectBox.Cir(rc.head, rc.tail);
         }),
         p.curve
       );
@@ -1847,7 +979,7 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     // <main> ::= <empty> | '--' | '-' | '..' | '.' | '~~' | '~' | '>>|' | '>|' | '>>' | '<<' | '>' | '<' | '(' | ')' | '`' | "'" | '||' | '|-' | '|<' | '|<<' | '|' | '*' | '+' | 'x' | '//' | '/' | 'o' | '==' | '=' | '::' | ':'
     dir: function () {
       return regexLit(/^[\^_23]/).opt().andl(flit('{')).and(fun(regexLit(/^(--|-|\.\.|\.|~~|~|>>\||>\||>>|<<|>|<|\(|\)|`|'|\|\||\|-|\|<|\|<<|\||\*|\+|x|\/\/|\/|o|==|=|::|:)/ /*'*/).opt())).andl(flit('}')).to(function (vm) {
-        return MML.xypic.ObjectBox.Dir(vm.head.getOrElse(""), vm.tail.getOrElse(""));
+        return AST.ObjectBox.Dir(vm.head.getOrElse(""), vm.tail.getOrElse(""));
       })
     },
     
@@ -1856,10 +988,10 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     radius: function () {
       return or(
         p.vector().to(function (v) {
-          return MML.xypic.ObjectBox.Cir.Radius.Vector(v);
+          return AST.ObjectBox.Cir.Radius.Vector(v);
         }),
-        MathJax.Parsers.success("default").to(function () {
-        	return MML.xypic.ObjectBox.Cir.Radius.Default();
+        FP.Parsers.success("default").to(function () {
+        	return AST.ObjectBox.Cir.Radius.Default();
         })
       );
     },
@@ -1869,10 +1001,10 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     cir: function () {
       return or(
         p.diag().and(fun(regexLit(/^[_\^]/))).and(p.diag).to(function (dod) {
-          return MML.xypic.ObjectBox.Cir.Cir.Segment(dod.head.head, dod.head.tail, dod.tail);
+          return AST.ObjectBox.Cir.Cir.Segment(dod.head.head, dod.head.tail, dod.tail);
         }),
-        MathJax.Parsers.success("full").to(function () {
-        	return MML.xypic.ObjectBox.Cir.Cir.Full();
+        FP.Parsers.success("full").to(function () {
+        	return AST.ObjectBox.Cir.Cir.Full();
         })
       );
     },
@@ -1880,7 +1012,7 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     // <curve> ::= '\crv' <curve-modifier> '{' <curve-object> <poslist> '}'
     curve: function () {
     	return lit("\\crv").andr(p.curveModifier).andl(flit("{")).and(p.curveObject).and(p.curvePoslist).andl(flit("}")).to(function (mop) {
-      	return MML.xypic.ObjectBox.Curve(mop.head.head, mop.head.tail, mop.tail);
+      	return AST.ObjectBox.Curve(mop.head.head, mop.head.tail, mop.tail);
       });
     },
     
@@ -1895,21 +1027,21 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     //                |   'cC'
     curveOption: function () {
     	return or(
-      	lit("p").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.p(); }),
-      	lit("P").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.P(); }),
-      	lit("l").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.l(); }),
-      	lit("L").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.L(); }),
-      	lit("c").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.c(); }),
-      	lit("C").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.C(); }),
-      	lit("pc").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.pc(); }),
-      	lit("pC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.pC(); }),
-      	lit("Pc").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.Pc(); }),
-      	lit("PC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.PC(); }),
-      	lit("lc").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.lc(); }),
-      	lit("lC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.lC(); }),
-      	lit("Lc").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.Lc(); }),
-      	lit("LC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.LC(); }),
-      	lit("cC").to(function () { return MML.xypic.ObjectBox.Curve.Modifier.cC(); })
+      	lit("p").to(function () { return AST.ObjectBox.Curve.Modifier.p(); }),
+      	lit("P").to(function () { return AST.ObjectBox.Curve.Modifier.P(); }),
+      	lit("l").to(function () { return AST.ObjectBox.Curve.Modifier.l(); }),
+      	lit("L").to(function () { return AST.ObjectBox.Curve.Modifier.L(); }),
+      	lit("c").to(function () { return AST.ObjectBox.Curve.Modifier.c(); }),
+      	lit("C").to(function () { return AST.ObjectBox.Curve.Modifier.C(); }),
+      	lit("pc").to(function () { return AST.ObjectBox.Curve.Modifier.pc(); }),
+      	lit("pC").to(function () { return AST.ObjectBox.Curve.Modifier.pC(); }),
+      	lit("Pc").to(function () { return AST.ObjectBox.Curve.Modifier.Pc(); }),
+      	lit("PC").to(function () { return AST.ObjectBox.Curve.Modifier.PC(); }),
+      	lit("lc").to(function () { return AST.ObjectBox.Curve.Modifier.lc(); }),
+      	lit("lC").to(function () { return AST.ObjectBox.Curve.Modifier.lC(); }),
+      	lit("Lc").to(function () { return AST.ObjectBox.Curve.Modifier.Lc(); }),
+      	lit("LC").to(function () { return AST.ObjectBox.Curve.Modifier.LC(); }),
+      	lit("cC").to(function () { return AST.ObjectBox.Curve.Modifier.cC(); })
       );
     },
     
@@ -1919,10 +1051,10 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     curveObject: function () {
     	return rep(or(
       	lit("~*").andr(p.object).to(function (obj) {
-        	return MML.xypic.ObjectBox.Curve.Object.Drop(obj);
+        	return AST.ObjectBox.Curve.Object.Drop(obj);
         }),
       	lit("~**").andr(p.object).to(function (obj) {
-        	return MML.xypic.ObjectBox.Curve.Object.Connect(obj);
+        	return AST.ObjectBox.Curve.Object.Connect(obj);
         })
       ));
     },
@@ -1942,44 +1074,44 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     curvePoslist: function () {
     	return or(
       	lit("&").andr(p.curvePoslist2).to(function (ps) {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.CurPos(), ps);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.CurPos(), ps);
         }),
       	lit("~@").andr(flit("&")).andr(p.curvePoslist2).to(function (ps) {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.AddStack(), ps);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.AddStack(), ps);
         }),
       	lit("~@").to(function () {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.AddStack(), MathJax.List.empty);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.AddStack(), FP.List.empty);
         }),
       	p.pos().andl(flit("&")).and(p.curvePoslist2).to(function (pps) {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.Pos(pps.head), pps.tail);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.Pos(pps.head), pps.tail);
         }),
       	p.nonemptyPos().to(function (p) {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.Pos(p), MathJax.List.empty);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.Pos(p), FP.List.empty);
         }),
-        MathJax.Parsers.success("empty").to(function () {
-        	return MathJax.List.empty;
+        FP.Parsers.success("empty").to(function () {
+        	return FP.List.empty;
         })
       );
     },
     curvePoslist2: function () {
     	return or(
       	lit("&").andr(p.curvePoslist2).to(function (ps) {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.CurPos(), ps);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.CurPos(), ps);
         }),
       	lit("~@").andr(flit("&")).andr(p.curvePoslist2).to(function (ps) {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.AddStack(), ps);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.AddStack(), ps);
         }),
       	lit("~@").to(function () {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.AddStack(), MathJax.List.empty);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.AddStack(), FP.List.empty);
         }),
       	p.nonemptyPos().andl(flit("&")).and(p.curvePoslist2).to(function (pps) {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.Pos(pps.head), pps.tail);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.Pos(pps.head), pps.tail);
         }),
       	p.nonemptyPos().to(function (p) {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.Pos(p), MathJax.List.empty);
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.Pos(p), FP.List.empty);
         }),
-        MathJax.Parsers.success("empty").to(function () {
-        	return MathJax.List.Cons(MML.xypic.ObjectBox.Curve.PosList.CurPos(), MathJax.List.empty);
+        FP.Parsers.success("empty").to(function () {
+        	return FP.List.Cons(AST.ObjectBox.Curve.PosList.CurPos(), FP.List.empty);
         })
       );
     },
@@ -1990,14 +1122,14 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     modifier: function () {
     	return or(
         lit("!").andr(p.vector).to(function (v) {
-          return MML.xypic.Modifier.Vector(v);
+          return AST.Modifier.Vector(v);
         }),
         lit("[").andr(p.shape).andl(flit("]")).to(function (s) {
-        	return MML.xypic.Modifier.Shape(s);
+        	return AST.Modifier.Shape(s);
         }),
         function () {
           return p.addOp().and(p.size).to(function (os) {
-            return MML.xypic.Modifier.AddOp(os.head, os.tail);
+            return AST.Modifier.AddOp(os.head, os.tail);
           })
         }
       );
@@ -2006,11 +1138,11 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     // <add-op> ::= '+' | '-' | '=' | '+=' | '-='
     addOp: function () {
     	return or(
-      	lit("+=").to(function () { return MML.xypic.Modifier.AddOp.GrowTo(); }),
-      	lit("-=").to(function () { return MML.xypic.Modifier.AddOp.ShrinkTo(); }),
-      	lit("+").to(function () { return MML.xypic.Modifier.AddOp.Grow(); }),
-      	lit("-").to(function () { return MML.xypic.Modifier.AddOp.Shrink(); }),
-      	lit("=").to(function () { return MML.xypic.Modifier.AddOp.Set(); })
+      	lit("+=").to(function () { return AST.Modifier.AddOp.GrowTo(); }),
+      	lit("-=").to(function () { return AST.Modifier.AddOp.ShrinkTo(); }),
+      	lit("+").to(function () { return AST.Modifier.AddOp.Grow(); }),
+      	lit("-").to(function () { return AST.Modifier.AddOp.Shrink(); }),
+      	lit("=").to(function () { return AST.Modifier.AddOp.Set(); })
       );
     },
     
@@ -2018,10 +1150,10 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     size: function () {
     	return or(
       	function () { return p.vector().to(function (v) {
-          return MML.xypic.Modifier.AddOp.VactorSize(v);
+          return AST.Modifier.AddOp.VactorSize(v);
         }) },
-      	MathJax.Parsers.success("default size").to(function () {
-          return MML.xypic.Modifier.AddOp.DefaultSize();
+      	FP.Parsers.success("default size").to(function () {
+          return AST.Modifier.AddOp.DefaultSize();
         })
       );
     },
@@ -2029,14 +1161,14 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     // <shape> ::= '.' | 'o' | 'l' | 'r' | 'u' | 'd' | 'c' | <empty>
     shape: function () {
     	return or(
-      	lit(".").to(function () { return MML.xypic.Modifier.Shape.Point(); }),
-      	lit("o").to(function () { return MML.xypic.Modifier.Shape.Circle(); }),
-      	lit("l").to(function () { return MML.xypic.Modifier.Shape.L(); }),
-      	lit("r").to(function () { return MML.xypic.Modifier.Shape.R(); }),
-      	lit("u").to(function () { return MML.xypic.Modifier.Shape.U(); }),
-      	lit("d").to(function () { return MML.xypic.Modifier.Shape.D(); }),
-      	lit("c").to(function () { return MML.xypic.Modifier.Shape.C(); }),
-      	MathJax.Parsers.success("rect").to(function () { return MML.xypic.Modifier.Shape.Rect(); })
+      	lit(".").to(function () { return AST.Modifier.Shape.Point(); }),
+      	lit("o").to(function () { return AST.Modifier.Shape.Circle(); }),
+      	lit("l").to(function () { return AST.Modifier.Shape.L(); }),
+      	lit("r").to(function () { return AST.Modifier.Shape.R(); }),
+      	lit("u").to(function () { return AST.Modifier.Shape.U(); }),
+      	lit("d").to(function () { return AST.Modifier.Shape.D(); }),
+      	lit("c").to(function () { return AST.Modifier.Shape.C(); }),
+      	FP.Parsers.success("rect").to(function () { return AST.Modifier.Shape.Rect(); })
       );
     },
     
@@ -2048,29 +1180,29 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     //              | '^'
     direction: function () {
       return seq(p.direction0, rep(p.direction1)).to(function (drs){
-        return MML.xypic.Direction.Compound(drs.head, drs.tail);
+        return AST.Direction.Compound(drs.head, drs.tail);
       });
     },
     direction0: function () {
       return or(
         lit('v').andr(p.vector).to(function (v) {
-          return MML.xypic.Direction.Vector(v);
+          return AST.Direction.Vector(v);
         }),
         p.diag().to(function (d) {
-          return MML.xypic.Direction.Diag(d);
+          return AST.Direction.Diag(d);
         })
       );
     },
     direction1: function () {
       return or(
         lit(':').andr(p.vector).to(function (v) {
-          return MML.xypic.Direction.RotVector(v);
+          return AST.Direction.RotVector(v);
         }),
         lit('_').to(function (x) {
-          return MML.xypic.Direction.RotAntiCW();
+          return AST.Direction.RotAntiCW();
         }),
         lit('^').to(function (x) {
-          return MML.xypic.Direction.RotCW();
+          return AST.Direction.RotCW();
         })
       );
     },
@@ -2078,16 +1210,16 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     // <diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
     //        | <empty>
     diag: fun(or(
-      regexLit(/^(ld|dl)/).to(function (x) { return MML.xypic.Diag.Angle('ld', -3*Math.PI/4); }),
-      regexLit(/^(rd|dr)/).to(function (x) { return MML.xypic.Diag.Angle('rd', -Math.PI/4); }),
-      regexLit(/^(lu|ul)/).to(function (x) { return MML.xypic.Diag.Angle('lu', 3*Math.PI/4); }),
-      regexLit(/^(ru|ur)/).to(function (x) { return MML.xypic.Diag.Angle('ru', Math.PI/4); }),
-      lit('l').to(function (x) { return MML.xypic.Diag.Angle('l', Math.PI); }),
-      lit('r').to(function (x) { return MML.xypic.Diag.Angle('r', 0); }),
-      lit('d').to(function (x) { return MML.xypic.Diag.Angle('d', -Math.PI/2); }),
-      lit('u').to(function (x) { return MML.xypic.Diag.Angle('u', Math.PI/2); }),
-      MathJax.Parsers.success("empty").to(function (x) {
-        return MML.xypic.Diag.Default();
+      regexLit(/^(ld|dl)/).to(function (x) { return AST.Diag.Angle('ld', -3*Math.PI/4); }),
+      regexLit(/^(rd|dr)/).to(function (x) { return AST.Diag.Angle('rd', -Math.PI/4); }),
+      regexLit(/^(lu|ul)/).to(function (x) { return AST.Diag.Angle('lu', 3*Math.PI/4); }),
+      regexLit(/^(ru|ur)/).to(function (x) { return AST.Diag.Angle('ru', Math.PI/4); }),
+      lit('l').to(function (x) { return AST.Diag.Angle('l', Math.PI); }),
+      lit('r').to(function (x) { return AST.Diag.Angle('r', 0); }),
+      lit('d').to(function (x) { return AST.Diag.Angle('d', -Math.PI/2); }),
+      lit('u').to(function (x) { return AST.Diag.Angle('u', Math.PI/2); }),
+      FP.Parsers.success("empty").to(function (x) {
+        return AST.Diag.Default();
       })
     )),
   })();
@@ -2098,7 +1230,7 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
     }
   });
   
-  MathJax.Parsers.ParseError = MathJax.Object.Subclass({
+  FP.Parsers.ParseError = MathJax.Object.Subclass({
     Init: function (parseResult) {
       this.parseResult = parseResult;
     },
@@ -2121,8 +1253,8 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
      */
     XY: function(begin) {
       try {
-      	var input = MathJax.StringReader(this.string, this.i);
-        var result = MathJax.Parsers.parse(p.xy(), input);
+      	var input = FP.StringReader(this.string, this.i);
+        var result = FP.Parsers.parse(p.xy(), input);
         this.i = result.next.offset;
 //        console.log(result.toString());
       } catch (e) {
@@ -2132,12 +1264,12 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
       
       if (result.successful) {
         if (supportGraphics) {
-          this.Push(MML.xypic(result.result));
+          this.Push(AST.xypic(result.result));
         } else {
           this.Push(MML.merror("Unsupported Browser. Please open with Firefox/Safari/Chrome"));
         }
       } else {
-        throw MathJax.Parsers.ParseError(result);
+        throw FP.Parsers.ParseError(result);
       }
       
       return begin;
@@ -2162,9 +1294,13 @@ MathJax.Parsers.OnceParser = MathJax.Parsers.Parser.Subclass({
 
 MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   var VERSION = "0.1";
+  
+  var FP = MathJax.Extension.fp;
   var MML = MathJax.ElementJax.mml;
   var HTMLCSS = MathJax.OutputJax["HTML-CSS"];
   var HUB = MathJax.Hub;
+  var xypic = MathJax.Extension.xypic;
+  var AST = xypic.AST;
   
   var SVGNS = "http://www.w3.org/2000/svg";
   var XHTMLNS = "http://www.w3.org/1999/xhtml";
@@ -2176,10 +1312,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   
   var svgForDebug;
   
-  MML.xypic.Graphics = MathJax.Object.Subclass({});
-  MML.xypic.Graphics.SVG = MML.xypic.Graphics.Subclass({
+  xypic.Graphics = MathJax.Object.Subclass({});
+  xypic.Graphics.SVG = xypic.Graphics.Subclass({
     createGroup: function (transform) {
-      return MML.xypic.Graphics.SVG.Group(this, transform);
+      return xypic.Graphics.SVG.Group(this, transform);
     },
     createSVGElement: function (type, def) {
       var obj = document.createElementNS(SVGNS, type);
@@ -2194,10 +1330,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return obj;
     },
     transformBuilder: function () {
-      return MML.xypic.Graphics.SVG.Transform();
+      return xypic.Graphics.SVG.Transform();
     }
   });
-  MML.xypic.Graphics.SVG.World = MML.xypic.Graphics.SVG.Subclass({
+  xypic.Graphics.SVG.World = xypic.Graphics.SVG.Subclass({
     Init: function (stack, height, depth, width, strokeWidth, color, def) {
       var svg = document.createElementNS(SVGNS, "svg");
       svg.setAttribute("xmlns", SVGNS);
@@ -2236,27 +1372,27 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       this.svg.setAttributeNS(null, name, value.toString());
     }
   });
-  MML.xypic.Graphics.SVG.Transform = MathJax.Object.Subclass({
+  xypic.Graphics.SVG.Transform = MathJax.Object.Subclass({
     Init: function (transform) {
       this.transform = (transform || "");
     },
     translate: function (x, y) {
-      return MML.xypic.Graphics.SVG.Transform(
+      return xypic.Graphics.SVG.Transform(
         this.transform+" translate("+em2px(x)+","+em2px(-y)+")")
     },
     rotateDegree: function (degree) {
-      return MML.xypic.Graphics.SVG.Transform(
+      return xypic.Graphics.SVG.Transform(
         this.transform+" rotate("+(-degree)+")");
     },
     rotateRadian: function (radian) {
-      return MML.xypic.Graphics.SVG.Transform(
+      return xypic.Graphics.SVG.Transform(
         this.transform+" rotate("+(-180*radian/Math.PI)+")");
     },
     toString: function () {
       return this.transform;
     }
   });
-  MML.xypic.Graphics.SVG.Group = MML.xypic.Graphics.SVG.Subclass({
+  xypic.Graphics.SVG.Group = xypic.Graphics.SVG.Subclass({
     Init: function (parent, transform) {
       this.drawArea = parent.createSVGElement("g", 
         transform === undefined? {} : {transform:transform.toString()});
@@ -2265,23 +1401,23 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       this.drawArea.parentNode.removeChild(this.drawArea);
     }
   });
-  MML.xypic.Graphics.Augment({}, {
+  xypic.Graphics.Augment({}, {
     createSVG: function (stack, height, depth, width, strokeWidth, color, def) {
-      return MML.xypic.Graphics.SVG.World(stack, height, depth, width, strokeWidth, color, def);
+      return xypic.Graphics.SVG.World(stack, height, depth, width, strokeWidth, color, def);
     }
   });
   
   // for WebKit SVG
   var foreignObjects;
   
-  MML.xypic.Augment({
+  AST.xypic.Augment({
     toHTML: function (span) {
       if (!HTMLCSS.supportGraphics) {
         return span;
       }
       
       var p = HTMLCSS.length2em("0.2em");
-      var t = MML.xypic.strokeWidth;
+      var t = AST.xypic.strokeWidth;
 
       span = this.HTMLcreateSpan(span);
       var stack = HTMLCSS.createStack(span);
@@ -2296,7 +1432,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       if (HTMLCSS.useVML) {
       	// TODO: to support VML or not ...
       } else {
-        svg = MML.xypic.Graphics.createSVG(stack, H, D, W, t, color, {
+        svg = xypic.Graphics.createSVG(stack, H, D, W, t, color, {
           viewBox:[0, -em2px(H+D), em2px(W), em2px(H+D)].join(" "),
           overflow:"visible"
         });
@@ -2310,7 +1446,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         
         var xypicData = this.cmd;
         if (xypicData) {
-          var env = MML.xypic.Env();
+          var env = xypic.Env();
           var box = xypicData.draw(svg, env);
           if (box !== undefined) {
             svg.setWidth(box.l+box.r+2*p);
@@ -2366,7 +1502,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     objectheight: HTMLCSS.length2em("0pt"),
   });
   
-  MML.xypic.Util = MathJax.Object.Subclass({}, {
+  xypic.Util = MathJax.Object.Subclass({}, {
     extProd: function (v1, v2) {
       return [v1[1]*v2[2]-v1[2]*v2[1], v1[2]*v2[0]-v1[0]*v2[2], v1[0]*v2[1]-v1[1]*v2[0]];
     },
@@ -2377,7 +1513,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return (x < 0? -1 : 1);
     },
     roundEpsilon: function (x) {
-      if (Math.abs(x) < MML.xypic.machinePrecision) {
+      if (Math.abs(x) < AST.xypic.machinePrecision) {
         return 0;
       } else {
         return x;
@@ -2407,12 +1543,12 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Frame = MathJax.Object.Subclass({
+  xypic.Frame = MathJax.Object.Subclass({
     toRect: function (def) {
-      return MML.xypic.Frame.Rect(this.x, this.y, def);
+      return xypic.Frame.Rect(this.x, this.y, def);
     },
 	  combineRect: function (that) {
-    	return MML.xypic.Frame.combineRect(this, that);
+    	return xypic.Frame.combineRect(this, that);
     }
   },{
     combineRect: function (frame1, frame2) {
@@ -2430,7 +1566,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Frame.Point = MML.xypic.Frame.Subclass({
+  xypic.Frame.Point = xypic.Frame.Subclass({
     Init: function (x, y) {
       this.x = x;
       this.y = y;
@@ -2461,7 +1597,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return this;
     },
     move: function (x, y) {
-    	return MML.xypic.Frame.Point(x, y);
+    	return xypic.Frame.Point(x, y);
     },
     rotate: function (angle) {
     	return this;
@@ -2471,7 +1607,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Frame.Rect = MML.xypic.Frame.Subclass({
+  xypic.Frame.Rect = xypic.Frame.Subclass({
     Init: function (x, y, def) {
       this.x = x;
       this.y = y;
@@ -2494,24 +1630,24 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       if (dx > 0) {
       	var ey = dy * this.r / dx;
         if (ey > this.u) {
-        	return MML.xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
+        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
         } else if (ey < -this.d) {
-        	return MML.xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
+        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
         }
-        return MML.xypic.Frame.Point(this.x + this.r, this.y + ey);
+        return xypic.Frame.Point(this.x + this.r, this.y + ey);
       } else if (dx < 0) {
       	var ey = -dy * this.l / dx;
         if (ey > this.u) {
-        	return MML.xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
+        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
         } else if (ey < -this.d) {
-        	return MML.xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
+        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
         }
-        return MML.xypic.Frame.Point(this.x - this.l, this.y + ey);
+        return xypic.Frame.Point(this.x - this.l, this.y + ey);
       } else {
       	if (dy > 0) {
-        	return MML.xypic.Frame.Point(this.x, this.y + this.u);
+        	return xypic.Frame.Point(this.x, this.y + this.u);
         } else if (dy < 0) {
-        	return MML.xypic.Frame.Point(this.x, this.y - this.d);
+        	return xypic.Frame.Point(this.x, this.y - this.d);
         }
       	return undefined;	// TODO: 存在しない点を表すオプジェクトを作る？MayBeモナドでよい。
       }
@@ -2525,24 +1661,24 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       if (dx > 0) {
       	var ey = dy * (-this.l) / dx;
         if (ey > this.u) {
-        	return MML.xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
+        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
         } else if (ey < -this.d) {
-        	return MML.xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
+        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
         }
-        return MML.xypic.Frame.Point(this.x - this.l, this.y + ey);
+        return xypic.Frame.Point(this.x - this.l, this.y + ey);
       } else if (dx < 0) {
       	var ey = dy * this.r / dx;
         if (ey > this.u) {
-        	return MML.xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
+        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
         } else if (ey < -this.d) {
-        	return MML.xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
+        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
         }
-        return MML.xypic.Frame.Point(this.x + this.r, this.y + ey);
+        return xypic.Frame.Point(this.x + this.r, this.y + ey);
       } else {
       	if (dy < 0) {
-        	return MML.xypic.Frame.Point(this.x, this.y + this.u);
+        	return xypic.Frame.Point(this.x, this.y + this.u);
         } else if (dy > 0) {
-        	return MML.xypic.Frame.Point(this.x, this.y - this.d);
+        	return xypic.Frame.Point(this.x, this.y - this.d);
         }
       	return undefined;	// TODO: 存在しない点を表すオプジェクトを作る？MayBeモナドでよい。
       }
@@ -2569,7 +1705,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return this.toRect({l:w/2, r:w/2, u:h/2, d:h/2});
     },
     move: function (x, y) {
-    	return MML.xypic.Frame.Rect(x, y, {l:this.l, r:this.r, u:this.u, d:this.d});
+    	return xypic.Frame.Rect(x, y, {l:this.l, r:this.r, u:this.u, d:this.d});
     },
     rotate: function (angle) {
     	var c = Math.cos(angle), s = Math.sin(angle);
@@ -2590,7 +1726,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Frame.Circle = MML.xypic.Frame.Subclass({
+  xypic.Frame.Circle = xypic.Frame.Subclass({
     Init: function (x, y, r) {
       this.x = x;
       this.y = y;
@@ -2612,7 +1748,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       	return undefined;	// TODO: 存在しない点を表すオプジェクトを作る？MayBeモナドでよい。
       } else {
       	var angle = Math.atan2(dy, dx);
-        return MML.xypic.Frame.Point(this.x+this.r*Math.cos(angle), this.y+this.r*Math.sin(angle));
+        return xypic.Frame.Point(this.x+this.r*Math.cos(angle), this.y+this.r*Math.sin(angle));
       }
     },
     oppositeEdgePoint: function (x, y) {
@@ -2625,25 +1761,25 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       	return undefined;	// TODO: 存在しない点を表すオプジェクトを作る？MayBeモナドでよい。
       } else {
       	var angle = Math.atan2(dy, dx);
-        return MML.xypic.Frame.Point(this.x-this.r*Math.cos(angle), this.y-this.r*Math.sin(angle));
+        return xypic.Frame.Point(this.x-this.r*Math.cos(angle), this.y-this.r*Math.sin(angle));
       }
     },
     grow: function (xMargin, yMargin) {
-      return MML.xypic.Frame.Circle(this.x, this.y, Math.max(0, this.r+xMargin));
+      return xypic.Frame.Circle(this.x, this.y, Math.max(0, this.r+xMargin));
     },
     toSize: function (width, height) {
-      return MML.xypic.Frame.Circle(this.x, this.y, width/2);
+      return xypic.Frame.Circle(this.x, this.y, width/2);
     },
     growTo: function (width, height) {
       var r = Math.max(this.r, width/2);
-      return MML.xypic.Frame.Circle(this.x, this.y, r);
+      return xypic.Frame.Circle(this.x, this.y, r);
     },
     shrinkTo: function (width, height) {
       var r = Math.min(this.r, width/2);
-      return MML.xypic.Frame.Circle(this.x, this.y, r);
+      return xypic.Frame.Circle(this.x, this.y, r);
     },
     move: function (x, y) {
-    	return MML.xypic.Frame.Circle(x, y, this.r);
+    	return xypic.Frame.Circle(x, y, this.r);
     },
     rotate: function (angle) {
     	return this;
@@ -2653,7 +1789,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Shape = MathJax.Object.Subclass({
+  xypic.Shape = MathJax.Object.Subclass({
     velocity: function (t) {
     	var dx = this.dpx(t);
     	var dy = this.dpy(t);
@@ -2665,7 +1801,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
     	this.buildLengthArray();
       
-      var n = MML.xypic.lengthResolution;
+      var n = AST.xypic.lengthResolution;
       var tn = t*n;
     	var f = Math.floor(tn);
     	var c = Math.ceil(tn);
@@ -2703,7 +1839,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         }
       }
       
-      var n = MML.xypic.lengthResolution;
+      var n = AST.xypic.lengthResolution;
       if (al === ah) {
       	return m/n;
       }
@@ -2715,7 +1851,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       	return;
       }
       
-      var n = MML.xypic.lengthResolution;
+      var n = AST.xypic.lengthResolution;
       // lengthArray[i]: \int_0^{t_{2i}} v(t) dt with Simpson's rule, (i=0, 1, \cdots, n)
       // where, t_k=k h, h=1/(2n): step length.
       var lengthArray = new Array(n+1);
@@ -2736,7 +1872,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       this.lengthArray = lengthArray;
     },
     drawParallelCurve: function (svg, vshift) {
-      var i, n = this.countOfSegments() * MML.xypic.interpolationResolution;
+      var i, n = this.countOfSegments() * AST.xypic.interpolationResolution;
       var ts = new Array(n+1);
       var x1s = new Array(n+1);
       var y1s = new Array(n+1);
@@ -2759,8 +1895,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         x2s[i] = x-dc;
         y2s[i] = y-ds;
       }
-      MML.xypic.Shape.CubicBeziers.interpolation(ts, x1s, y1s).drawPrimitive(svg, "none");
-      MML.xypic.Shape.CubicBeziers.interpolation(ts, x2s, y2s).drawPrimitive(svg, "none");
+      xypic.Shape.CubicBeziers.interpolation(ts, x1s, y1s).drawPrimitive(svg, "none");
+      xypic.Shape.CubicBeziers.interpolation(ts, x2s, y2s).drawPrimitive(svg, "none");
     },
     drawParallelDottedCurve: function (svg, spacing, vshift) {
       var px = 1/HTMLCSS.em, hpx = px/2;
@@ -2817,8 +1953,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         x2s[i] = x-dc;
         y2s[i] = y-ds;
       }
-      MML.xypic.Shape.CubicBeziers.interpolation(ts, x1s, y1s).drawSkipped(svg);
-      MML.xypic.Shape.CubicBeziers.interpolation(ts, x2s, y2s).drawSkipped(svg);
+      xypic.Shape.CubicBeziers.interpolation(ts, x1s, y1s).drawSkipped(svg);
+      xypic.Shape.CubicBeziers.interpolation(ts, x2s, y2s).drawSkipped(svg);
     },
   	drawSquigCurve: function (svg, env, variant) {
       var thickness = HTMLCSS.length2em("0.15em");
@@ -2977,7 +2113,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
     },
   	drawDashSquigCurve: function (svg, env, variant) {
-      var thickness = MML.xypic.thickness;
+      var thickness = AST.xypic.thickness;
       var len = this.length(1);
       var wave = 4*thickness;
       var amp = thickness;
@@ -3262,7 +2398,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
             var conBBox = objectForConnect.boundingBox(svg, env);
             if (conBBox == undefined) {
               env.angle = 0;
-              env.mostRecentLine = MML.xypic.MostRecentLine.none;
+              env.mostRecentLine = xypic.MostRecentLine.none;
               return undefined;
             }
             
@@ -3282,14 +2418,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
             
             var compositeLen = conLen + dropLen;
             if (compositeLen == 0) {
-              compositeLen = MML.xypic.strokeWidth;
+              compositeLen = AST.xypic.strokeWidth;
             }
             
             var len = this.length(1);
             var n = Math.floor(len/compositeLen);
             if (n == 0) {
               env.angle = 0;
-              env.mostRecentLine = MML.xypic.MostRecentLine.none;
+              env.mostRecentLine = xypic.MostRecentLine.none;
               return undefined;
             }
             
@@ -3333,21 +2469,21 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         var objectBBox = object.boundingBox(svg, env);
         if (objectBBox == undefined) {
           env.angle = 0;
-          env.mostRecentLine = MML.xypic.MostRecentLine.none;
+          env.mostRecentLine = xypic.MostRecentLine.none;
           return undefined;
         }
         
         var objectWidth = objectBBox.l+objectBBox.r;
         var objectLen = objectWidth;
         if (objectLen == 0) {
-          objectLen = MML.xypic.strokeWidth;
+          objectLen = AST.xypic.strokeWidth;
         }
         
         var len = this.length(1);
         var n = Math.floor(len/objectLen);
         if (n == 0) {
           env.angle = 0;
-          env.mostRecentLine = MML.xypic.MostRecentLine.none;
+          env.mostRecentLine = xypic.MostRecentLine.none;
           return undefined;
         }
         
@@ -3389,7 +2525,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     minSolutionOfCubicEq: function (a3, a2, a1, a0) {
     	// find minimum solution t in [0, 1]
       if (a3 === 0) {
-      	return MML.xypic.Shape.minSolutionOfQuadEq(a2, a1, a0);
+      	return xypic.Shape.minSolutionOfQuadEq(a2, a1, a0);
       }
       var b2 = a2/3/a3, b1 = a1/a3, b0 = a0/a3;
       var p = b2*b2-b1/3, q = -b0/2+b1*b2/2-b2*b2*b2;
@@ -3397,20 +2533,20 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       if (d === 0) {
       	var s = Math.pow(q, 1/3);
         var t0 = 2*s-b2, t1 = -s-b2;
-        return MML.xypic.Shape.minT(t0, t1);
+        return xypic.Shape.minT(t0, t1);
       } else if (d > 0) {
-      	var u = q+MML.xypic.Shape.sign(q)*Math.sqrt(d);
-      	var r = MML.xypic.Shape.sign(u)*Math.pow(Math.abs(u), 1/3);
+      	var u = q+xypic.Shape.sign(q)*Math.sqrt(d);
+      	var r = xypic.Shape.sign(u)*Math.pow(Math.abs(u), 1/3);
         var s = p/r;
         var t = r+s-b2;
-        return MML.xypic.Shape.minT(t);
+        return xypic.Shape.minT(t);
       } else {
       	var r = 2*Math.sqrt(p);
         var s = Math.acos(2*q/p/r);
         var t0 = r*Math.cos(s/3)-b2;
         var t1 = r*Math.cos((s+2*Math.PI)/3)-b2;
         var t2 = r*Math.cos((s+4*Math.PI)/3)-b2;
-        return MML.xypic.Shape.minT(t0, t1, t2);
+        return xypic.Shape.minT(t0, t1, t2);
       }
     },
     minSolutionOfQuadEq: function (a2, a1, a0) {
@@ -3419,14 +2555,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       	if (a1 === 0) {
         	return (a0 === 0? 0 : undefined);
         }
-        return  MML.xypic.Shape.minT(-a0/a1);
+        return  xypic.Shape.minT(-a0/a1);
       } else {
       	var d = a1*a1-4*a0*a2;
         if (d >= 0) {
           var s = Math.sqrt(d);
           var tp = (-a1+s)/2/a2;
           var tm = (-a1-s)/2/a2;
-          return MML.xypic.Shape.minT(tp, tm);
+          return xypic.Shape.minT(tp, tm);
         } else {
         	return undefined;
         }
@@ -3434,7 +2570,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Shape.QuadBezier = MML.xypic.Shape.Subclass({
+  xypic.Shape.QuadBezier = xypic.Shape.Subclass({
   	Init: function (cp0, cp1, cp2) {
     	this.cp0 = cp0;
     	this.cp1 = cp1;
@@ -3459,10 +2595,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     	return this.cp2;
     },
     position: function (t) {
-    	return MML.xypic.Frame.Point(this.px(t), this.py(t));
+    	return xypic.Frame.Point(this.px(t), this.py(t));
     },
     derivative: function (t) {
-    	return MML.xypic.Frame.Point(this.dpx(t), this.dpy(t));
+    	return xypic.Frame.Point(this.dpx(t), this.dpy(t));
     },
     angle: function (t) {
     	return Math.atan2(this.dpy(t), this.dpx(t));
@@ -3471,7 +2607,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       var maxMinX = this.maxMin(this.cp0.x, this.cp1.x, this.cp2.x, vshift);
       var maxMinY = this.maxMin(this.cp0.y, this.cp1.y, this.cp2.y, vshift);
     	if (vshift === 0) {
-        return MML.xypic.Frame.Rect(this.cp0.x, this.cp0.y, {
+        return xypic.Frame.Rect(this.cp0.x, this.cp0.y, {
           l:this.cp0.x-maxMinX.min, r:maxMinX.max-this.cp0.x,
           u:maxMinY.max-this.cp0.y, d:this.cp0.y-maxMinY.min
         });
@@ -3489,7 +2625,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         var maxX = Math.max(maxMinX.max, sx+vc0, sx-vc0, ex+vc1, ex-vc1);
         var minY = Math.min(maxMinY.min, sy+vs0, sy-vs0, ey+vs1, ey-vs1);
         var maxY = Math.max(maxMinY.max, sy+vs0, sy-vs0, ey+vs1, ey-vs1);
-        return MML.xypic.Frame.Rect(sx, sy, {
+        return xypic.Frame.Rect(sx, sy, {
           l:sx-minX, r:maxX-sx, u:maxY-sy, d:sy-minY
         });
       }
@@ -3504,7 +2640,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         min = x0;
       }
       
-      var roundEp = MML.xypic.Util.roundEpsilon;
+      var roundEp = xypic.Util.roundEpsilon;
       
     	var a0 = roundEp(x0);
       var a1 = roundEp(x1 - x0);
@@ -3540,16 +2676,16 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       var ty = this.py(t);
       
       var p0 = this.cp0;
-      var p1 = MML.xypic.Frame.Point(x0+t*(x1-x0), y0+t*(y1-y0));
-      var p2 = MML.xypic.Frame.Point(tx, ty);
+      var p1 = xypic.Frame.Point(x0+t*(x1-x0), y0+t*(y1-y0));
+      var p2 = xypic.Frame.Point(tx, ty);
       
       var q0 = p2;
-      var q1 = MML.xypic.Frame.Point(x1+t*(x2-x1), y1+t*(y2-y1));
+      var q1 = xypic.Frame.Point(x1+t*(x2-x1), y1+t*(y2-y1));
     	var q2 = this.cp2;
       
       return [
-      	MML.xypic.Shape.QuadBezier(p0, p1, p2),
-      	MML.xypic.Shape.QuadBezier(q0, q1, q2)
+      	xypic.Shape.QuadBezier(p0, p1, p2),
+      	xypic.Shape.QuadBezier(q0, q1, q2)
       ]
     },
     shaveStart: function (frame) {
@@ -3558,7 +2694,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       if (edgeCPs === undefined) {
         return undefined;
       }
-      return MML.xypic.Shape.QuadBezier(edgeCPs[0], edgeCPs[1], edgeCPs[2]);
+      return xypic.Shape.QuadBezier(edgeCPs[0], edgeCPs[1], edgeCPs[2]);
     },
     shaveEnd: function (frame) {
       var edgeCPs;
@@ -3566,7 +2702,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       if (edgeCPs === undefined) {
         return undefined;
       }
-      return MML.xypic.Shape.QuadBezier(edgeCPs[2], edgeCPs[1], edgeCPs[0]);
+      return xypic.Shape.QuadBezier(edgeCPs[2], edgeCPs[1], edgeCPs[0]);
     },
     edgeControlPoints: function (frame, cp0, cp1, cp2) {
       if (frame.isPoint()) {
@@ -3574,7 +2710,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
       
       var t;
-      var roundEp = MML.xypic.Util.roundEpsilon;
+      var roundEp = xypic.Util.roundEpsilon;
       
       var x0 = cp0.x;
       var x1 = cp1.x;
@@ -3603,19 +2739,19 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         
         var ts = [];
         if (x0 <= rx && (x1 >= rx || x2 >= rx)) {
-          t = MML.xypic.Shape.minSolutionOfQuadEq(a2x, a1x, a0x-rx);
+          t = xypic.Shape.minSolutionOfQuadEq(a2x, a1x, a0x-rx);
           if (t !== undefined) { ts.push(t) }
         }
         if (x0 >= lx && (x2 <= lx || x1 <= lx)) {
-          t = MML.xypic.Shape.minSolutionOfQuadEq(a2x, a1x, a0x-lx);
+          t = xypic.Shape.minSolutionOfQuadEq(a2x, a1x, a0x-lx);
           if (t !== undefined) { ts.push(t) }
         }
         if (y0 <= uy && (y1 >= uy || y2 >= uy)) {
-          t = MML.xypic.Shape.minSolutionOfQuadEq(a2y, a1y, a0y-uy);
+          t = xypic.Shape.minSolutionOfQuadEq(a2y, a1y, a0y-uy);
           if (t !== undefined) { ts.push(t) }
         }
         if (y0 >= dy && (y2 <= dy || y1 <= dy)) {
-          t = MML.xypic.Shape.minSolutionOfQuadEq(a2y, a1y, a0y-dy);
+          t = xypic.Shape.minSolutionOfQuadEq(a2y, a1y, a0y-dy);
           if (t !== undefined) { ts.push(t) }
         }
         if (ts.length === 0) {
@@ -3626,18 +2762,18 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       } else if (frame.isCircle()) {
         var cx = frame.x, cy = frame.y, r = frame.r, pi = Math.PI;
         
-        var arc0 = MML.xypic.Shape.Segment.Arc(cx, cy, r, -pi, -pi/2);
-        var arc1 = MML.xypic.Shape.Segment.Arc(cx, cy, r, -pi/2, 0);
-        var arc2 = MML.xypic.Shape.Segment.Arc(cx, cy, r, 0, pi/2);
-        var arc3 = MML.xypic.Shape.Segment.Arc(cx, cy, r, pi/2, pi);
+        var arc0 = xypic.Shape.Segment.Arc(cx, cy, r, -pi, -pi/2);
+        var arc1 = xypic.Shape.Segment.Arc(cx, cy, r, -pi/2, 0);
+        var arc2 = xypic.Shape.Segment.Arc(cx, cy, r, 0, pi/2);
+        var arc3 = xypic.Shape.Segment.Arc(cx, cy, r, pi/2, pi);
         
-        var bezier = MML.xypic.Shape.Segment.QuadBezier(MML.xypic.Shape.QuadBezier(cp0, cp1, cp2), 0, 1);
+        var bezier = xypic.Shape.Segment.QuadBezier(xypic.Shape.QuadBezier(cp0, cp1, cp2), 0, 1);
         
         var intersec = [];
-        intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(arc0, bezier));
-        intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(arc1, bezier));
-        intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(arc2, bezier));
-        intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(arc3, bezier));
+        intersec = intersec.concat(xypic.Shape.Segment.findIntersections(arc0, bezier));
+        intersec = intersec.concat(xypic.Shape.Segment.findIntersections(arc1, bezier));
+        intersec = intersec.concat(xypic.Shape.Segment.findIntersections(arc2, bezier));
+        intersec = intersec.concat(xypic.Shape.Segment.findIntersections(arc3, bezier));
         
         if (intersec.length === 0) {
           return undefined;
@@ -3651,8 +2787,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
       var tx = px(t);
       var ty = py(t);
-      cp0 = MML.xypic.Frame.Point(tx, ty);
-      cp1 = MML.xypic.Frame.Point(x1+t*(x2-x1), y1+t*(y2-y1));
+      cp0 = xypic.Frame.Point(tx, ty);
+      cp1 = xypic.Frame.Point(x1+t*(x2-x1), y1+t*(y2-y1));
       return [cp0, cp1 ,cp2];
     },
     countOfSegments: function () { return 1; },
@@ -3670,7 +2806,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Shape.CubicBezier = MML.xypic.Shape.Subclass({
+  xypic.Shape.CubicBezier = xypic.Shape.Subclass({
   	Init: function (cp0, cp1, cp2, cp3) {
     	this.cp0 = cp0;
     	this.cp1 = cp1;
@@ -3698,10 +2834,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     	return this.cp3;
     },
     position: function (t) {
-    	return MML.xypic.Frame.Point(this.px(t), this.py(t));
+    	return xypic.Frame.Point(this.px(t), this.py(t));
     },
     derivative: function (t) {
-    	return MML.xypic.Frame.Point(this.dpx(t), this.dpy(t));
+    	return xypic.Frame.Point(this.dpx(t), this.dpy(t));
     },
     angle: function (t) {
     	return Math.atan2(this.dpy(t), this.dpx(t));
@@ -3710,7 +2846,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       var maxMinX = this.maxMin(this.cp0.x, this.cp1.x, this.cp2.x, this.cp3.x, vshift);
       var maxMinY = this.maxMin(this.cp0.y, this.cp1.y, this.cp2.y, this.cp3.y, vshift);
     	if (vshift === 0) {
-        return MML.xypic.Frame.Rect(this.cp0.x, this.cp0.y, {
+        return xypic.Frame.Rect(this.cp0.x, this.cp0.y, {
           l:this.cp0.x-maxMinX.min, r:maxMinX.max-this.cp0.x,
           u:maxMinY.max-this.cp0.y, d:this.cp0.y-maxMinY.min
         });
@@ -3728,7 +2864,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         var maxX = Math.max(maxMinX.max, sx+vc0, sx-vc0, ex+vc1, ex-vc1);
         var minY = Math.min(maxMinY.min, sy+vs0, sy-vs0, ey+vs1, ey-vs1);
         var maxY = Math.max(maxMinY.max, sy+vs0, sy-vs0, ey+vs1, ey-vs1);
-        return MML.xypic.Frame.Rect(sx, sy, {
+        return xypic.Frame.Rect(sx, sy, {
           l:sx-minX, r:maxX-sx, u:maxY-sy, d:sy-minY
         });
       }
@@ -3743,7 +2879,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         min = x0;
       }
       
-      var roundEp = MML.xypic.Util.roundEpsilon;
+      var roundEp = xypic.Util.roundEpsilon;
     	var a0 = roundEp(x0);
       var a1 = roundEp(x1 - x0);
       var a2 = roundEp(x2 - 2*x1 + x0);
@@ -3798,24 +2934,24 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       var ty = this.py(t);
       
       var p0 = this.cp0;
-      var p1 = MML.xypic.Frame.Point(x0+t*(x1-x0), y0+t*(y1-y0));
-			var p2 = MML.xypic.Frame.Point(
+      var p1 = xypic.Frame.Point(x0+t*(x1-x0), y0+t*(y1-y0));
+			var p2 = xypic.Frame.Point(
       	x0+2*t*(x1-x0)+t*t*(x2-2*x1+x0),
         y0+2*t*(y1-y0)+t*t*(y2-2*y1+y0)
       );
-      var p3 = MML.xypic.Frame.Point(tx, ty);
+      var p3 = xypic.Frame.Point(tx, ty);
       
       var q0 = p3;
-      var q1 = MML.xypic.Frame.Point(
+      var q1 = xypic.Frame.Point(
       	x1+2*t*(x2-x1)+t*t*(x3-2*x2+x1),
         y1+2*t*(y2-y1)+t*t*(y3-2*y2+y1)
       );
-      var q2 = MML.xypic.Frame.Point(x2+t*(x3-x2), y2+t*(y3-y2));
+      var q2 = xypic.Frame.Point(x2+t*(x3-x2), y2+t*(y3-y2));
     	var q3 = this.cp3;
       
       return [
-      	MML.xypic.Shape.CubicBezier(p0, p1, p2, p3),
-      	MML.xypic.Shape.CubicBezier(q0, q1, q2, q3)
+      	xypic.Shape.CubicBezier(p0, p1, p2, p3),
+      	xypic.Shape.CubicBezier(q0, q1, q2, q3)
       ]
     },
     shaveStart: function (frame) {
@@ -3824,7 +2960,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       if (edgeCPs === undefined) {
         return undefined;
       }
-      return MML.xypic.Shape.CubicBezier(edgeCPs[0], edgeCPs[1], edgeCPs[2], edgeCPs[3]);
+      return xypic.Shape.CubicBezier(edgeCPs[0], edgeCPs[1], edgeCPs[2], edgeCPs[3]);
     },
     shaveEnd: function (frame) {
       var edgeCPs;
@@ -3832,7 +2968,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       if (edgeCPs === undefined) {
         return undefined;
       }
-      return MML.xypic.Shape.CubicBezier(edgeCPs[3], edgeCPs[2], edgeCPs[1], edgeCPs[0]);
+      return xypic.Shape.CubicBezier(edgeCPs[3], edgeCPs[2], edgeCPs[1], edgeCPs[0]);
     },
     edgeControlPoints: function (frame, cp0, cp1, cp2, cp3) {
       if (frame.isPoint()) {
@@ -3840,7 +2976,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
       
       var t;
-      var roundEp = MML.xypic.Util.roundEpsilon;
+      var roundEp = xypic.Util.roundEpsilon;
       
       var x0 = cp0.x;
       var x1 = cp1.x;
@@ -3873,19 +3009,19 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         
         var ts = [];
         if (x0 <= rx && (x3 >= rx || x1 >= rx || x2 >= rx)) {
-          t = MML.xypic.Shape.minSolutionOfCubicEq(a3x, a2x, a1x, a0x-rx);
+          t = xypic.Shape.minSolutionOfCubicEq(a3x, a2x, a1x, a0x-rx);
           if (t !== undefined) { ts.push(t) }
         }
         if (x0 >= lx && (x3 <= lx || x2 <= lx || x1 <= lx)) {
-          t = MML.xypic.Shape.minSolutionOfCubicEq(a3x, a2x, a1x, a0x-lx);
+          t = xypic.Shape.minSolutionOfCubicEq(a3x, a2x, a1x, a0x-lx);
           if (t !== undefined) { ts.push(t) }
         }
         if (y0 <= uy && (y3 >= uy || y1 >= uy || y2 >= uy)) {
-          t = MML.xypic.Shape.minSolutionOfCubicEq(a3y, a2y, a1y, a0y-uy);
+          t = xypic.Shape.minSolutionOfCubicEq(a3y, a2y, a1y, a0y-uy);
           if (t !== undefined) { ts.push(t) }
         }
         if (y0 >= dy && (y3 <= dy || y2 <= dy || y1 <= dy)) {
-          t = MML.xypic.Shape.minSolutionOfCubicEq(a3y, a2y, a1y, a0y-dy);
+          t = xypic.Shape.minSolutionOfCubicEq(a3y, a2y, a1y, a0y-dy);
           if (t !== undefined) { ts.push(t) }
         }
         if (ts.length === 0) {
@@ -3896,18 +3032,18 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       } else if (frame.isCircle()) {
         var cx = frame.x, cy = frame.y, r = frame.r, pi = Math.PI;
         
-        var arc0 = MML.xypic.Shape.Segment.Arc(cx, cy, r, -pi, -pi/2);
-        var arc1 = MML.xypic.Shape.Segment.Arc(cx, cy, r, -pi/2, 0);
-        var arc2 = MML.xypic.Shape.Segment.Arc(cx, cy, r, 0, pi/2);
-        var arc3 = MML.xypic.Shape.Segment.Arc(cx, cy, r, pi/2, pi);
+        var arc0 = xypic.Shape.Segment.Arc(cx, cy, r, -pi, -pi/2);
+        var arc1 = xypic.Shape.Segment.Arc(cx, cy, r, -pi/2, 0);
+        var arc2 = xypic.Shape.Segment.Arc(cx, cy, r, 0, pi/2);
+        var arc3 = xypic.Shape.Segment.Arc(cx, cy, r, pi/2, pi);
         
-        var bezier = MML.xypic.Shape.Segment.CubicBezier(MML.xypic.Shape.CubicBezier(cp0, cp1, cp2, cp3), 0, 1);
+        var bezier = xypic.Shape.Segment.CubicBezier(xypic.Shape.CubicBezier(cp0, cp1, cp2, cp3), 0, 1);
         
         var intersec = [];
-        intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(arc0, bezier));
-        intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(arc1, bezier));
-        intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(arc2, bezier));
-        intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(arc3, bezier));
+        intersec = intersec.concat(xypic.Shape.Segment.findIntersections(arc0, bezier));
+        intersec = intersec.concat(xypic.Shape.Segment.findIntersections(arc1, bezier));
+        intersec = intersec.concat(xypic.Shape.Segment.findIntersections(arc2, bezier));
+        intersec = intersec.concat(xypic.Shape.Segment.findIntersections(arc3, bezier));
         
         if (intersec.length === 0) {
           return undefined;
@@ -3922,12 +3058,12 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       
       var tx = px(t);
       var ty = py(t);
-      cp0 = MML.xypic.Frame.Point(tx, ty);
-      cp1 = MML.xypic.Frame.Point(
+      cp0 = xypic.Frame.Point(tx, ty);
+      cp1 = xypic.Frame.Point(
         x1+2*t*(x2-x1)+t*t*(x3-2*x2+x1),
         y1+2*t*(y2-y1)+t*t*(y3-2*y2+y1)
       );
-      cp2 = MML.xypic.Frame.Point(x2+t*(x3-x2), y2+t*(y3-y2));
+      cp2 = xypic.Frame.Point(x2+t*(x3-x2), y2+t*(y3-y2));
       return [cp0, cp1 ,cp2, cp3];
     },
     countOfSegments: function () { return 1; },
@@ -3946,7 +3082,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Shape.CubicBeziers = MML.xypic.Shape.Subclass({
+  xypic.Shape.CubicBeziers = xypic.Shape.Subclass({
   	Init: function (cbs) {
     	this.cbs = cbs;
       var n = this.cbs.length;
@@ -4011,7 +3147,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
           break;
         }
       }
-      return MML.xypic.Shape.CubicBeziers(shaved);
+      return xypic.Shape.CubicBeziers(shaved);
     },
     shaveEnd: function (frame) {
       var reversedShaved = [];
@@ -4030,15 +3166,15 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
           }
         }
       }
-      return MML.xypic.Shape.CubicBeziers(reversedShaved.reverse());
+      return xypic.Shape.CubicBeziers(reversedShaved.reverse());
     },
     divide: function (t) {
     	if (t < 0 || t > 1) {
       	throw Error("illegal cubic Bezier parameter t:"+t);
       } else if (t === 0) {
-      	return [MML.xypic.Shape.CubicBeziers([]), this];
+      	return [xypic.Shape.CubicBeziers([]), this];
       } else if (t === 1) {
-      	return [this, MML.xypic.Shape.CubicBeziers([])];
+      	return [this, xypic.Shape.CubicBeziers([])];
       }
       
       var n = this.cbs.length;
@@ -4051,7 +3187,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       var divB = cb.divide(s);
       divS.push(divB[0]);
       divE.unshift(divB[1]);
-      return [MML.xypic.Shape.CubicBeziers(divS), MML.xypic.Shape.CubicBeziers(divE)];
+      return [xypic.Shape.CubicBeziers(divS), xypic.Shape.CubicBeziers(divE)];
     },
     countOfSegments: function () { return this.cbs.length; },
     drawPrimitive: function (svg, dasharray) {
@@ -4086,25 +3222,25 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   },{
   	interpolation: function (ts, xs, ys) {
-    	var x12 = MML.xypic.Shape.CubicBeziers.cubicSplineInterpolation(ts, xs);
+    	var x12 = xypic.Shape.CubicBeziers.cubicSplineInterpolation(ts, xs);
       var x1 = x12[0];
       var x2 = x12[1];
       
-    	var y12 = MML.xypic.Shape.CubicBeziers.cubicSplineInterpolation(ts, ys);
+    	var y12 = xypic.Shape.CubicBeziers.cubicSplineInterpolation(ts, ys);
       var y1 = y12[0];
       var y2 = y12[1];
       
       var i, n = ts.length;
       var beziers = new Array(n-1);
       for (i = 0; i < n-1; i++) {
-      	beziers[i] = MML.xypic.Shape.CubicBezier(
-        	MML.xypic.Frame.Point(xs[i], ys[i]),
-        	MML.xypic.Frame.Point(x1[i], y1[i]),
-        	MML.xypic.Frame.Point(x2[i], y2[i]),
-        	MML.xypic.Frame.Point(xs[i+1], ys[i+1])
+      	beziers[i] = xypic.Shape.CubicBezier(
+        	xypic.Frame.Point(xs[i], ys[i]),
+        	xypic.Frame.Point(x1[i], y1[i]),
+        	xypic.Frame.Point(x2[i], y2[i]),
+        	xypic.Frame.Point(xs[i+1], ys[i+1])
         )
       }
-      return MML.xypic.Shape.CubicBeziers(beziers);
+      return xypic.Shape.CubicBeziers(beziers);
     },
     cubicSplineInterpolation: function (ts, xs) {
     	var n = ts.length-1;
@@ -4149,7 +3285,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Shape.CubicBSpline = MML.xypic.Shape.Subclass({
+  xypic.Shape.CubicBSpline = xypic.Shape.Subclass({
   	Init: function (s, intCps, e) {
     	if (intCps.length < 1) {
       	throw Error("the number of internal control points of cubic B-spline must be greater than or equal to 1");
@@ -4236,7 +3372,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
     },
     position: function (t) {
-      return MML.xypic.Frame.Point(this.px(t), this.py(t));
+      return xypic.Frame.Point(this.px(t), this.py(t));
     },
     angle: function (t) {
       return Math.atan2(this.dpy(t), this.dpx(t));
@@ -4259,10 +3395,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       var p3x = (p2x+n1x)/2;
       var p3y = (p2y+n1y)/2;
       var p0 = cp0;
-      var p1 = MML.xypic.Frame.Point(p1x, p1y);
-      var p2 = MML.xypic.Frame.Point(p2x, p2y);
-      var p3 = MML.xypic.Frame.Point(p3x, p3y);
-      var cb = MML.xypic.Shape.CubicBezier(p0, p1, p2, p3);
+      var p1 = xypic.Frame.Point(p1x, p1y);
+      var p2 = xypic.Frame.Point(p2x, p2y);
+      var p3 = xypic.Frame.Point(p3x, p3y);
+      var cb = xypic.Shape.CubicBezier(p0, p1, p2, p3);
       cbs.push(cb);
       
       var len = this.cps.length - 1;
@@ -4281,10 +3417,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         p3x = (p2x+n1x)/2;
         p3y = (p2y+n1y)/2;
         p0 = p3;
-        p1 = MML.xypic.Frame.Point(p1x, p1y);
-        p2 = MML.xypic.Frame.Point(p2x, p2y);
-        p3 = MML.xypic.Frame.Point(p3x, p3y);
-        cb = MML.xypic.Shape.CubicBezier(p0, p1, p2, p3);
+        p1 = xypic.Frame.Point(p1x, p1y);
+        p2 = xypic.Frame.Point(p2x, p2y);
+        p3 = xypic.Frame.Point(p3x, p3y);
+        cb = xypic.Shape.CubicBezier(p0, p1, p2, p3);
         cbs.push(cb);
       }
       
@@ -4299,10 +3435,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       p3x = cp1.x;
       p3y = cp1.y;
       p0 = p3;
-      p1 = MML.xypic.Frame.Point(p1x, p1y);
-      p2 = MML.xypic.Frame.Point(p2x, p2y);
-      p3 = MML.xypic.Frame.Point(p3x, p3y);
-      cb = MML.xypic.Shape.CubicBezier(p0, p1, p2, p3);
+      p1 = xypic.Frame.Point(p1x, p1y);
+      p2 = xypic.Frame.Point(p2x, p2y);
+      p3 = xypic.Frame.Point(p3x, p3y);
+      cb = xypic.Shape.CubicBezier(p0, p1, p2, p3);
       cbs.push(cb);
     	
       return cbs;
@@ -4310,7 +3446,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     countOfSegments: function () { return this.cps.length - 1; }
   });
   
-  MML.xypic.Shape.Segment = MathJax.Object.Subclass({
+  xypic.Shape.Segment = MathJax.Object.Subclass({
     bezierFatLine: function (n) {
       var p0 = this.cps[0], pn = this.cps[n];
       var a, b, c;
@@ -4342,7 +3478,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     clippedLineRange: function (ps, lineMin, lineMax) {
       var n = ps.length - 1;
       var es = new Array(n+1);
-      var extProd = MML.xypic.Util.extProd;
+      var extProd = xypic.Util.extProd;
       for (var i = 0; i <= n; i++) {
         es[i] = [i/n, -lineMin[0]*ps[i].x-lineMin[1]*ps[i].y-lineMin[2], 1];
       }
@@ -4421,8 +3557,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   }, {
     findIntersections: function (segment0, segment1) {
-      var n = MML.xypic.Shape.Segment.maxIterations;
-      var acc = MML.xypic.Shape.Segment.goalAccuracy;
+      var n = xypic.Shape.Segment.maxIterations;
+      var acc = xypic.Shape.Segment.goalAccuracy;
       var queue = [[segment0, segment1, false]];
       var i = 0;
       var intersections = [];
@@ -4477,7 +3613,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     goalAccuracy: 1e-4
   });
   
-  MML.xypic.Shape.Segment.Line = MML.xypic.Shape.Segment.Subclass({
+  xypic.Shape.Segment.Line = xypic.Shape.Segment.Subclass({
     Init: function (p0, p1, tmin, tmax) {
       this.p0 = p0;
       this.p1 = p1;
@@ -4507,7 +3643,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return {min:[a, b, c], max:[a, b, c]};
     },
     clip: function (tmin, tmax) {
-      return MML.xypic.Shape.Segment.Line(this.p0, this.p1, tmin, tmax);
+      return xypic.Shape.Segment.Line(this.p0, this.p1, tmin, tmax);
     },
     clippedRange: function (lineMin, lineMax) {
       var ps = new Array(2);
@@ -4531,13 +3667,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
 
-  MML.xypic.Shape.Segment.QuadBezier = MML.xypic.Shape.Segment.Subclass({
+  xypic.Shape.Segment.QuadBezier = xypic.Shape.Segment.Subclass({
     Init: function (bezier, tmin, tmax) {
       this.bezier = bezier;
       this.tmin = tmin;
       this.tmax = tmax;
       this.cp0 = bezier.position(tmin);
-      this.cp1 = MML.xypic.Frame.Point(
+      this.cp1 = xypic.Frame.Point(
         (1-tmax)*(1-tmin)*bezier.cp0.x + (tmin+tmax-2*tmin*tmax)*bezier.cp1.x + tmin*tmax*bezier.cp2.x,
         (1-tmax)*(1-tmin)*bezier.cp0.y + (tmin+tmax-2*tmin*tmax)*bezier.cp1.y + tmin*tmax*bezier.cp2.y
       );
@@ -4548,7 +3684,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     paramLength: function () { return this.tmax - this.tmin; },
     fatLine: function () { return this.bezierFatLine(2); },
     clip: function (tmin, tmax) {
-      return MML.xypic.Shape.Segment.QuadBezier(this.bezier, tmin, tmax);
+      return xypic.Shape.Segment.QuadBezier(this.bezier, tmin, tmax);
     },
     clippedRange: function (lineMin, lineMax) {
       return this.clippedLineRange(this.cps, lineMin, lineMax);
@@ -4575,17 +3711,17 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Shape.Segment.CubicBezier = MML.xypic.Shape.Segment.Subclass({
+  xypic.Shape.Segment.CubicBezier = xypic.Shape.Segment.Subclass({
     Init: function (bezier, tmin, tmax) {
       this.bezier = bezier;
       this.tmin = tmin;
       this.tmax = tmax;
       this.cp0 = bezier.position(tmin);
-      this.cp1 = MML.xypic.Frame.Point(
+      this.cp1 = xypic.Frame.Point(
         (1-tmax)*(1-tmin)*(1-tmin)*bezier.cp0.x + (1-tmin)*(2*tmin+tmax-3*tmin*tmax)*bezier.cp1.x + tmin*(2*tmax+tmin-3*tmin*tmax)*bezier.cp2.x + tmin*tmin*tmax*bezier.cp3.x,
         (1-tmax)*(1-tmin)*(1-tmin)*bezier.cp0.y + (1-tmin)*(2*tmin+tmax-3*tmin*tmax)*bezier.cp1.y + tmin*(2*tmax+tmin-3*tmin*tmax)*bezier.cp2.y + tmin*tmin*tmax*bezier.cp3.y
       );
-      this.cp2 = MML.xypic.Frame.Point(
+      this.cp2 = xypic.Frame.Point(
         (1-tmin)*(1-tmax)*(1-tmax)*bezier.cp0.x + (1-tmax)*(2*tmax+tmin-3*tmin*tmax)*bezier.cp1.x + tmax*(2*tmin+tmax-3*tmin*tmax)*bezier.cp2.x + tmin*tmax*tmax*bezier.cp3.x,
         (1-tmin)*(1-tmax)*(1-tmax)*bezier.cp0.y + (1-tmax)*(2*tmax+tmin-3*tmin*tmax)*bezier.cp1.y + tmax*(2*tmin+tmax-3*tmin*tmax)*bezier.cp2.y + tmin*tmax*tmax*bezier.cp3.y
       );
@@ -4596,7 +3732,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     paramLength: function () { return this.tmax - this.tmin; },
     fatLine: function () { return this.bezierFatLine(3); },
     clip: function (tmin, tmax) {
-      return MML.xypic.Shape.Segment.CubicBezier(this.bezier, tmin, tmax);
+      return xypic.Shape.Segment.CubicBezier(this.bezier, tmin, tmax);
     },
     clippedRange: function (lineMin, lineMax) {
       return this.clippedLineRange(this.cps, lineMin, lineMax);
@@ -4623,7 +3759,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Shape.Segment.Arc = MML.xypic.Shape.Segment.Subclass({
+  xypic.Shape.Segment.Arc = xypic.Shape.Segment.Subclass({
     Init: function (x, y, r, angleMin, angleMax) {
       this.x = x;
       this.y = y;
@@ -4653,13 +3789,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return {min:Lmin, max:Lmax};
     },
     clip: function (angleMin, angleMax) {
-      return MML.xypic.Shape.Segment.Arc(this.x, this.y, this.r, angleMin, angleMax);
+      return xypic.Shape.Segment.Arc(this.x, this.y, this.r, angleMin, angleMax);
     },
     clippedRange: function (lineMin, lineMax) {
       var x = this.x, y = this.y, r = this.r, angleMin = this.angleMin, angleMax = this.angleMax;
       var d = -(lineMin[0]*x+lineMin[1]*y+lineMin[2]);
       
-      var sign = MML.xypic.Util.sign2;
+      var sign = xypic.Util.sign2;
       var angles = [];
       var det = r*r - d*d;
       if (det >= 0) {
@@ -4766,15 +3902,15 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   });
   
   
-  MML.xypic.MostRecentLine = MathJax.Object.Subclass({});
+  xypic.MostRecentLine = MathJax.Object.Subclass({});
   
-  MML.xypic.MostRecentLine.None = MML.xypic.MostRecentLine.Subclass({
+  xypic.MostRecentLine.None = xypic.MostRecentLine.Subclass({
   	Init: function () {}, 
   	isDefined: false,
     segment: function () { return []; }
   });
   
-  MML.xypic.MostRecentLine.Line = MML.xypic.MostRecentLine.Subclass({
+  xypic.MostRecentLine.Line = xypic.MostRecentLine.Subclass({
   	Init: function (start, end, p, c) {
     	this.start = start;
       this.end = end;
@@ -4783,13 +3919,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     },
   	isDefined: true,
     position: function (t) {
-      return MML.xypic.Frame.Point(
+      return xypic.Frame.Point(
         this.p.x + t*(this.c.x - this.p.x),
         this.p.y + t*(this.c.y - this.p.y)
       );
     },
     derivative: function (t) {
-      return MML.xypic.Frame.Point(
+      return xypic.Frame.Point(
         this.c.x - this.p.x,
         this.c.y - this.p.y
       );
@@ -4805,14 +3941,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         var l = Math.sqrt(dx*dx+dy*dy);
         var angle = Math.atan2(dy, dx);
         if (factor > 0.5) {
-          return {pos:MML.xypic.Frame.Point(
+          return {pos:xypic.Frame.Point(
                 end.x - (1 - factor)*dx + slideEm*dx/l,
                 end.y - (1 - factor)*dy + slideEm*dy/l
               ),
               angle:angle
             };
         } else {
-          return {pos:MML.xypic.Frame.Point(
+          return {pos:xypic.Frame.Point(
                 start.x + factor*dx + slideEm*dx/l,
                 start.y + factor*dy + slideEm*dy/l
               ),
@@ -4822,11 +3958,11 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
     },
     segments: function () {
-      return [MML.xypic.Shape.Segment.Line(this.p, this.c, 0, 1)];
+      return [xypic.Shape.Segment.Line(this.p, this.c, 0, 1)];
     }
   });
   
-  MML.xypic.MostRecentLine.QuadBezier = MML.xypic.MostRecentLine.Subclass({
+  xypic.MostRecentLine.QuadBezier = xypic.MostRecentLine.Subclass({
   	Init: function (origBezier, shavePBezier, shavePCBezier) {
     	this.origBezier = origBezier;
     	this.shavePBezier = shavePBezier;
@@ -4873,11 +4009,11 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return {pos:pos, angle:angle};
     },
     segments: function () {
-      return [MML.xypic.Shape.Segment.QuadBezier(this.origBezier, 0, 1)];
+      return [xypic.Shape.Segment.QuadBezier(this.origBezier, 0, 1)];
     }
   });
   
-  MML.xypic.MostRecentLine.CubicBezier = MML.xypic.MostRecentLine.Subclass({
+  xypic.MostRecentLine.CubicBezier = xypic.MostRecentLine.Subclass({
   	Init: function (origBezier, shavePBezier, shavePCBezier) {
     	this.origBezier = origBezier;
     	this.shavePBezier = shavePBezier;
@@ -4927,11 +4063,11 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return {pos:pos, angle:angle};
     },
     segments: function () {
-      return [MML.xypic.Shape.Segment.CubicBezier(this.origBezier, 0, 1)];
+      return [xypic.Shape.Segment.CubicBezier(this.origBezier, 0, 1)];
     }
   });
   
-  MML.xypic.MostRecentLine.CubicBSpline = MML.xypic.MostRecentLine.Subclass({
+  xypic.MostRecentLine.CubicBSpline = xypic.MostRecentLine.Subclass({
   	Init: function (s, e, origBeziers, shavePBeziers, shavePCBeziers) {
     	this.s = s;
       this.e = e;
@@ -4983,26 +4119,26 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       var segments = new Array(this.origBeziers.length);
       var n = segments.length;
       for (var i = 0; i < n; i++) {
-        segments[i] = MML.xypic.Shape.Segment.CubicBezier(this.origBezier, i/n, (i+1)/n);
+        segments[i] = xypic.Shape.Segment.CubicBezier(this.origBezier, i/n, (i+1)/n);
       }
       return segments;
     }
   });
   
-  MML.xypic.MostRecentLine.Augment({}, {
-  	none: MML.xypic.MostRecentLine.None()
+  xypic.MostRecentLine.Augment({}, {
+  	none: xypic.MostRecentLine.None()
   });
   
-  MML.xypic.Env = MathJax.Object.Subclass({
+  xypic.Env = MathJax.Object.Subclass({
     Init: function () {
       this.boundingBox = undefined;
     	this.savedPosition = {};
       this.angle = 0; // radian
-      this.mostRecentLine = MML.xypic.MostRecentLine.none;
-      this.p = this.c = MML.xypic.Env.originPosition;
+      this.mostRecentLine = xypic.MostRecentLine.none;
+      this.p = this.c = xypic.Env.originPosition;
     },
     duplicate: function () {
-      var newEnv = MML.xypic.Env();
+      var newEnv = xypic.Env();
       newEnv.boundingBox = this.boundingBox;
       newEnv.savedPosition = {};
       for (var id in this.savedPosition) {
@@ -5033,7 +4169,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
     },
     extendBoundingBox: function (box) {
-      this.boundingBox = MML.xypic.Frame.combineRect(this.boundingBox, box);
+      this.boundingBox = xypic.Frame.combineRect(this.boundingBox, box);
     },
     toString: function () {
       var savedPositionDesc = "";
@@ -5048,10 +4184,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return "Env(p:"+this.p+", c:"+this.c+", angle:"+this.angle+", mostRecentLine:"+this.mostRecentLine+", savedPosition:{"+savedPositionDesc+"})";
     }
   }, {
-    originPosition: MML.xypic.Frame.Point(0, 0)
+    originPosition: xypic.Frame.Point(0, 0)
   });
   
-  MML.xypic.Pos.Coord.Augment({
+  AST.Pos.Coord.Augment({
   	draw: function (svg, env) {
       env.c = this.coord.position(env);
       this.pos2s.foreach(function (p) {
@@ -5061,7 +4197,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Pos.Plus.Augment({
+  AST.Pos.Plus.Augment({
   	draw: function (svg, env) {
     	var d = this.coord.position(env);
     	env.c = env.c.move(env.c.x+d.x, env.c.y+d.y);
@@ -5069,7 +4205,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Pos.Minus.Augment({
+  AST.Pos.Minus.Augment({
   	draw: function (svg, env) {
     	var d = this.coord.position(env);
     	env.c = env.c.move(env.c.x-d.x, env.c.y-d.y);
@@ -5077,14 +4213,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Pos.Then.Augment({
+  AST.Pos.Then.Augment({
   	draw: function (svg, env) {
     	env.c = this.coord.position(env);
       return undefined;
     }
   });
   
-  MML.xypic.Pos.SwapPAndC.Augment({
+  AST.Pos.SwapPAndC.Augment({
   	draw: function (svg, env) {
     	env.swapPAndC();
     	env.c = this.coord.position(env);
@@ -5092,20 +4228,20 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Pos.ConnectObject.Augment({
+  AST.Pos.ConnectObject.Augment({
   	draw: function (svg, env) {
     	return this.object.connect(svg, env);
     }
   });
   
-  MML.xypic.Pos.DropObject.Augment({
+  AST.Pos.DropObject.Augment({
   	draw: function (svg, env) {
     	env.c = this.object.drop(svg, env);
       return env.c;
     }
   });
   
-  MML.xypic.Pos.Place.Augment({
+  AST.Pos.Place.Augment({
   	draw: function (svg, env) {
       if (env.mostRecentLine.isDefined) {
       	var place = this.place;
@@ -5133,7 +4269,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         }
         
         dimen = HTMLCSS.length2em(place.slide.dimen || "0");
-        var jot = MML.xypic.jot;
+        var jot = AST.xypic.jot;
         var slideEm = dimen + (jotP - jotC) * jot;
         var posAngle = env.mostRecentLine.posAngle(shouldShaveP, shouldShaveC, f, slideEm);
         env.c = posAngle.pos;
@@ -5145,13 +4281,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Place.Factor.Augment({
+  AST.Place.Factor.Augment({
     value: function (svg, env) {
       return this.factor;
     }
   });
   
-  MML.xypic.Place.Intercept.Augment({
+  AST.Place.Intercept.Augment({
     value: function (svg, env) {
       if (!env.mostRecentLine.isDefined) {
         return undefined;
@@ -5160,13 +4296,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       var tmpEnv = env.duplicate();
       tmpEnv.boundingBox = undefined;
       tmpEnv.angle = 0;
-      tmpEnv.mostRecentLine = MML.xypic.MostRecentLine.none;
-      tmpEnv.p = tmpEnv.c = MML.xypic.Env.originPosition;
+      tmpEnv.mostRecentLine = xypic.MostRecentLine.none;
+      tmpEnv.p = tmpEnv.c = xypic.Env.originPosition;
       var box = this.pos.draw(svg, tmpEnv);
       env.extendBoundingBox(box);
       
       if (!tmpEnv.mostRecentLine.isDefined) {
-        tmpEnv.mostRecentLine = MML.xypic.MostRecentLine.Line(tmpEnv.p, tmpEnv.c, tmpEnv.p, tmpEnv.c);
+        tmpEnv.mostRecentLine = xypic.MostRecentLine.Line(tmpEnv.p, tmpEnv.c, tmpEnv.p, tmpEnv.c);
       }
       
       var intersec = [];
@@ -5175,7 +4311,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       
       for (var i = 0; i < thisSegs.length; i++) {
         for (var j = 0; j < thatSegs.length; j++) {
-          intersec = intersec.concat(MML.xypic.Shape.Segment.findIntersections(thisSegs[i], thatSegs[j]));
+          intersec = intersec.concat(xypic.Shape.Segment.findIntersections(thisSegs[i], thatSegs[j]));
         }
       }
       
@@ -5297,14 +4433,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Pos.SavingPos.Augment({
+  AST.Pos.SavingPos.Augment({
   	draw: function (svg, env) {
     	env.savePos(this.id, env.c);
       return undefined;
     }
   });
   
-  MML.xypic.Object.Augment({
+  AST.Object.Augment({
   	drop: function (svg, env) {
       return this.object.drop(svg, env, this.modifiers);
     },
@@ -5316,11 +4452,11 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.ObjectBox.Augment({
+  AST.ObjectBox.Augment({
     boundingBox: function (svg, env, modifiers) {
       var tmpEnv = env.duplicate();
       tmpEnv.angle = 0;
-      tmpEnv.p = tmpEnv.c = MML.xypic.Frame.Point(0, 0);
+      tmpEnv.p = tmpEnv.c = xypic.Frame.Point(0, 0);
       tmpGroup = svg.createGroup();
       var bbox = this.drop(tmpGroup, tmpEnv, modifiers);
       tmpGroup.remove();
@@ -5328,7 +4464,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.ObjectBox.Text.Augment({
+  AST.ObjectBox.Text.Augment({
   	drop: function (svg, env, modifiers) {
     	// modification
       modifiers.foreach(function (m) { m.preprocess(env); });
@@ -5417,14 +4553,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         var objectBBox = this.boundingBox(svg, env, modifiers);
         if (objectBBox == undefined) {
           env.angle = 0;
-          env.mostRecentLine = MML.xypic.MostRecentLine.none;
+          env.mostRecentLine = xypic.MostRecentLine.none;
           return undefined;
         }
         
         var objectWidth = objectBBox.l+objectBBox.r;
         var objectLen = objectWidth;
         if (objectLen == 0) {
-          objectLen = MML.xypic.strokeWidth;
+          objectLen = AST.xypic.strokeWidth;
         }
         
         var dx = e.x-s.x;
@@ -5433,7 +4569,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         var n = Math.floor(len/objectLen);
         if (n == 0) {
           env.angle = 0;
-          env.mostRecentLine = MML.xypic.MostRecentLine.none;
+          env.mostRecentLine = xypic.MostRecentLine.none;
           return undefined;
         }
         
@@ -5448,7 +4584,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         var group = svg.createGroup();
         var bboxS, bboxE;
         for (var i = 0; i < n; i++) {
-          env.c = MML.xypic.Frame.Point(startX + i*odx, startY + i*ody);
+          env.c = xypic.Frame.Point(startX + i*odx, startY + i*ody);
           env.angle = 0;
           var bbox = this.drop(group, env, modifiers);
           if (i == 0) {
@@ -5461,16 +4597,16 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         var box = bboxS.combineRect(bboxE);
         env.angle = angle;
         env.c = c;
-        env.mostRecentLine = MML.xypic.MostRecentLine.Line(s, e, env.p, env.c);
+        env.mostRecentLine = xypic.MostRecentLine.Line(s, e, env.p, env.c);
         return box;
       }
       env.angle = 0;
-      env.mostRecentLine = MML.xypic.MostRecentLine.none;
+      env.mostRecentLine = xypic.MostRecentLine.none;
       return undefined;
     }
   });
   
-  MML.xypic.ObjectBox.Cir.Augment({
+  AST.ObjectBox.Cir.Augment({
   	drop: function (svg, env, modifiers) {
       if (env.c === undefined) {
         // TODO: cが存在しない場合の扱いは？
@@ -5496,17 +4632,17 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.ObjectBox.Cir.Radius.Vector.Augment({
+  AST.ObjectBox.Cir.Radius.Vector.Augment({
     radius: function (env) {
       return this.vector.xy(env).x;
     }
   });
-  MML.xypic.ObjectBox.Cir.Radius.Default.Augment({
+  AST.ObjectBox.Cir.Radius.Default.Augment({
     radius: function (env) {
       return env.c.r;
     }
   });
-  MML.xypic.ObjectBox.Cir.Cir.Segment.Augment({
+  AST.ObjectBox.Cir.Cir.Segment.Augment({
     draw: function (svg, env, x, y, r) {
       var sd = this.startDiag.toString();
       var ed = this.endDiag.toString();
@@ -5536,7 +4672,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       svg.createSVGElement("path", {
         d:"M"+em2px(sx)+","+em2px(-sy)+" A"+em2px(r)+","+em2px(r)+" 0 "+large+","+flip+" "+em2px(ex)+","+em2px(-ey)
       });
-      return MML.xypic.Frame.Circle(x, y, r);
+      return xypic.Frame.Circle(x, y, r);
     },
     diagToAngleACW: function (diag, angle) {
       switch (diag) {
@@ -5591,16 +4727,16 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       }
     },
   });
-  MML.xypic.ObjectBox.Cir.Cir.Full.Augment({
+  AST.ObjectBox.Cir.Cir.Full.Augment({
     draw: function (svg, env, x, y, r) {
       svg.createSVGElement("circle", {
         cx:em2px(x), cy:em2px(-y), r:em2px(r)
       });
-      return MML.xypic.Frame.Circle(x, y, r);
+      return xypic.Frame.Circle(x, y, r);
     }
   });
   
-  MML.xypic.ObjectBox.Dir.Augment({
+  AST.ObjectBox.Dir.Augment({
   	drop: function (svg, env, modifiers) {
       if (env.c === undefined) {
         // TODO: cが存在しない場合の扱いは？
@@ -5609,7 +4745,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       
       modifiers.foreach(function (m) { m.preprocess(env); });
       
-      var t = MML.xypic.thickness;
+      var t = AST.xypic.thickness;
       var g = svg.createGroup(svg.transformBuilder().translate(env.c.x,env.c.y).rotateRadian(env.angle));
       
       var box;
@@ -5847,7 +4983,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     },
     connect: function (svg, env, modifiers) {
       // 多重線の幅、点線・破線の幅の基準
-      var t = MML.xypic.thickness;
+      var t = AST.xypic.thickness;
       var s = env.p.edgePoint(env.c.x, env.c.y);
       var e = env.c.edgePoint(env.p.x, env.p.y);
       if (s !== undefined && e !== undefined && (s.x !== e.x || s.y !== e.y)) {
@@ -5938,20 +5074,20 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
             var arrowBBox = this.boundingBox(svg, env, modifiers);
             if (arrowBBox == undefined) {
               env.angle = 0;
-              env.mostRecentLine = MML.xypic.MostRecentLine.none;
+              env.mostRecentLine = xypic.MostRecentLine.none;
               return undefined;
             }
             
             var arrowLen = arrowBBox.l+arrowBBox.r;
             if (arrowLen == 0) {
-              arrowLen = MML.xypic.strokeWidth;
+              arrowLen = AST.xypic.strokeWidth;
             }
             
             var len = Math.sqrt(dx*dx+dy*dy);
             var n = Math.floor(len/arrowLen);
             if (n == 0) {
               env.angle = 0;
-              env.mostRecentLine = MML.xypic.MostRecentLine.none;
+              env.mostRecentLine = xypic.MostRecentLine.none;
               return undefined;
             }
             
@@ -5963,7 +5099,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
             var startY = s.y + (shiftLen + arrowBBox.l)*sin;
             var group = svg.createGroup();
             for (var i = 0; i < n; i++) {
-              env.c = MML.xypic.Frame.Point(startX + i*ac, startY + i*as);
+              env.c = xypic.Frame.Point(startX + i*ac, startY + i*as);
               env.angle = angle;
               var bbox = this.drop(group, env, modifiers);
               if (i == 0) {
@@ -5976,16 +5112,16 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
             var box = bboxS.combineRect(bboxE);
             env.c = c;
             env.angle = angle;
-            env.mostRecentLine = MML.xypic.MostRecentLine.Line(s, e, env.p, env.c);
+            env.mostRecentLine = xypic.MostRecentLine.Line(s, e, env.p, env.c);
             return box;            
         }
         
         env.angle = angle;
-        env.mostRecentLine = MML.xypic.MostRecentLine.Line(s, e, env.p, env.c);
+        env.mostRecentLine = xypic.MostRecentLine.Line(s, e, env.p, env.c);
         return box;
       } else {
         env.angle = 0;
-        env.mostRecentLine = MML.xypic.MostRecentLine.none;
+        env.mostRecentLine = xypic.MostRecentLine.none;
         return undefined;
       }
     },
@@ -6008,7 +5144,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
           x2:em2px(e.x-cx), y2:-em2px(e.y-cy), 
           "stroke-dasharray":dasharray
         });
-        return MML.xypic.Frame.Rect(s.x, s.y, {
+        return xypic.Frame.Rect(s.x, s.y, {
         	l:s.x-Math.min(s.x+cx, s.x-cx, e.x+cx, e.x-cx),
         	r:Math.max(s.x+cx, s.x-cx, e.x+cx, e.x-cx)-s.x,
         	u:Math.max(s.y+cy, s.y-cy, e.y+cy, e.y-cy)-s.y,
@@ -6027,7 +5163,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
           x2:em2px(e.x-cx), y2:-em2px(e.y-cy), 
           "stroke-dasharray":dasharray
         });
-        return MML.xypic.Frame.Rect(s.x, s.y, {
+        return xypic.Frame.Rect(s.x, s.y, {
         	l:s.x-Math.min(s.x+cx, s.x-cx, e.x+cx, e.x-cx),
         	r:Math.max(s.x+cx, s.x-cx, e.x+cx, e.x-cx)-s.x,
         	u:Math.max(s.y+cy, s.y-cy, e.y+cy, e.y-cy)-s.y,
@@ -6039,7 +5175,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
           x2:em2px(e.x), y2:-em2px(e.y), 
           "stroke-dasharray":dasharray
         });
-        return MML.xypic.Frame.Rect(s.x, s.y, {
+        return xypic.Frame.Rect(s.x, s.y, {
         	l:s.x-Math.min(s.x, e.x),
         	r:Math.max(s.x, e.x)-s.x,
         	u:Math.max(s.y, e.y)-s.y,
@@ -6055,7 +5191,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         g2 = svg.createGroup(svg.transformBuilder().translate(-cx,-cy));
         g2.createSVGElement("path", {d:d});
         var bx = 1.5*cx, by = 1.5*cy;
-        return MML.xypic.Frame.Rect(s.x, s.y, {
+        return xypic.Frame.Rect(s.x, s.y, {
           l:s.x-Math.min(s.x+bx, s.x-bx, e.x+bx, e.x-bx),
           r:Math.max(s.x+bx, s.x-bx, e.x+bx, e.x-bx)-s.x,
           u:Math.max(s.y+by, s.y-by, e.y+by, e.y-by)-s.y,
@@ -6066,7 +5202,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
         g1.createSVGElement("path", {d:d});
         g2 = svg.createGroup(svg.transformBuilder().translate(-cx/2,-cy/2));
         g2.createSVGElement("path", {d:d});
-        return MML.xypic.Frame.Rect(s.x, s.y, {
+        return xypic.Frame.Rect(s.x, s.y, {
           l:s.x-Math.min(s.x+cx, s.x-cx, e.x+cx, e.x-cx),
           r:Math.max(s.x+cx, s.x-cx, e.x+cx, e.x-cx)-s.x,
           u:Math.max(s.y+cy, s.y-cy, e.y+cy, e.y-cy)-s.y,
@@ -6075,7 +5211,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       } else {
         svg.createSVGElement("path", {d:d});
         var bx = cx/2, by = cy/2;
-        return MML.xypic.Frame.Rect(s.x, s.y, {
+        return xypic.Frame.Rect(s.x, s.y, {
           l:s.x-Math.min(s.x+bx, s.x-bx, e.x+bx, e.x-bx),
           r:Math.max(s.x+bx, s.x-bx, e.x+bx, e.x-bx)-s.x,
           u:Math.max(s.y+by, s.y-by, e.y+by, e.y-by)-s.y,
@@ -6085,9 +5221,9 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.ObjectBox.Curve.Augment({
+  AST.ObjectBox.Curve.Augment({
     drop: function (svg, env, modifiers) {
-      return MML.xypic.Frame.Point(env.c.x, env.c.y);
+      return xypic.Frame.Point(env.c.x, env.c.y);
     },
     connect: function (svg, env, modifiers) {
     	// find object for drop and connect
@@ -6098,11 +5234,11 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       	objectForConnect = o.objectForConnect(objectForConnect);
       });
       if (objectForDrop === undefined && objectForConnect === undefined) {
-        objectForConnect = MML.xypic.Object(MathJax.List.empty, MML.xypic.ObjectBox.Dir("", "-"));
+        objectForConnect = AST.Object(FP.List.empty, AST.ObjectBox.Dir("", "-"));
       }
       
       // 多重線の幅、点線・破線の幅の基準
-      var thickness = MML.xypic.thickness;
+      var thickness = AST.xypic.thickness;
       
       var c = env.c;
       var p = env.p;
@@ -6124,18 +5260,18 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       switch (controlPoints.length) {
         case 0:
           if (s.x === e.x && s.y === e.y) {
-            env.mostRecentLine = MML.xypic.MostRecentLine.none;
+            env.mostRecentLine = xypic.MostRecentLine.none;
             env.angle = 0;
             return undefined;
           }
           if (objectForConnect !== undefined) {
-            return objectForConnect.connect(svg, env, MathJax.List.empty);
+            return objectForConnect.connect(svg, env, FP.List.empty);
           } else {
-            return objectForDrop.connect(svg, env, MathJax.List.empty);
+            return objectForDrop.connect(svg, env, FP.List.empty);
           }
           
         case 1:
-          var origBezier = MML.xypic.Shape.QuadBezier(s, controlPoints[0], e);
+          var origBezier = xypic.Shape.QuadBezier(s, controlPoints[0], e);
           var shavePBezier = origBezier.shaveStart(s);
           var shavePCBezier;
           if (shavePBezier !== undefined) {
@@ -6143,16 +5279,16 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
           }
           if (shavePCBezier === undefined) {
               env.angle = 0;
-              env.mostRecentLine = MML.xypic.MostRecentLine.none;
+              env.mostRecentLine = xypic.MostRecentLine.none;
               return undefined;
           }
           box = shavePCBezier.draw(svg, env, objectForDrop, objectForConnect);
-          env.mostRecentLine = MML.xypic.MostRecentLine.QuadBezier(origBezier, shavePBezier, shavePCBezier);
+          env.mostRecentLine = xypic.MostRecentLine.QuadBezier(origBezier, shavePBezier, shavePCBezier);
           env.angle = Math.atan2(e.y - s.y, e.x - s.x);
           break;
           
         case 2:
-          var origBezier = MML.xypic.Shape.CubicBezier(s, controlPoints[0], controlPoints[1], e);
+          var origBezier = xypic.Shape.CubicBezier(s, controlPoints[0], controlPoints[1], e);
           var shavePBezier = origBezier.shaveStart(s);
           var shavePCBezier;
           if (shavePBezier !== undefined) {
@@ -6160,30 +5296,30 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
           }
           var cb = shavePCBezier;
           if (cb === undefined) {
-            env.mostRecentLine = MML.xypic.MostRecentLine.none;
+            env.mostRecentLine = xypic.MostRecentLine.none;
             env.angle = 0;
             return undefined;
           }
           
           box = shavePCBezier.draw(svg, env, objectForDrop, objectForConnect);
-          env.mostRecentLine = MML.xypic.MostRecentLine.CubicBezier(origBezier, shavePBezier, shavePCBezier);
+          env.mostRecentLine = xypic.MostRecentLine.CubicBezier(origBezier, shavePBezier, shavePCBezier);
           env.angle = Math.atan2(e.y - s.y, e.x - s.x);
           break;
           
         default:
-          var spline = MML.xypic.Shape.CubicBSpline(s, controlPoints, e);
-          var origBeziers = MML.xypic.Shape.CubicBeziers(spline.toCubicBeziers());
+          var spline = xypic.Shape.CubicBSpline(s, controlPoints, e);
+          var origBeziers = xypic.Shape.CubicBeziers(spline.toCubicBeziers());
           var shavePBeziers = origBeziers.shaveStart(s);
           var shavePCBeziers = shavePBeziers.shaveEnd(e);
           
           var n = shavePCBeziers.countOfSegments;
           if (n == 0) {
-            env.mostRecentLine = MML.xypic.MostRecentLine.none;
+            env.mostRecentLine = xypic.MostRecentLine.none;
             env.angle = 0;
             return undefined;
           }
           box = shavePCBeziers.draw(svg, env, objectForDrop, objectForConnect);
-          env.mostRecentLine = MML.xypic.MostRecentLine.CubicBSpline(s, e, origBeziers, shavePBeziers, shavePCBeziers);
+          env.mostRecentLine = xypic.MostRecentLine.CubicBSpline(s, e, origBeziers, shavePBeziers, shavePCBeziers);
           env.angle = Math.atan2(e.y - s.y, e.x - s.x);
           break;
       }
@@ -6196,7 +5332,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
 	});
   
-  MML.xypic.ObjectBox.Curve.Object.Drop.Augment({
+  AST.ObjectBox.Curve.Object.Drop.Augment({
   	objectForDrop: function (object) {
     	return this.object;
     },
@@ -6205,7 +5341,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     },
   });
   
-  MML.xypic.ObjectBox.Curve.Object.Connect.Augment({
+  AST.ObjectBox.Curve.Object.Connect.Augment({
   	objectForDrop: function (object) {
     	return object;
     },
@@ -6214,71 +5350,71 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     },
   });
   
-  MML.xypic.ObjectBox.Curve.PosList.CurPos.Augment({
+  AST.ObjectBox.Curve.PosList.CurPos.Augment({
   	draw: function (svg, env) {
     	return undefined;
     }
   });
   
-  MML.xypic.ObjectBox.Curve.PosList.Pos.Augment({
+  AST.ObjectBox.Curve.PosList.Pos.Augment({
   	draw: function (svg, env) {
     	return this.pos.draw(svg, env);
     }
   });
   
-  MML.xypic.ObjectBox.Curve.PosList.AddStack.Augment({
+  AST.ObjectBox.Curve.PosList.AddStack.Augment({
   	draw: function (svg, env) {
     	// TODO: impl pick control points from the stack
     	return undefined;
     }
   });
   
-  MML.xypic.Coord.C.Augment({
+  AST.Coord.C.Augment({
     position: function (env) {
     	return env.c;
     }
   });
   
-  MML.xypic.Coord.P.Augment({
+  AST.Coord.P.Augment({
     position: function (env) {
     	return env.p;
     }
   });
   
-  MML.xypic.Coord.X.Augment({
+  AST.Coord.X.Augment({
     position: function (env) {
     	var p = env.p;
       var c = env.c;
       // TODO: 分母が0のときはどうする？ 扱いがComplete Sourceに書いてある。
       var x = p.x-(c.x-p.x)/(c.y-p.y)*p.y;
-    	return MML.xypic.Frame.Point(x, 0);
+    	return xypic.Frame.Point(x, 0);
     }
   });
   
-  MML.xypic.Coord.Y.Augment({
+  AST.Coord.Y.Augment({
     position: function (env) {
     	var p = env.p;
       var c = env.c;
       // TODO: 分母が0のときはどうする？ 扱いがComplete Sourceに書いてある。
       var y = p.y-(c.y-p.y)/(c.x-p.x)*p.x;
-    	return MML.xypic.Frame.Point(0, y);
+    	return xypic.Frame.Point(0, y);
     }
   });
   
-  MML.xypic.Coord.Vector.Augment({
+  AST.Coord.Vector.Augment({
     position: function (env) {
     	var xy = this.vector.xy(env);
-    	return MML.xypic.Frame.Point(xy.x, xy.y);
+    	return xypic.Frame.Point(xy.x, xy.y);
     }
   });
   
-  MML.xypic.Coord.Id.Augment({
+  AST.Coord.Id.Augment({
     position: function (env) {
     	return env.lookupPos(this.id)
     }
   });
   
-  MML.xypic.Vector.InCurBase.Augment({
+  AST.Vector.InCurBase.Augment({
     xy: function (env) {
     	return {x:this.x, y:this.y};
     },
@@ -6287,7 +5423,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Vector.Abs.Augment({
+  AST.Vector.Abs.Augment({
     xy: function (env) {
     	// TODO: 拡大したときに位置がずれないようにする。
     	return {x:HTMLCSS.length2em(this.x), y:HTMLCSS.length2em(this.y)};
@@ -6298,7 +5434,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Vector.Angle.Augment({
+  AST.Vector.Angle.Augment({
     xy: function (env) {
       var angle = Math.PI/180*this.degree;
       return {x:Math.cos(angle), y:Math.sin(angle)};
@@ -6308,7 +5444,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Vector.Dir.Augment({
+  AST.Vector.Dir.Augment({
     xy: function (env) {
     	var l = HTMLCSS.length2em(this.dimen);
       var angle = this.dir.angle(env);
@@ -6319,7 +5455,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Vector.Corner.Augment({
+  AST.Vector.Corner.Augment({
     xy: function (env) {
     	var xy = this.corner.xy(env);
       return {x:xy.x*this.factor, y:xy.y*this.factor};
@@ -6329,7 +5465,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.L.Augment({
+  AST.Corner.L.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:-c.l, y:0};
@@ -6339,7 +5475,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.R.Augment({
+  AST.Corner.R.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:c.r, y:0};
@@ -6349,7 +5485,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.D.Augment({
+  AST.Corner.D.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:0, y:-c.d};
@@ -6359,7 +5495,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.U.Augment({
+  AST.Corner.U.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:0, y:c.u};
@@ -6369,7 +5505,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.CL.Augment({
+  AST.Corner.CL.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:-c.l, y:(c.u-c.d)/2};
@@ -6380,7 +5516,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.CR.Augment({
+  AST.Corner.CR.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:c.r, y:(c.u-c.d)/2};
@@ -6391,7 +5527,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.CD.Augment({
+  AST.Corner.CD.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:(c.r-c.l)/2, y:-c.d};
@@ -6402,7 +5538,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.CU.Augment({
+  AST.Corner.CU.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:(c.r-c.l)/2, y:c.u};
@@ -6413,7 +5549,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.LU.Augment({
+  AST.Corner.LU.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:-c.l, y:c.u};
@@ -6424,7 +5560,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.LD.Augment({
+  AST.Corner.LD.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:-c.l, y:-c.d};
@@ -6435,7 +5571,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.RU.Augment({
+  AST.Corner.RU.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:c.r, y:c.u};
@@ -6446,7 +5582,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.RD.Augment({
+  AST.Corner.RD.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:c.r, y:-c.d};
@@ -6457,10 +5593,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.NearestEdgePoint.Augment({
+  AST.Corner.NearestEdgePoint.Augment({
   	xy: function (env) {
     	var c = env.c;
-      var e = c.edgePoint() || MML.xypic.Frame.Point(0, 0);  
+      var e = c.edgePoint() || xypic.Frame.Point(0, 0);  
       return {x:e.x-c.x, y:e.y-c.y};
     },
     angle: function (env) {
@@ -6469,7 +5605,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.PropEdgePoint.Augment({
+  AST.Corner.PropEdgePoint.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:e.x-c.x, y:e.y-c.y};	// TODO: calc proportional edge point
@@ -6480,7 +5616,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Corner.Axis.Augment({
+  AST.Corner.Axis.Augment({
   	xy: function (env) {
     	var c = env.c;
       return {x:0, y:(c.u-c.d)/2};	// TODO: align to Math axis
@@ -6491,7 +5627,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Modifier.Vector.Augment({
+  AST.Modifier.Vector.Augment({
   	preprocess: function (env) {
     	var d = this.vector.xy(env);
       env.c = env.c.move(env.c.x - d.x, env.c.y - d.y);
@@ -6501,7 +5637,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Modifier.Shape.Augment({
+  AST.Modifier.Shape.Augment({
   	preprocess: function (env) {
     	this.shape.preprocess(env);
     },
@@ -6510,30 +5646,30 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Modifier.Shape.Point.Augment({
+  AST.Modifier.Shape.Point.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
-    	var mc = MML.xypic.Frame.Point(c.x, c.y);
+    	var mc = xypic.Frame.Point(c.x, c.y);
       env.c = mc;
       return mc;
     }
   });
   
-  MML.xypic.Modifier.Shape.Rect.Augment({
+  AST.Modifier.Shape.Rect.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
     	return c;
     }
   });
   
-  MML.xypic.Modifier.Shape.Circle.Augment({
+  AST.Modifier.Shape.Circle.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
-    	return MML.xypic.Frame.Circle(c.x, c.y, Math.max(c.l, c.r, c.u, c.d));
+    	return xypic.Frame.Circle(c.x, c.y, Math.max(c.l, c.r, c.u, c.d));
     }
   });
   
-  MML.xypic.Modifier.Shape.L.Augment({
+  AST.Modifier.Shape.L.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
     	// TODO: impl [l]
@@ -6541,7 +5677,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Modifier.Shape.R.Augment({
+  AST.Modifier.Shape.R.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
     	// TODO: impl [r]
@@ -6549,7 +5685,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Modifier.Shape.U.Augment({
+  AST.Modifier.Shape.U.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
     	// TODO: impl [u]
@@ -6557,7 +5693,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Modifier.Shape.D.Augment({
+  AST.Modifier.Shape.D.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
     	// TODO: impl [d]
@@ -6565,7 +5701,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Modifier.Shape.C.Augment({
+  AST.Modifier.Shape.C.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
     	// TODO: impl [c]
@@ -6573,43 +5709,43 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Modifier.AddOp.Augment({
+  AST.Modifier.AddOp.Augment({
   	preprocess: function (env) {},
     postprocess: function (c, env) {
     	return this.op.postprocess(this.size, c, env);
     }
   });
-  MML.xypic.Modifier.AddOp.Grow.Augment({
+  AST.Modifier.AddOp.Grow.Augment({
     postprocess: function (size, c, env) {
       var margin = (size.isDefault?
-        {x:2*MML.xypic.objectmargin, y:2*MML.xypic.objectmargin}:
+        {x:2*AST.xypic.objectmargin, y:2*AST.xypic.objectmargin}:
         size.vector.xy(env));
     	var xMargin = Math.abs(margin.x/2);
     	var yMargin = Math.abs(margin.y/2);
       return c.grow(xMargin, yMargin);
     }
   });
-  MML.xypic.Modifier.AddOp.Shrink.Augment({
+  AST.Modifier.AddOp.Shrink.Augment({
     postprocess: function (size, c, env) {
       var margin = (size.isDefault?
-        {x:2*MML.xypic.objectmargin, y:2*MML.xypic.objectmargin}:
+        {x:2*AST.xypic.objectmargin, y:2*AST.xypic.objectmargin}:
         size.vector.xy(env));
     	var xMargin = -Math.abs(margin.x/2);
     	var yMargin = -Math.abs(margin.y/2);
       return c.grow(xMargin, yMargin);
     }
   });
-  MML.xypic.Modifier.AddOp.Set.Augment({
+  AST.Modifier.AddOp.Set.Augment({
     postprocess: function (size, c, env) {
       var margin = (size.isDefault?
-        {x:MML.xypic.objectwidth, y:MML.xypic.objectheight}:
+        {x:AST.xypic.objectwidth, y:AST.xypic.objectheight}:
         size.vector.xy(env));
     	var width = Math.abs(margin.x);
     	var height = Math.abs(margin.y);
       return c.toSize(width, height);
     }
   });
-  MML.xypic.Modifier.AddOp.GrowTo.Augment({
+  AST.Modifier.AddOp.GrowTo.Augment({
     postprocess: function (size, c, env) {
       var l = Math.max(c.l+c.r, c.u+c.d);
       var margin = (size.isDefault? {x:l, y:l} : size.vector.xy(env));
@@ -6618,7 +5754,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
       return c.growTo(width, height);
     }
   });
-  MML.xypic.Modifier.AddOp.ShrinkTo.Augment({
+  AST.Modifier.AddOp.ShrinkTo.Augment({
     postprocess: function (size, c, env) {
       var l = Math.min(c.l+c.r, c.u+c.d);
       var margin = (size.isDefault? {x:l, y:l} : size.vector.xy(env));
@@ -6628,7 +5764,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Direction.Compound.Augment({
+  AST.Direction.Compound.Augment({
   	angle: function (env) {
     	var angle = this.dir.angle(env);
       this.rots.foreach(function (rot) { angle = rot.rotate(angle, env); });
@@ -6636,43 +5772,43 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-  MML.xypic.Direction.Diag.Augment({
+  AST.Direction.Diag.Augment({
   	angle: function (env) {
     	return this.diag.angle(env);
     }
   });
   
-  MML.xypic.Direction.Vector.Augment({
+  AST.Direction.Vector.Augment({
   	angle: function (env) {
     	return this.vector.angle(env);
     }
   });
   
-  MML.xypic.Direction.RotVector.Augment({
+  AST.Direction.RotVector.Augment({
   	rotate: function (angle, env) {
       return angle + this.vector.angle(env);
     }
   });
   
-  MML.xypic.Direction.RotCW.Augment({
+  AST.Direction.RotCW.Augment({
   	rotate: function (angle, env) {
       return angle + Math.PI/2;
     }
   });
   
-  MML.xypic.Direction.RotAntiCW.Augment({
+  AST.Direction.RotAntiCW.Augment({
   	rotate: function (angle, env) {
       return angle - Math.PI/2;
     }
   });
   
-  MML.xypic.Diag.Default.Augment({
+  AST.Diag.Default.Augment({
   	angle: function (env) {
     	return env.angle;
     }
   });
     
-  MML.xypic.Diag.Angle.Augment({
+  AST.Diag.Angle.Augment({
   	angle: function (env) {
     	return this.ang;
     }
@@ -6681,4 +5817,4 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
   MathJax.Hub.Startup.signal.Post("HTML-CSS Xy-pic Ready");
 });
 
-MathJax.Ajax.loadComplete("[MathJax]/extensions/TeX/Xypic.js");
+MathJax.Ajax.loadComplete("[MathJax]/extensions/TeX/xypic.js");

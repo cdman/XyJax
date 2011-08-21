@@ -15,13 +15,13 @@
 //
   MathJax.HTML.Cookie.Set("menu",{});
   MathJax.Hub.Config({
-    extensions: ["tex2jax.js"],
+    extensions: ["tex2jax.js", "fp.js"],
     jax: ["input/TeX","output/HTML-CSS"],
     "HTML-CSS": {
       availableFonts:[], preferredFont: null, webFont: null,
       styles: {".MathJax_Preview": {visibility: "hidden"}}
     }, 
-    TeX: {extensions: ["XYpic.js"]}
+    TeX: {extensions: ["xypic.js"]}
   });
 
 (function (HUB) {

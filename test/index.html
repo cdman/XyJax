@@ -15,13 +15,13 @@
 //
   MathJax.HTML.Cookie.Set("menu",{});
   MathJax.Hub.Config({
-    extensions: ["tex2jax.js"],
+    extensions: ["tex2jax.js", "fp.js"],
     jax: ["input/TeX","output/HTML-CSS"],
     "HTML-CSS": {
       availableFonts:[],
       styles: {".MathJax_Preview": {visibility: "hidden"}}
     },
-    TeX: {extensions: ["Xypic.js"]}
+    TeX: {extensions: ["xypic.js"]}
   });
   MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     var FONT = MathJax.OutputJax["HTML-CSS"].Font;

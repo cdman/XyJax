@@ -733,7 +733,7 @@ Source code:
 \end{xy}
 }}}</pre>
 </div>
-<div title="HowToInstall" creator="isao" modifier="isao" created="201108111428" modified="201108111523" changecount="11">
+<div title="HowToInstall" creator="isao" modifier="isao" created="201108111428" modified="201108210855" changecount="20">
 <pre>@@THIS INSTALL INSTRUCTION IS TENTATIVE.@@
 @@I'm trying to separate XyJax package from the original MathJax's code.@@
 
@@ -750,22 +750,24 @@ Source code:
 # Open test/sample-xyjax.html with Firefox/Safari/Chrome.
 ** you can see so-called commutative diagram, if XyJax works.
 # Use XyJax on your own site.
-** like the configuration of the test/sample-xy.jax (and the following code), load unpacked/MathJax.js within pages on your site.
+** like the configuration of the test/sample-xy.jax (and the following code), load unpacked/MathJax.js and fp.js, xypic.js within pages on your site.
 
 {{{
 &lt;script type=&quot;text/x-mathjax-config&quot;&gt;
   MathJax.Hub.Config({
-    extensions: [&quot;tex2jax.js&quot;],
+    extensions: [&quot;tex2jax.js&quot;,&quot;fp.js&quot;],
+    //                         ^^^^^load fp.js
     jax: [&quot;input/TeX&quot;,&quot;output/HTML-CSS&quot;],
     &quot;HTML-CSS&quot;: {
       styles: {&quot;.MathJax_Preview&quot;: {visibility: &quot;hidden&quot;}}
     },
     tex2jax: {inlineMath: [[&quot;$&quot;,&quot;$&quot;],[&quot;\\(&quot;,&quot;\\)&quot;]]},
-    TeX: {extensions: [&quot;AMSmath.js&quot;,&quot;AMSsymbols.js&quot;]}
+    TeX: {extensions: [&quot;xypic.js&quot;, &quot;AMSmath.js&quot;,&quot;AMSsymbols.js&quot;]}
+    //                  ^^^^^^^^load xypic.js
   });
 &lt;/script&gt;
 &lt;script type=&quot;text/javascript&quot; src=&quot;../unpacked/MathJax.js&quot;&gt;&lt;/script&gt;
-&lt;!--                                   ^^^^^^^^IMPORTANT! load in the unpacked folder. --&gt;
+&lt;!--                                   ^^^^^^^^IMPORTANT! in the unpacked folder. --&gt;
 }}}
 
 ref. http://www.mathjax.org/docs/1.1/installation.html</pre>
@@ -1030,7 +1032,7 @@ Source code:
 \end{xy}
 }}}</pre>
 </div>
-<div title="PluginMathJax" modifier="isao" created="201009232141" modified="201108171350" tags="systemConfig" changecount="20" server.type="file" server.host="http://www.almapater.org/courses/mat-521-001-2011-spring/mat-521-001-2011-spring.html" server.page.revision="201012021914">
+<div title="PluginMathJax" modifier="isao" created="201009232141" modified="201108210850" tags="systemConfig" changecount="25" server.type="file" server.host="http://www.almapater.org/courses/mat-521-001-2011-spring/mat-521-001-2011-spring.html" server.page.revision="201012021914">
 <pre>/***
 |''Name''|PluginMathJax|
 |''Description''|Displays TeX math using MathJax|
@@ -1083,12 +1085,12 @@ if(!version.extensions.PluginMathJax) {
             mjscript.type = &quot;text/javascript&quot;;
             
             // ***** Use the location of your MathJax! ***** :
-            mjscript.src = &quot;unpacked/MathJax.js?config=TeX-AMS_HTML&quot;;
+            mjscript.src = &quot;unpacked/MathJax.js&quot;;
             
             var mjconfig = 'MathJax.Hub.Config({' +
             'jax: [&quot;input/TeX&quot;,&quot;output/HTML-CSS&quot;],' +
-            'extensions: [&quot;tex2jax.js&quot;],' +
-            'TeX: { extensions: [&quot;Xypic.js&quot;,&quot;AMSmath.js&quot;,&quot;AMSsymbols.js&quot;] },' +
+            'extensions: [&quot;tex2jax.js&quot;,&quot;fp.js&quot;],' +
+            'TeX: { extensions: [&quot;xypic.js&quot;,&quot;AMSmath.js&quot;,&quot;AMSsymbols.js&quot;] },' +
             '&quot;HTML-CSS&quot;: {' +
                 'scale: 115' +
                 '},' +
@@ -1699,7 +1701,7 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 <pre>&gt; Xy-pic is a package for typesetting graphs and diagrams using the principle of &quot;logical composition of visual components.&quot;
 Please visit [[Xy-pic's home page|http://www.tug.org/applications/Xy-pic/]]</pre>
 </div>
-<div title="XyJax" creator="isao" modifier="isao" created="201108061630" modified="201108181458" changecount="77">
+<div title="XyJax" creator="isao" modifier="isao" created="201108061630" modified="201108210849" changecount="78">
 <pre>!About XyJax
 XyJax is a [[Xy-pic]] compatible package for MathJax.
 This software is under development, so this release is alpha-quality (often buggy).

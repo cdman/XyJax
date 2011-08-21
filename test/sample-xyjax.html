@@ -9,18 +9,19 @@
 
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({
-    extensions: ["tex2jax.js"],
+    extensions: ["tex2jax.js","fp.js"],
+    //                         ^^^^^load fp.js
     jax: ["input/TeX","output/HTML-CSS"],
     "HTML-CSS": {
       styles: {".MathJax_Preview": {visibility: "hidden"}}
     },
     tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]},
-    TeX: {extensions: ["Xypic.js", "AMSmath.js","AMSsymbols.js"]}
+    TeX: {extensions: ["xypic.js", "AMSmath.js","AMSsymbols.js"]}
+    //                  ^^^^^^^^load xypic.js
   });
-
 </script>
 <script type="text/javascript" src="../unpacked/MathJax.js"></script>
-<!--                                   ^^^^^^^^IMPORTANT! load in the unpacked folder. -->
+<!--                                   ^^^^^^^^IMPORTANT! in the unpacked folder. -->
 
 </head>
 <body>
@@ -33,15 +34,15 @@
 
 \[
 \begin{xy}
-<0,0>*{X \times Y}="xy", <5em,0>*{X}="x", 
-<0,-5em>*{Y}="y", <5em,-5em>*{Z}="z", <-4em,4em>*{U}="u",
-"xy";"x" **@{-} ?>*@{>} ?<>*!/_0.5em/{\scriptstyle p},
-"xy";"y" **@{-} ?>*@{>} ?<>*!/^0.5em/{\scriptstyle q},
-"x";"z" **@{-} ?>*@{>} ?<>*!/_0.5em/{\scriptstyle f},
-"y";"z" **@{-} ?>*@{>} ?<>*!/^0.5em/{\scriptstyle g},
+<0,0>*+{X \times Y}="xy", <5em,0>*+{X}="x", 
+<0,-5em>*+{Y}="y", <5em,-5em>*+{Z}="z", <-4em,4em>*+{U}="u",
+"xy";"x" **@{-} ?>*@{>} ?<>(.5)*!/^0.5em/{\scriptstyle p},
+"xy";"y" **@{-} ?>*@{>} ?<>(.5)*!/_0.5em/{\scriptstyle q},
+"x";"z" **@{-} ?>*@{>} ?<>(.5)*!/^0.5em/{\scriptstyle f},
+"y";"z" **@{-} ?>*@{>} ?<>(.5)*!/_0.5em/{\scriptstyle g},
 "u";"xy" **@{--} ?>*@{>},
-"u";"y" **\crv{<-3em,-2em>} ?>*@{>} ?<>*!/_0.5em/{y},
-"u";"x" **\crv{<2em,3em>} ?>*@{>} ?<>*!/^0.5em/{x}
+"u";"y" **\crv{<-3em,-2em>} ?>*@{>} ?<>(.5)*!/^0.5em/{y},
+"u";"x" **\crv{<2em,3em>} ?>*@{>} ?<>(.5)*!/_0.5em/{x}
 \end{xy}
 \]
 
