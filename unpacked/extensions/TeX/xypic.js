@@ -709,37 +709,46 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   var seq = FP.Parsers.seq;
   var or = FP.Parsers.or;
   var rep = function (x) { return FP.Parsers.lazyParser(x)().rep(); }
+  var memo = function (parser) {
+    return function () {
+      var m = parser.memo;
+      if (m === undefined) {
+        m = parser.memo = parser();
+      }
+      return m;
+    }
+  }
   
   var p = FP.Parsers.Subclass({
     // <pos> '\end' '{' 'xy' '}'
-    xy: function () {
+    xy: memo(function () {
       return p.pos().into(function (pos) {
         return FP.Parsers.guard(function() { return lit('\\end').andl(flit('{')).andl(flit('xy')).andl(flit('}')).to(function () {
           return pos;
         })});
       });
-    },
+    }),
     
     // <pos> ::= <coord> <pos2>*
-    pos: function () {
+    pos: memo(function () {
       return seq(p.coord, rep(p.pos2)).to(function (cps) {
         return AST.Pos.Coord(cps.head, cps.tail);
       });
-    },
+    }),
     
     // <nonemptyPos> ::= <coord> <pos2>*
-    nonemptyPos: function () {
+    nonemptyPos: memo(function () {
       return seq(p.nonemptyCoord, rep(p.pos2)).to(function (cps) {
         return AST.Pos.Coord(cps.head, cps.tail);
       });
-    },
+    }),
     
     // <pos2> ::= ';' <coord>
     //        |   '**' <object>
     //        |   '*' <object>
     //        |   '?' <place>
     //        |   '=' <saving>
-    pos2: function () {
+    pos2: memo(function () {
       return or(
         lit('+').andr(p.coord).to(function (c) { return AST.Pos.Plus(c); }),
         lit('-').andr(p.coord).to(function (c) { return AST.Pos.Minus(c); }),
@@ -750,20 +759,20 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         lit('?').andr(p.place).to(function (o) { return AST.Pos.Place(o); }),
         lit('=').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (o) { return AST.Pos.SavingPos(o); })
       );
-    },
+    }),
     
     // <coord> ::= <nonemptyCoord> | <empty>
-    coord: function () {
+    coord: memo(function () {
       return or(
         p.nonemptyCoord,
         FP.Parsers.success('empty').to(function () { return AST.Coord.C(); })
       );
-    },
+    }),
     
     // <nonemptyCoord> ::= 'c' | 'p' | 'x' | 'y'
     //         |   <vector>
     //         |   '"' <id> '"'
-    nonemptyCoord: function () {
+    nonemptyCoord: memo(function () {
       return or(
         lit('c').to(function () { return AST.Coord.C(); }), 
         lit('p').to(function () { return AST.Coord.P(); }), 
@@ -772,7 +781,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         p.vector().to(function (v) { return AST.Coord.Vector(v); }), 
         lit('"').andr(p.id).andl(felem('"')).to(function (id) { return AST.Coord.Id(id) })
       );
-    },
+    }),
     
     // <vector> ::= '(' <factor> ',' <factor> ')'
     //          |   '<' <dimen> ',' <dimen> '>'
@@ -782,7 +791,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     //          |   0
     //          |   <corner>
     //          |   <corner> '(' <factor> ')'
-    vector: function () {
+    vector: memo(function () {
       return or(
         lit('(').andr(p.factor).andl(flit(',')).and(p.factor).andl(flit(')')).to(
           function (xy) {
@@ -818,14 +827,14 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         	})
         }
       );
-    },
+    }),
     
     // <corner> ::= 'L' | 'R' | 'D' | 'U'
     //          | 'CL' | 'CR' | 'CD' | 'CU' | 'LC' | 'RC' | 'DC' | 'UC'
     //          | 'LD' | 'RD' | 'LU' | 'RU' | 'DL' | 'DR' | 'UL' | 'UR'
     //          | 'E' | 'P'
     //          | 'A'
-    corner: function () {
+    corner: memo(function () {
     	return or(
       	regexLit(/^(CL|LC)/).to(function () { return AST.Corner.CL(); }),
       	regexLit(/^(CR|RC)/).to(function () { return AST.Corner.CR(); }),
@@ -843,14 +852,14 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       	lit('P').to(function () { return AST.Corner.PropEdgePoint(); }),
       	lit('A').to(function () { return AST.Corner.Axis(); })
       );
-    },
+    }),
     
     // <place> ::= '<' <place>
     //         | '>' <place>
     //         | '(' <factor> ')' <place>
     //         | '!' '{' <pos> '}' <slide>
     //         | <slide>
-    place: function () {
+    place: memo(function () {
       return or(
         lit('<').andr(p.place).to(function (pl) {
           return AST.Place(1, 0, undefined, undefined).compound(pl);
@@ -868,11 +877,11 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
           return AST.Place(0, 0, undefined, s);
         }) }
       );
-    },
+    }),
     
     // <slide> ::= '/' <dimen> '/'
     //         | <empty>
-    slide: function () {
+    slide: memo(function () {
       return or(
         lit('/').andr(p.dimen).andl(flit('/')).to(function (d) {
           return AST.Slide(d);
@@ -881,65 +890,65 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
           return AST.Slide(undefined);
         })
       );
-    },
+    }),
     
     // <factor>
-    factor: fun(regexLit(/^[+\-]?(\d+(\.\d*)?|\d*\.\d+)/).to(
+    factor: memo(fun(regexLit(/^[+\-]?(\d+(\.\d*)?|\d*\.\d+)/).to(
       function (v) { return parseFloat(v); })
-    ),
+    )),
     
     // <number>
-    number: fun(regexLit(/^[+\-]?\d+/).to(
+    number: memo(fun(regexLit(/^[+\-]?\d+/).to(
       function (n) { return parseInt(n); })
-    ),
+    )),
     
-    unit: fun(regexLit(/^(em|ex|px|pt|pc|in|cm|mm|mu)/).opt().to(function (d) {
-        return d.getOrElse("mm");
-    })),
+    unit: memo(fun(regexLit(/^(em|ex|px|pt|pc|in|cm|mm|mu)/).to(function (d) {
+        return d//.getOrElse("mm");
+    }))),
     
     // <dimen> ::= <factor> ( 'em' | 'ex' | 'px' | 'pt' | 'pc' | 'in' | 'cm' | 'mm' | 'mu' )?
-    dimen: function () {
+    dimen: memo(function () {
       return p.factor().and(p.unit).to(function (x) {
         return x.head.toString() + x.tail;
       })
-    },
+    }),
     
-    // <loose-dimen> ::= <loose-factor> 
-    looseDimen: function () {
+    // <loose-dimen> ::= <loose-factor> ( 'em' | 'ex' | 'px' | 'pt' | 'pc' | 'in' | 'cm' | 'mm' | 'mu' )?
+    looseDimen: memo(function () {
       return p.looseFactor().and(p.unit).to(function (x) {
         return x.head.toString() + x.tail;
       })
-    },
+    }),
     
     // <loose-factor>
     // makeshift against /^ 3.5mm/ converted to /^ 3 .5mm/ by MathJax.InputJax.TeX.prefilterMath()
-    looseFactor: fun(or(
+    looseFactor: memo(fun(or(
       regexLit(/^(\d \d*(\.\d*))/).to(function (v) {
         return parseFloat(v.replace(/ /, ""));
       }),
       regexLit(/^[+\-]?(\d+(\.\d*)?|\d*\.\d+)/).to(function (v) {
         return parseFloat(v);
       })
-    )),
+    ))),
     
     // <id>
-    id: fun(regex(/^[^"]+/)), // " TODO: IDの文字領域は？
+    id: memo(fun(regex(/^[^"]+/))), // "
     
     // <object> ::= <modifier>* <objectbox>
-    object: function () {
+    object: memo(function () {
       return or(
         rep(p.modifier).and(p.objectbox).to(function (mso) {
           return AST.Object(mso.head, mso.tail);
         })
       );
-    },
+    }),
     
     // <objectbox> ::= '{' <text> '}'
     //          | '@' <dir>
     //          | '\dir' <dir>
     //          | '\cir' <radius> '{' <cir> '}'
     //          | <curve>
-    objectbox: function () {
+    objectbox: memo(function () {
       return or(lit("{").andr(p.text).andl(felem("}")).to(function (math) {
           var mml = TEX.Parse(math).mml();
           if (mml.inferred) {
@@ -957,10 +966,10 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         }),
         p.curve
       );
-    },
+    }),
     
     // <text> ::= /[^{}]*/ ( '{' <text> '}' /[^{}]*/ )*
-    text: function () {
+    text: memo(function () {
       return regex(/^[^{}]*/).and(function () {
         return (elem("{").andr(p.text).andl(felem("}")).and(fun(regex(/^[^{}]*/)))).rep().to(function (xs) {
           var res = "";
@@ -972,20 +981,20 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       }).to(function (x) {
         return x.head + x.tail
       });
-    },
+    }),
 		
     // <dir> ::= <variant> '{' <main> '}'
     // <variant> ::= '^' | '_' | '2' | '3' | <empty>
     // <main> ::= <empty> | '--' | '-' | '..' | '.' | '~~' | '~' | '>>|' | '>|' | '>>' | '<<' | '>' | '<' | '(' | ')' | '`' | "'" | '||' | '|-' | '|<' | '|<<' | '|' | '*' | '+' | 'x' | '//' | '/' | 'o' | '==' | '=' | '::' | ':'
-    dir: function () {
+    dir: memo(function () {
       return regexLit(/^[\^_23]/).opt().andl(flit('{')).and(fun(regexLit(/^(--|-|\.\.|\.|~~|~|>>\||>\||>>|<<|>|<|\(|\)|`|'|\|\||\|-|\|<|\|<<|\||\*|\+|x|\/\/|\/|o|==|=|::|:)/ /*'*/).opt())).andl(flit('}')).to(function (vm) {
         return AST.ObjectBox.Dir(vm.head.getOrElse(""), vm.tail.getOrElse(""));
       })
-    },
+    }),
     
     // <radius> ::= <vector>
     //          | <empty>
-    radius: function () {
+    radius: memo(function () {
       return or(
         p.vector().to(function (v) {
           return AST.ObjectBox.Cir.Radius.Vector(v);
@@ -994,11 +1003,11 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         	return AST.ObjectBox.Cir.Radius.Default();
         })
       );
-    },
+    }),
     
     // <cir> ::= <diag> <orient> <diag>
     //       | <empty>
-    cir: function () {
+    cir: memo(function () {
       return or(
         p.diag().and(fun(regexLit(/^[_\^]/))).and(p.diag).to(function (dod) {
           return AST.ObjectBox.Cir.Cir.Segment(dod.head.head, dod.head.tail, dod.tail);
@@ -1007,25 +1016,25 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         	return AST.ObjectBox.Cir.Cir.Full();
         })
       );
-    },
+    }),
     
     // <curve> ::= '\crv' <curve-modifier> '{' <curve-object> <poslist> '}'
-    curve: function () {
+    curve: memo(function () {
     	return lit("\\crv").andr(p.curveModifier).andl(flit("{")).and(p.curveObject).and(p.curvePoslist).andl(flit("}")).to(function (mop) {
       	return AST.ObjectBox.Curve(mop.head.head, mop.head.tail, mop.tail);
       });
-    },
+    }),
     
 	  // <curve-modifier> ::= ( '~' <curve-option> )*
-    curveModifier: function () {
+    curveModifier: memo(function () {
     	return rep(fun(lit("~").andr(p.curveOption)));
-    },
+    }),
     
     // <curve-option> ::= 'p' | 'P' | 'l' | 'L' | 'c' | 'C'
     //                |   'pc' | 'pC' | 'Pc' | 'PC'
     //                |   'lc' | 'lC' | 'Lc' | 'LC'
     //                |   'cC'
-    curveOption: function () {
+    curveOption: memo(function () {
     	return or(
       	lit("p").to(function () { return AST.ObjectBox.Curve.Modifier.p(); }),
       	lit("P").to(function () { return AST.ObjectBox.Curve.Modifier.P(); }),
@@ -1043,12 +1052,12 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       	lit("LC").to(function () { return AST.ObjectBox.Curve.Modifier.LC(); }),
       	lit("cC").to(function () { return AST.ObjectBox.Curve.Modifier.cC(); })
       );
-    },
+    }),
     
     // <curve-object> ::= <empty>
     //                |   '~*' <object> <curve-object>
     //                |   '~**' <object> <curve-object>
-    curveObject: function () {
+    curveObject: memo(function () {
     	return rep(or(
       	lit("~*").andr(p.object).to(function (obj) {
         	return AST.ObjectBox.Curve.Object.Drop(obj);
@@ -1057,7 +1066,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         	return AST.ObjectBox.Curve.Object.Connect(obj);
         })
       ));
-    },
+    }),
     
     // <curve-poslist> ::= <empty> ^^ Empty List
     //           |   '&' <curve-poslist2> ^^ (c, <poslist>)
@@ -1071,7 +1080,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     //           |   <nonemptyPos> '&' <curve-poslist2> ^^ (<nonemptyPos>, <poslist>)
     //           |   '~@' ^^ (~@, Nil)
     //           |   '~@' '&' <curve-poslist2> ^^ (~@, <poslist>)
-    curvePoslist: function () {
+    curvePoslist: memo(function () {
     	return or(
       	lit("&").andr(p.curvePoslist2).to(function (ps) {
         	return FP.List.Cons(AST.ObjectBox.Curve.PosList.CurPos(), ps);
@@ -1092,8 +1101,8 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         	return FP.List.empty;
         })
       );
-    },
-    curvePoslist2: function () {
+    }),
+    curvePoslist2: memo(function () {
     	return or(
       	lit("&").andr(p.curvePoslist2).to(function (ps) {
         	return FP.List.Cons(AST.ObjectBox.Curve.PosList.CurPos(), ps);
@@ -1114,12 +1123,12 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
         	return FP.List.Cons(AST.ObjectBox.Curve.PosList.CurPos(), FP.List.empty);
         })
       );
-    },
+    }),
     
     // <modifier> ::= '!' <vector>
     //            |   '[' <shape> ']'
     //            |   <add-op> <size>
-    modifier: function () {
+    modifier: memo(function () {
     	return or(
         lit("!").andr(p.vector).to(function (v) {
           return AST.Modifier.Vector(v);
@@ -1133,10 +1142,10 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
           })
         }
       );
-    },
+    }),
     
     // <add-op> ::= '+' | '-' | '=' | '+=' | '-='
-    addOp: function () {
+    addOp: memo(function () {
     	return or(
       	lit("+=").to(function () { return AST.Modifier.AddOp.GrowTo(); }),
       	lit("-=").to(function () { return AST.Modifier.AddOp.ShrinkTo(); }),
@@ -1144,10 +1153,10 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       	lit("-").to(function () { return AST.Modifier.AddOp.Shrink(); }),
       	lit("=").to(function () { return AST.Modifier.AddOp.Set(); })
       );
-    },
+    }),
     
     // <size> ::= <vector> | <empty>
-    size: function () {
+    size: memo(function () {
     	return or(
       	function () { return p.vector().to(function (v) {
           return AST.Modifier.AddOp.VactorSize(v);
@@ -1156,10 +1165,10 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
           return AST.Modifier.AddOp.DefaultSize();
         })
       );
-    },
+    }),
     
     // <shape> ::= '.' | 'o' | 'l' | 'r' | 'u' | 'd' | 'c' | <empty>
-    shape: function () {
+    shape: memo(function () {
     	return or(
       	lit(".").to(function () { return AST.Modifier.Shape.Point(); }),
       	lit("o").to(function () { return AST.Modifier.Shape.Circle(); }),
@@ -1170,7 +1179,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       	lit("c").to(function () { return AST.Modifier.Shape.C(); }),
       	FP.Parsers.success("rect").to(function () { return AST.Modifier.Shape.Rect(); })
       );
-    },
+    }),
     
     // <direction> ::= <direction0> <direction1>*
     // <direction0> ::= <diag>
@@ -1178,12 +1187,12 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
     // <direction1> | ':' <vector>
     //              | '_'
     //              | '^'
-    direction: function () {
+    direction: memo(function () {
       return seq(p.direction0, rep(p.direction1)).to(function (drs){
         return AST.Direction.Compound(drs.head, drs.tail);
       });
-    },
-    direction0: function () {
+    }),
+    direction0: memo(function () {
       return or(
         lit('v').andr(p.vector).to(function (v) {
           return AST.Direction.Vector(v);
@@ -1192,8 +1201,8 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
           return AST.Direction.Diag(d);
         })
       );
-    },
-    direction1: function () {
+    }),
+    direction1: memo(function () {
       return or(
         lit(':').andr(p.vector).to(function (v) {
           return AST.Direction.RotVector(v);
@@ -1205,11 +1214,11 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
           return AST.Direction.RotCW();
         })
       );
-    },
+    }),
     
     // <diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
     //        | <empty>
-    diag: fun(or(
+    diag: memo(fun(or(
       regexLit(/^(ld|dl)/).to(function (x) { return AST.Diag.Angle('ld', -3*Math.PI/4); }),
       regexLit(/^(rd|dr)/).to(function (x) { return AST.Diag.Angle('rd', -Math.PI/4); }),
       regexLit(/^(lu|ul)/).to(function (x) { return AST.Diag.Angle('lu', 3*Math.PI/4); }),
@@ -1221,7 +1230,7 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
       FP.Parsers.success("empty").to(function (x) {
         return AST.Diag.Default();
       })
-    )),
+    ))),
   })();
 
   MathJax.Hub.Insert(TEXDEF,{
