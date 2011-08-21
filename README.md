@@ -33,7 +33,7 @@ I'm trying to separate XyJax package from the original MathJax's code.
 4. Open test/sample-xyjax.html with Firefox/Safari/Chrome.
  + you can see so-called commutative diagram, if XyJax works.
 5. Use XyJax on your own site.
- + like the configuration of the test/sample-xy.jax, load unpacked/MathJax.js within pages on your site.
+ + like the configuration of the test/sample-xy.jax, load unpacked/MathJax.js and fp.js, xypic.js within pages on your site.
 
 ## Limitation
 
