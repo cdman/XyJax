@@ -21,14 +21,33 @@
  *  limitations under the License.
  */
 
+MathJax.Extension.xypic = {
+  version: "0.1",
+  isTeXJaxReady: false,
+  isHTMLCSSJaxReady: false
+}
+
+MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
+  MathJax.Extension.xypic.isTeXJaxReady = true;
+  MathJax.Hub.Startup.signal.Post("TeX Xy-pic Require");
+  if (MathJax.Extension.xypic.isHTMLCSSJaxReady) {
+    MathJax.Hub.Startup.signal.Post("HTML-CSS Xy-pic Require");
+  }
+});
+
 MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
+  MathJax.Extension.xypic.isHTMLCSSJaxReady = true;
+  if (MathJax.Extension.xypic.isTeXJaxReady) {
+    MathJax.Hub.Startup.signal.Post("HTML-CSS Xy-pic Require");
+  }
+});
+
+MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   var FP = MathJax.Extension.fp;
   var MML = MathJax.ElementJax.mml;
   var TEX = MathJax.InputJax.TeX;
   var TEXDEF = TEX.Definitions;
-  var xypic = MathJax.Extension.xypic = {
-    version: "0.1"
-  };
+  var xypic = MathJax.Extension.xypic;
   var AST = xypic.AST = MathJax.Object.Subclass({});
   
   MathJax.Hub.Insert(TEXDEF, {
@@ -1296,7 +1315,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
     }
   });
   
-/*  MathJax.Hub.Startup.signal.Post("TeX Xy-pic Ready");
+  MathJax.Hub.Startup.signal.Post("TeX Xy-pic Ready");
 });
 
 
@@ -1313,7 +1332,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
 
 
 
-MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {*/
+MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   var FP = MathJax.Extension.fp;
   var MML = MathJax.ElementJax.mml;
   var HTMLCSS = MathJax.OutputJax["HTML-CSS"];

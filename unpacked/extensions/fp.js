@@ -22,10 +22,10 @@
  */
 
 MathJax.Hub.Register.StartupHook("End Extensions",function () {
-  MathJax.Extension.fp = {
+  
+  var FP = MathJax.Extension.fp = {
     version: "0.1"
   };
-  var FP = MathJax.Extension.fp;
   
   /************ Matcher **************/
   FP.Matcher = MathJax.Object.Subclass({
