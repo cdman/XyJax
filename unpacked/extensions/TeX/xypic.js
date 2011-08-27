@@ -23,24 +23,71 @@
 
 MathJax.Extension.xypic = {
   version: "0.1",
-  isTeXJaxReady: false,
-  isHTMLCSSJaxReady: false
+  signalHandler: {
+    signals: [],
+    hookedSignals: [],
+    chains: [],
+    chainSignal: function (successor, predecessors) {
+      for (var i = 0; i < predecessors.length; i++) {
+        MathJax.Extension.xypic.signalHandler.addSignal(predecessors[i]);
+      }
+      MathJax.Extension.xypic.signalHandler.chains.push({succ:successor, pred:predecessors});
+    },
+    addSignal: function (signal) {
+      var signals = MathJax.Extension.xypic.signalHandler.signals;
+      for (var i = 0; i < signals.length; i++) {
+        if (signals[i] === signal) {
+          return;
+        }
+      }
+      MathJax.Extension.xypic.signalHandler.signals.push(signal);
+      var handler = MathJax.Extension.xypic.signalHandler.handleSignal(signal);
+      MathJax.Hub.Register.StartupHook(signal, handler);
+    },
+    handleSignal: function (signal) {
+      return function () {
+        MathJax.Extension.xypic.signalHandler.hookedSignals.push(signal);
+        MathJax.Extension.xypic.signalHandler.handleChains();
+      }
+    },
+    handleChains: function () {
+      var i = 0;
+      var chains = MathJax.Extension.xypic.signalHandler.chains;
+      var remainings = [];
+      while (i < chains.length) {
+        var c = chains[i];
+        var pred = c.pred;
+        var invokable = true;
+        for (var j = 0; j < pred.length; j++) {
+          var p = pred[j];
+          if (!MathJax.Extension.xypic.signalHandler.listenedSignal(p)) {
+            invokable = false;
+            break;
+          }
+        }
+        if (invokable) {
+          MathJax.Hub.Startup.signal.Post(c.succ);
+        } else {
+          remainings.push(c);
+        }
+        i++;
+      }
+      MathJax.Extension.xypic.signalHandler.chains = remainings;
+    },
+    listenedSignal: function (signal) {
+      var signals = MathJax.Extension.xypic.signalHandler.hookedSignals;
+      for (var i = 0; i < signals.length; i++) {
+        if (signals[i] === signal) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
 }
 
-MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
-  MathJax.Extension.xypic.isTeXJaxReady = true;
-  MathJax.Hub.Startup.signal.Post("TeX Xy-pic Require");
-  if (MathJax.Extension.xypic.isHTMLCSSJaxReady) {
-    MathJax.Hub.Startup.signal.Post("HTML-CSS Xy-pic Require");
-  }
-});
-
-MathJax.Hub.Register.StartupHook("HTML-CSS Jax Ready",function () {
-  MathJax.Extension.xypic.isHTMLCSSJaxReady = true;
-  if (MathJax.Extension.xypic.isTeXJaxReady) {
-    MathJax.Hub.Startup.signal.Post("HTML-CSS Xy-pic Require");
-  }
-});
+MathJax.Extension.xypic.signalHandler.chainSignal("TeX Xy-pic Require", ["Functional Programming library Ready", "TeX Jax Ready"]);
+MathJax.Extension.xypic.signalHandler.chainSignal("HTML-CSS Xy-pic Require", ["TeX Xy-pic Ready", "HTML-CSS Jax Ready"]);
 
 MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   var FP = MathJax.Extension.fp;
