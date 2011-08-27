@@ -4637,15 +4637,15 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Pos.Plus.Augment({
   	draw: function (svg, env) {
-    	var d = this.coord.position(svg, env);
-    	env.c = env.c.move(env.c.x+d.x, env.c.y+d.y);
+    	var pos = this.coord.position(svg, env);
+    	env.c = pos.move(env.c.x+pos.x, env.c.y+pos.y);
     }
   });
   
   AST.Pos.Minus.Augment({
   	draw: function (svg, env) {
-    	var d = this.coord.position(svg, env);
-    	env.c = env.c.move(env.c.x-d.x, env.c.y-d.y);
+    	var pos = this.coord.position(svg, env);
+    	env.c = pos.move(env.c.x-pos.x, env.c.y-pos.y);
     }
   });
   
@@ -5134,7 +5134,6 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.ObjectBox.Cir.Augment({
   	drop: function (svg, env, modifiers) {
       if (env.c === undefined) {
-        // TODO: cが存在しない場合の扱いは？
         return undefined;
       }
       
@@ -5264,7 +5263,6 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.ObjectBox.Dir.Augment({
   	drop: function (svg, env, modifiers) {
       if (env.c === undefined) {
-        // TODO: cが存在しない場合の扱いは？
         return undefined;
       }
       
