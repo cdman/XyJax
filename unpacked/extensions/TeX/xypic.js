@@ -132,6 +132,17 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     toString: function () { return this.type + "(" + this.cmd + ")"; }
   });
   
+  // <pos-decor> ::= <pos> <decor>
+  AST.PosDecor = MathJax.Object.Subclass({
+    Init: function (pos, decor) {
+      this.pos = pos;
+      this.decor = decor;
+    },
+    toString: function () {
+      return this.pos.toString() + " " + this.decor;
+    }
+  });
+  
   // <pos>
   AST.Pos = MathJax.Object.Subclass({});
   // <pos> ::= <coord> <pos2>*
@@ -225,9 +236,68 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       return "?(" + this.place + ")";
     }
   });
-  // <pos2> ::= '=' <saving>
-  // <saving> ::= '"' <id> '"'
-  AST.Pos.SavingPos = MathJax.Object.Subclass({
+  // <pos2> ::= '@+' <corrd>
+  AST.Pos.PushCoord = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return "@+(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= '@-' <corrd>
+  AST.Pos.EvalCoordThenPop = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return "@-(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= '@=' <corrd>
+  AST.Pos.LoadStack = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return "@=(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= '@@' <corrd>
+  AST.Pos.DoCoord = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return "@@(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= '@i'
+  AST.Pos.InitStack = MathJax.Object.Subclass({
+    Init: function () {
+    },
+    toString: function () {
+      return "@i";
+    }
+  });
+  // <pos2> ::= '@('
+  AST.Pos.EnterFrame = MathJax.Object.Subclass({
+    Init: function () {
+    },
+    toString: function () {
+      return "@(";
+    }
+  });
+  // <pos2> ::= '@)'
+  AST.Pos.LeaveFrame = MathJax.Object.Subclass({
+    Init: function () {
+    },
+    toString: function () {
+      return "@)";
+    }
+  });
+  // <pos2> ::= '=' '"' <id> '"'
+  AST.Pos.SavePos = MathJax.Object.Subclass({
     Init: function (id) {
       this.id = id;
     },
@@ -235,10 +305,34 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       return "=(" + this.id + ")";
     }
   });
-	// <saving> ::= '@:"' <id> '"'
-	// <saving> ::= '@' <coord> '"' <id> '"'
-	// <saving> ::= '@@"' <id> '"'
-  // TODO: impl <saving>
+  // <pos2> ::= '=' <coord> '"' <id> '"'
+  AST.Pos.SaveMacro = MathJax.Object.Subclass({
+    Init: function (macro, id) {
+      this.macro = macro;
+      this.id = id;
+    },
+    toString: function () {
+      return "=(" + this.id + ")";
+    }
+  });
+  // <pos2> ::= '=:' '"' <id> '"'
+  AST.Pos.SaveBase = MathJax.Object.Subclass({
+    Init: function (id) {
+      this.id = id;
+    },
+    toString: function () {
+      return "=:(" + this.id + ")";
+    }
+  });
+  // <pos2> ::= '=@' '"' <id> '"'
+  AST.Pos.SaveStack = MathJax.Object.Subclass({
+    Init: function (id) {
+      this.id = id;
+    },
+    toString: function () {
+      return "=:(" + this.id + ")";
+    }
+  });
   
   // <coord> 
   AST.Coord = MathJax.Object.Subclass({});
@@ -282,6 +376,25 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     },
     toString: function () {
       return '"' + this.id + '"';
+    }
+  });
+  // <coord> ::= '{' <pos> <decor> '}'
+  AST.Coord.Group = MathJax.Object.Subclass({
+    Init: function (posDecor) {
+      this.posDecor = posDecor;
+    },
+    toString: function () {
+      return '{' + this.posDecor + '}';
+    }
+  });
+  // <coord> ::= 's' <digit>
+  // <coord> ::= 's' '{' <nonnegative-number> '}'
+  AST.Coord.StackPosition = MathJax.Object.Subclass({
+    Init: function (number) {
+      this.number = number;
+    },
+    toString: function () {
+      return 's{' + this.number + '}';
     }
   });
   
@@ -783,6 +896,16 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   	toString: function () { return this.symbol; }
   });
   
+  // <decor> ::= <command>*
+  AST.Decor = MathJax.Object.Subclass({
+    Init: function (commands) {
+      this.commands = commands;
+    },
+    toString: function () {
+      return this.commands.mkString(" ");
+    }
+  });
+  
 
   var fun = FP.Parsers.fun;
   var elem = FP.Parsers.elem;
@@ -805,12 +928,19 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   }
   
   var p = FP.Parsers.Subclass({
-    // <pos> '\end' '{' 'xy' '}'
+    // <pos-decor> '\end' '{' 'xy' '}'
     xy: memo(function () {
-      return p.pos().into(function (pos) {
+      return p.posDecor().into(function (pd) {
         return FP.Parsers.guard(function() { return lit('\\end').andl(flit('{')).andl(flit('xy')).andl(flit('}')).to(function () {
-          return pos;
+          return pd;
         })});
+      });
+    }),
+    
+    // <pos-decor> ::= <pos> <decor>
+    posDecor: memo(function () {
+      return seq(p.pos, p.decor).to(function (pd) {
+        return AST.PosDecor(pd.head, pd.tail);
       });
     }),
     
@@ -837,7 +967,17 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     //        |   '**' <object>
     //        |   '*' <object>
     //        |   '?' <place>
-    //        |   '=' <saving>
+    //        |   '@+' <corrd>
+    //        |   '@-' <corrd>
+    //        |   '@=' <corrd>
+    //        |   '@@' <corrd>
+    //        |   '@i'
+    //        |   '@('
+    //        |   '@)'
+    // <pos2> ::= '=:' '"' <id> '"'
+    // <pos2> ::= '=@' '"' <id> '"'
+    // <pos2> ::= '=' '"' <id> '"'
+    // <pos2> ::= '=' <nonemptyCoord> '"' <id> '"'
     pos2: memo(function () {
       return or(
         lit('+').andr(p.coord).to(function (c) { return AST.Pos.Plus(c); }),
@@ -849,7 +989,17 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         lit('**').andr(p.object).to(function (o) { return AST.Pos.ConnectObject(o); }),
         lit('*').andr(p.object).to(function (o) { return AST.Pos.DropObject(o); }),
         lit('?').andr(p.place).to(function (o) { return AST.Pos.Place(o); }),
-        lit('=').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (o) { return AST.Pos.SavingPos(o); })
+        lit('@+').andr(p.coord).to(function (c) { return AST.Pos.PushCoord(c); }),
+        lit('@-').andr(p.coord).to(function (c) { return AST.Pos.EvalCoordThenPop(c); }),
+        lit('@=').andr(p.coord).to(function (c) { return AST.Pos.LoadStack(c); }),
+        lit('@@').andr(p.coord).to(function (c) { return AST.Pos.DoCoord(c); }),
+        lit('@i').to(function (c) { return AST.Pos.InitStack(); }),
+        lit('@(').to(function (c) { return AST.Pos.EnterFrame(); }),
+        lit('@)').to(function (c) { return AST.Pos.LeaveFrame(); }),
+        lit('=:').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SaveBase(id); }),
+        lit('=@').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SaveStack(id); }),
+        lit('=').andr(p.nonemptyCoord).andl(flit('"')).and(p.id).andl(felem('"')).to(function (mid) { return AST.Pos.SaveMacro(mid.head, mid.tail); }),
+        lit('=').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SavePos(id); })
       );
     }),
     
@@ -864,6 +1014,9 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     // <nonemptyCoord> ::= 'c' | 'p' | 'x' | 'y'
     //         |   <vector>
     //         |   '"' <id> '"'
+    //         |   '{' <pos> <decor> '}'
+    //         |   's' <digit>
+    //         |   's' '{' <nonnegative-number> '}'
     nonemptyCoord: memo(function () {
       return or(
         lit('c').to(function () { return AST.Coord.C(); }), 
@@ -871,7 +1024,14 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         lit('x').to(function () { return AST.Coord.X(); }), 
         lit('y').to(function () { return AST.Coord.Y(); }),
         p.vector().to(function (v) { return AST.Coord.Vector(v); }), 
-        lit('"').andr(p.id).andl(felem('"')).to(function (id) { return AST.Coord.Id(id) })
+        lit('"').andr(p.id).andl(felem('"')).to(function (id) { return AST.Coord.Id(id) }),
+        lit('{').andr(p.posDecor).andl(flit('}')).to(function (pd) { return AST.Coord.Group(pd) }),
+        regexLit(/^s\d/).to(function (sn) {
+          return AST.Coord.StackPosition(parseInt(sn.substring(1)));
+        }),
+        lit('s').andr(flit('{')).and(p.nonnegativeNumber).andl(flit('}')).to(function (n) {
+          return AST.Coord.StackPosition(n);
+        })
       );
     }),
     
@@ -994,18 +1154,23 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       function (n) { return parseInt(n); })
     )),
     
+    // <nonnegative-number>
+    nonnegativeNumber: memo(fun(regexLit(/^\d+/).to(
+      function (n) { return parseInt(n); })
+    )),
+    
     unit: memo(fun(regexLit(/^(em|ex|px|pt|pc|in|cm|mm|mu)/).to(function (d) {
-        return d//.getOrElse("mm");
+        return d
     }))),
     
-    // <dimen> ::= <factor> ( 'em' | 'ex' | 'px' | 'pt' | 'pc' | 'in' | 'cm' | 'mm' | 'mu' )?
+    // <dimen> ::= <factor> ( 'em' | 'ex' | 'px' | 'pt' | 'pc' | 'in' | 'cm' | 'mm' | 'mu' )
     dimen: memo(function () {
       return p.factor().and(p.unit).to(function (x) {
         return x.head.toString() + x.tail;
       })
     }),
     
-    // <loose-dimen> ::= <loose-factor> ( 'em' | 'ex' | 'px' | 'pt' | 'pc' | 'in' | 'cm' | 'mm' | 'mu' )?
+    // <loose-dimen> ::= <loose-factor> ( 'em' | 'ex' | 'px' | 'pt' | 'pc' | 'in' | 'cm' | 'mm' | 'mu' )
     looseDimen: memo(function () {
       return p.looseFactor().and(p.unit).to(function (x) {
         return x.head.toString() + x.tail;
@@ -1323,8 +1488,15 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         return AST.Diag.Default();
       })
     ))),
+    
+    // <decor> ::= <command>*
+    decor: memo(function () {
+      return FP.Parsers.success("empty").to(function () {
+        return AST.Decor(FP.List.empty);
+      })
+    }),
   })();
-
+  
   MathJax.Hub.Insert(TEXDEF,{
     environment: {
       xy:            ['XY', null]
@@ -1474,6 +1646,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
       svg.appendChild(this.drawArea);
       this.svg = svg;
+      this.bbox = undefined;
     },
     setHeight: function (height) {
       this.svg.style.height = HTMLCSS.Em(height);
@@ -1483,6 +1656,9 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     },
     setAttribute: function (name, value) {
       this.svg.setAttributeNS(null, name, value.toString());
+    },
+    extendBoundingBox: function (boundingBox) {
+      this.boundingBox = xypic.Frame.combineRect(this.boundingBox, boundingBox);
     }
   });
   xypic.Graphics.SVG.Transform = MathJax.Object.Subclass({
@@ -1507,11 +1683,15 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   xypic.Graphics.SVG.Group = xypic.Graphics.SVG.Subclass({
     Init: function (parent, transform) {
+      this.parent = parent;
       this.drawArea = parent.createSVGElement("g", 
         transform === undefined? {} : {transform:transform.toString()});
     },
     remove: function () {
       this.drawArea.parentNode.removeChild(this.drawArea);
+    },
+    extendBoundingBox: function (boundingBox) {
+      this.parent.extendBoundingBox(boundingBox);
     }
   });
   xypic.Graphics.Augment({}, {
@@ -1560,7 +1740,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         var xypicData = this.cmd;
         if (xypicData) {
           var env = xypic.Env();
-          var box = xypicData.draw(svg, env);
+          xypicData.draw(svg, env);
+          var box = svg.boundingBox;
           if (box !== undefined) {
             svg.setWidth(box.l+box.r+2*p);
             svg.setHeight(box.u+box.d+2*p);
@@ -4242,34 +4423,103 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   	none: xypic.MostRecentLine.None()
   });
   
+  
+  xypic.Saving = MathJax.Object.Subclass({});
+  xypic.Saving.Position = MathJax.Object.Subclass({
+    Init: function (pos) {
+      this.pos = pos;
+    },
+    position: function (svg, env) {
+      return this.pos;
+    },
+    toString: function () {
+      return this.pos.toString();
+    }
+  });
+  
+  xypic.Saving.Macro = MathJax.Object.Subclass({
+    Init: function (macro) {
+      this.macro = macro;
+    },
+    position: function (svg, env) {
+      env.c = this.macro.position(svg, env);
+      return env.c;
+    },
+    toString: function () {
+      return this.macro.toString();
+    }
+  });
+  
+  xypic.Saving.Base = MathJax.Object.Subclass({
+    Init: function (origin, xBase, yBase) {
+      this.origin = origin;
+      this.xBase = xBase;
+      this.yBase = yBase;
+    },
+    position: function (svg, env) {
+      env.origin = this.origin;
+      env.xBase = this.xBase;
+      env.yBase = this.yBase;
+      return env.c;
+    },
+    toString: function () {
+      return "origin:" + this.origin + ", xBase:" + this.xBase + ", yBase:" + this.yBase;
+    }
+  });
+  
+  xypic.Saving.Stack = MathJax.Object.Subclass({
+    Init: function (stack) {
+      this.stack = stack;
+    },
+    position: function (svg, env) {
+      if (!this.stack.isEmpty) {
+        this.stack.tail.reverse().foreach(function (p) {
+          env.capturePosition(p);
+        });
+        env.c = this.stack.head;
+      }
+      return env.c;
+    },
+    toString: function () {
+      return this.stack.toString();
+    }
+  });
+  
+  
   xypic.Env = MathJax.Object.Subclass({
     Init: function () {
       var onemm = HTMLCSS.length2em("1mm");
-      this.boundingBox = undefined;
       this.origin = {x:0, y:0};
       this.xBase = {x:onemm, y:0};
       this.yBase = {x:0, y:onemm};
     	this.savedPosition = {};
+      this.stackFrames = FP.List.empty;
+      this.stack = FP.List.empty;
       this.angle = 0; // radian
       this.mostRecentLine = xypic.MostRecentLine.none;
       this.p = this.c = xypic.Env.originPosition;
+      this.shouldCapturePos = false;
+      this.capturedPositions = FP.List.empty;
     },
     duplicate: function () {
       var newEnv = xypic.Env();
-      newEnv.boundingBox = this.boundingBox;
+      newEnv.origin = this.origin;
+      newEnv.xBase = this.xBase;
+      newEnv.yBase = this.yBase;
       newEnv.savedPosition = {};
       for (var id in this.savedPosition) {
         if (this.savedPosition.hasOwnProperty(id)) {
           newEnv.savedPosition[id] = this.savedPosition[id];
         }
       }
+      newEnv.stackFrames = this.stackFrames;
+      newEnv.stack = this.stack;
       newEnv.angle = this.angle;
       newEnv.mostRecentLine = this.mostRecentLine;
       newEnv.p = this.p;
       newEnv.c = this.c;
-      newEnv.origin = this.origin;
-      newEnv.xBase = this.xBase;
-      newEnv.yBase = this.yBase;
+      newEnv.shouldCapturePos = this.shouldCapturePos;
+      newEnv.capturedPositions = this.capturedPositions;
       return newEnv;
     },
     absVector: function (x, y) {
@@ -4291,8 +4541,58 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       this.p = this.c;
       this.c = t;
     },
+    enterStackFrame: function () {
+      this.stackFrames = FP.List.Cons(this.stack, this.stackFrames);
+      this.initStack();
+    },
+    leaveStackFrame: function () {
+      if (!this.stackFrames.isEmpty) {
+        this.stack = this.stackFrames.head;
+        this.stackFrames = this.stackFrames.tail;
+      } else {
+        this.initStack();
+      } 
+    },
     savePos: function (id, pos) {
     	this.savedPosition[id] = pos;
+    },
+    startCapturePositions: function () {
+      this.shouldCapturePos = true;
+      this.capturedPositions = FP.List.empty;
+    },
+    endCapturePositions: function () {
+      this.shouldCapturePos = false;
+      var positions = this.capturedPositions;
+      this.capturedPositions = FP.List.empty;
+      return positions;
+    },
+    capturePosition: function (pos) {
+      if (this.shouldCapturePos && pos !== undefined) {
+        this.capturedPositions = FP.List.Cons(pos, this.capturedPositions);
+      }
+    },
+    pushPos: function (pos) {
+      if (pos !== undefined) {
+        this.stack = FP.List.Cons(pos, this.stack);
+      }
+    },
+    popPos: function () {
+      if (this.stack.isEmpty) {
+        throw Error("cannot pop from an empty stack");
+      } else {
+        var pos = this.stack.head;
+        this.stack = this.stack.tail;
+        return pos;
+      }
+    },
+    initStack: function () {
+      this.stack = FP.List.empty;
+    },
+    setStack: function (positions) {
+      this.stack = positions;
+    },
+    stackAt: function (number) {
+      return this.stack.at(number);
     },
     lookupPos: function (id) {
     	var pos = this.savedPosition[id];
@@ -4301,9 +4601,6 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       } else {
       	return pos;
       }
-    },
-    extendBoundingBox: function (box) {
-      this.boundingBox = xypic.Frame.combineRect(this.boundingBox, box);
     },
     toString: function () {
       var savedPositionDesc = "";
@@ -4321,44 +4618,48 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     originPosition: xypic.Frame.Point(0, 0)
   });
   
+  
+  AST.PosDecor.Augment({
+  	draw: function (svg, env) {
+      this.pos.draw(svg, env);
+      this.decor.draw(svg, env);
+    }
+  });
+  
   AST.Pos.Coord.Augment({
   	draw: function (svg, env) {
-      env.c = this.coord.position(env);
+      env.c = this.coord.position(svg, env);
       this.pos2s.foreach(function (p) {
-        env.extendBoundingBox(p.draw(svg, env));
+        p.draw(svg, env);
       });
-      return env.boundingBox;
     }
   });
   
   AST.Pos.Plus.Augment({
   	draw: function (svg, env) {
-    	var d = this.coord.position(env);
+    	var d = this.coord.position(svg, env);
     	env.c = env.c.move(env.c.x+d.x, env.c.y+d.y);
-      return undefined;
     }
   });
   
   AST.Pos.Minus.Augment({
   	draw: function (svg, env) {
-    	var d = this.coord.position(env);
+    	var d = this.coord.position(svg, env);
     	env.c = env.c.move(env.c.x-d.x, env.c.y-d.y);
-      return undefined;
     }
   });
   
   AST.Pos.Then.Augment({
   	draw: function (svg, env) {
-    	env.c = this.coord.position(env);
-      return undefined;
+      env.capturePosition(env.c);
+    	env.c = this.coord.position(svg, env);
     }
   });
   
   AST.Pos.SwapPAndC.Augment({
   	draw: function (svg, env) {
     	env.swapPAndC();
-    	env.c = this.coord.position(env);
-      return undefined;
+    	env.c = this.coord.position(svg, env);
     }
   });
   
@@ -4370,29 +4671,26 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       env.setOrigin(p.x, p.y);
       env.setXBase(x, y);
       env.setYBase(-y, x);
-    	env.c = this.coord.position(env);
-      return undefined;
+    	env.c = this.coord.position(svg, env);
     }
   });
   
   AST.Pos.SetYBase.Augment({
   	draw: function (svg, env) {
       env.setYBase(env.c.x - env.origin.x, env.c.y - env.origin.y);
-    	env.c = this.coord.position(env);
-      return undefined;
+    	env.c = this.coord.position(svg, env);
     }
   });
   
   AST.Pos.ConnectObject.Augment({
   	draw: function (svg, env) {
-    	return this.object.connect(svg, env);
+    	this.object.connect(svg, env);
     }
   });
   
   AST.Pos.DropObject.Augment({
   	draw: function (svg, env) {
     	env.c = this.object.drop(svg, env);
-      return env.c;
     }
   });
   
@@ -4416,7 +4714,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
             shouldShaveC = shouldShaveP = false;
             f = place.factor.value(svg, env);
             if (f === undefined) {
-              return undefined;
+              return;
             }
           } else {
             f = place.factor.value(svg, env);
@@ -4429,10 +4727,60 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         var posAngle = env.mostRecentLine.posAngle(shouldShaveP, shouldShaveC, f, slideEm);
         env.c = posAngle.pos;
         env.angle = posAngle.angle;
-        return env.c;
-      } else  {
-	      return undefined;
       }
+    }
+  });
+  
+  AST.Pos.PushCoord.Augment({
+  	draw: function (svg, env) {
+      var pos = this.coord.position(svg, env);
+      env.pushPos(pos);
+    }
+  });
+  
+  AST.Pos.EvalCoordThenPop.Augment({
+  	draw: function (svg, env) {
+      env.c = this.coord.position(svg, env);
+      env.popPos();
+    }
+  });
+  
+  AST.Pos.LoadStack.Augment({
+  	draw: function (svg, env) {
+      env.startCapturePositions();
+      this.coord.position(svg, env);
+      var positions = env.endCapturePositions();
+      env.setStack(positions);
+      env.pushPos(env.c);
+    }
+  });
+  
+  AST.Pos.DoCoord.Augment({
+  	draw: function (svg, env) {
+      var coord = this.coord;
+      var pos = env.stack.reverse();
+      pos.foreach(function (c) {
+        env.c = c;
+        coord.position(svg, env);
+      });
+    }
+  });
+  
+  AST.Pos.InitStack.Augment({
+  	draw: function (svg, env) {
+      env.initStack();
+    }
+  });
+  
+  AST.Pos.EnterFrame.Augment({
+  	draw: function (svg, env) {
+      env.enterStackFrame();
+    }
+  });
+  
+  AST.Pos.LeaveFrame.Augment({
+  	draw: function (svg, env) {
+      env.leaveStackFrame();
     }
   });
   
@@ -4449,12 +4797,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
       
       var tmpEnv = env.duplicate();
-      tmpEnv.boundingBox = undefined;
       tmpEnv.angle = 0;
       tmpEnv.mostRecentLine = xypic.MostRecentLine.none;
       tmpEnv.p = tmpEnv.c = xypic.Env.originPosition;
       var box = this.pos.draw(svg, tmpEnv);
-      env.extendBoundingBox(box);
       
       if (!tmpEnv.mostRecentLine.isDefined) {
         tmpEnv.mostRecentLine = xypic.MostRecentLine.Line(tmpEnv.p, tmpEnv.c, tmpEnv.p, tmpEnv.c);
@@ -4588,19 +4934,40 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     }
   });
   
-  AST.Pos.SavingPos.Augment({
+  AST.Pos.SavePos.Augment({
   	draw: function (svg, env) {
-    	env.savePos(this.id, env.c);
-      return undefined;
+    	env.savePos(this.id, xypic.Saving.Position(env.c));
+    }
+  });
+  
+  AST.Pos.SaveMacro.Augment({
+  	draw: function (svg, env) {
+    	env.savePos(this.id, xypic.Saving.Macro(this.macro));
+    }
+  });
+  
+  AST.Pos.SaveBase.Augment({
+  	draw: function (svg, env) {
+    	env.savePos(this.id, xypic.Saving.Base(env.origin, env.xBase, env.yBase));
+    }
+  });
+  
+  AST.Pos.SaveStack.Augment({
+  	draw: function (svg, env) {
+    	env.savePos(this.id, xypic.Saving.Stack(env.stack));
     }
   });
   
   AST.Object.Augment({
   	drop: function (svg, env) {
-      return this.object.drop(svg, env, this.modifiers);
+      var bbox = this.object.drop(svg, env, this.modifiers, false);
+      svg.extendBoundingBox(bbox);
+      return bbox;
     },
     connect: function (svg, env) {
-    	return this.object.connect(svg, env, this.modifiers);
+    	var bbox = this.object.connect(svg, env, this.modifiers);
+      svg.extendBoundingBox(bbox);
+      return bbox;
     },
     boundingBox: function (svg, env) {
       return this.object.boundingBox(svg, env, this.modifiers);
@@ -4613,14 +4980,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       tmpEnv.angle = 0;
       tmpEnv.p = tmpEnv.c = xypic.Frame.Point(0, 0);
       tmpGroup = svg.createGroup();
-      var bbox = this.drop(tmpGroup, tmpEnv, modifiers);
+      var bbox = this.drop(tmpGroup, tmpEnv, modifiers, true);
       tmpGroup.remove();
       return bbox;
     }
   });
   
   AST.ObjectBox.Text.Augment({
-  	drop: function (svg, env, modifiers) {
+  	drop: function (svg, env, modifiers, hidden) {
     	// modification
       modifiers.foreach(function (m) { m.preprocess(env); });
       
@@ -4696,6 +5063,9 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
 //      });
       
       var c = env.c.toRect({u:halfHD, d:halfHD, l:halfW, r:halfW});
+      if (!hidden) {
+        svg.extendBoundingBox(c);
+      }
     	// modification
     	// TODO: '!'に対応させる。objectの大きさを元に、描画の位置を調整することになるため、ここでは遅い。
       modifiers.foreach(function (m) { c = m.postprocess(c, env); });
@@ -4741,7 +5111,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         for (var i = 0; i < n; i++) {
           env.c = xypic.Frame.Point(startX + i*odx, startY + i*ody);
           env.angle = 0;
-          var bbox = this.drop(group, env, modifiers);
+          var bbox = this.drop(group, env, modifiers, false);
           if (i == 0) {
             bboxS = bbox;
           }
@@ -5519,24 +5889,23 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.ObjectBox.Curve.PosList.AddStack.Augment({
   	draw: function (svg, env) {
     	// TODO: impl pick control points from the stack
-    	return undefined;
     }
   });
   
   AST.Coord.C.Augment({
-    position: function (env) {
+    position: function (svg, env) {
     	return env.c;
     }
   });
   
   AST.Coord.P.Augment({
-    position: function (env) {
+    position: function (svg, env) {
     	return env.p;
     }
   });
   
   AST.Coord.X.Augment({
-    position: function (env) {
+    position: function (svg, env) {
     	var p = env.p;
       var c = env.c;
       var o = env.origin;
@@ -5556,7 +5925,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.Coord.Y.Augment({
-    position: function (env) {
+    position: function (svg, env) {
     	var p = env.p;
       var c = env.c;
       var o = env.origin;
@@ -5576,15 +5945,28 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.Coord.Vector.Augment({
-    position: function (env) {
+    position: function (svg, env) {
     	var xy = this.vector.xy(env);
     	return xypic.Frame.Point(xy.x, xy.y);
     }
   });
   
   AST.Coord.Id.Augment({
-    position: function (env) {
-    	return env.lookupPos(this.id)
+    position: function (svg, env) {
+    	return env.lookupPos(this.id).position(svg, env);
+    }
+  });
+  
+  AST.Coord.Group.Augment({
+    position: function (svg, env) {
+      this.posDecor.draw(svg, env);
+      return env.c;
+    }
+  });
+  
+  AST.Coord.StackPosition.Augment({
+    position: function (svg, env) {
+      return env.stackAt(this.number);
     }
   });
   
@@ -5988,6 +6370,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Diag.Angle.Augment({
   	angle: function (env) {
     	return this.ang;
+    }
+  });
+  
+  AST.Decor.Augment({
+    draw: function (svg, env) {
+      this.commands.foreach(function (c) {
+        c.draw(svg, env);
+      });
     }
   });
   

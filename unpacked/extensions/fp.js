@@ -95,6 +95,25 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
       this.tail = tail;
     },
     isEmpty: false,
+    at: function (index) {
+      if (index < 0 || index >= this.length()) {
+        throw Error("no such element at " + index + ". index must be lower than " + this.length() + ".");
+      }
+      var t = this;
+      for (var i = 0; i < index; i++) {
+        t = t.tail;
+      }
+      return t.head;
+    },
+    length: function () {
+      var t = this;
+      var l = 0;
+      while (!t.isEmpty) {
+        l++;
+        t = t.tail;
+      }
+      return l;
+    },
     foldLeft: function (x0, f) {
       var r, c;
       r = f(x0, this.head);
@@ -118,6 +137,13 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
         f(e.head);
         e = e.tail;
       }
+    },
+    reverse: function () {
+      var r = FP.List.empty;
+      this.foreach(function (c) {
+        r = FP.List.Cons(c, r);
+      });
+      return r;
     },
     mkString: function () {
       var open, delim, close;
@@ -159,9 +185,14 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
 
   FP.List.Nil = FP.List.Subclass({
     isEmpty: true,
+    at: function (index) {
+      throw Error("cannot get element from an empty list.");
+    },
+    length: function () { return 0; },
     foldLeft: function (x0, f) { return x0; },
     foldRight: function (x0, f) { return x0; },
     foreach: function (f) {},
+    reverse: function () { return this; },
     mkString: function () {
       switch (arguments.length) {
         case 0:

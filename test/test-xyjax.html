@@ -30,8 +30,31 @@
 <hr>
 <p>
 
-Xy-picの例$(\begin{xy}(0,0);<1cm,0mm>**@{-} ?>*@{>} ?<>*!/^ 2mm/{\scriptstyle f}\end{xy})$です。
+Xy-picの例$(\begin{xy}(0,0);<1cm,0mm>**@{-} ?>*@{>} ?<>*!/_2mm/{\scriptstyle f}\end{xy})$です。
 Xy-picの例$(\begin{xy}(0,0);<1cm,10mm>**@{} ?>*@3{>}\end{xy})$です。
+
+\[
+\begin{xy}
+@={(0,-10), (10,3), (20,-5)}
+@(,
+  @+(0,-20),
+  @+(15,3),
+  @@{*{\otimes}},
+  s0="prev" @@{;"prev";**@{-}="prev"}
+@),
+s0="prev" @@{;"prev";**@{-}="prev"}
+\end{xy}
+\]
+
+\[
+\begin{xy}
+@={(0,-10), (10,3), (20,-5)} @@{*{P}},
+=@"stack",
+@i,
+@="stack",
+s0="prev" @@{;"prev";**@{-}="prev"}
+\end{xy}
+\]
 
 \[
 \begin{xy}
