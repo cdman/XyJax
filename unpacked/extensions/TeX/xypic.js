@@ -5280,10 +5280,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
 //              var lc = l*Math.cos(10*Math.PI/180+Math.atan2(0.165, 0.55));
 //              var ls = l*Math.sin(10*Math.PI/180+Math.atan2(0.165, 0.55));
 //              console.log("l:"+l, ", l cos 10:"+lc+", l sin 10:"+ls)
-//              box = {l:lc-0.24, r:0.24, d:ls, u:ls};
-              box = {l:0.273, r:0.24, d:0.258, u:0.258};
-            	var gu = g.createGroup(g.transformBuilder().translate(0.24,0).rotateDegree(-10));
-            	var gd = g.createGroup(g.transformBuilder().translate(0.24,0).rotateDegree(10));
+//              box = {l:lc, r:0, d:ls, u:ls};
+              box = {l:0.513, r:0, d:0.258, u:0.258};
+            	var gu = g.createGroup(g.transformBuilder().rotateDegree(-10));
+            	var gd = g.createGroup(g.transformBuilder().rotateDegree(10));
               gu.createSVGElement("path", {
                 d:"M0,0 Q"+em2px(-0.25)+","+em2px(-0.023)+" "+em2px(-0.55)+","+em2px(-0.165)
               });
@@ -5296,15 +5296,15 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
 //              var lc = l*Math.cos(15*Math.PI/180+Math.atan2(0.165, 0.55));
 //              var ls = l*Math.sin(15*Math.PI/180+Math.atan2(0.165, 0.55));
 //              console.log("l:"+l, ", l cos 15:"+lc+", l sin 15:"+ls)
-//              box = {l:0.24, r:0.33, d:ls, u:ls};
-              box = {l:0.23, r:0.33, d:0.3017, u:0.3017};
-            	var gu = g.createGroup(g.transformBuilder().translate(0.33,0).rotateDegree(-15));
-            	var gd = g.createGroup(g.transformBuilder().translate(0.33,0).rotateDegree(15));
+//              box = {l:0.57, r:0, d:ls, u:ls};
+              box = {l:0.57, r:0, d:0.302, u:0.302};
+            	var gu = g.createGroup(g.transformBuilder().rotateDegree(-15));
+            	var gd = g.createGroup(g.transformBuilder().rotateDegree(15));
               gu.createSVGElement("path", {
                 d:"M0,0 Q"+em2px(-0.25)+","+em2px(-0.023)+" "+em2px(-0.55)+","+em2px(-0.165)
               });
               g.createSVGElement("line", {
-              	x1:em2px(0.33), y1:0, x2:em2px(-0.24), y2:0
+              	x1:em2px(0), y1:0, x2:em2px(-0.57), y2:0
               });
               gd.createSVGElement("path", {
                 d:"M0,0 Q"+em2px(-0.25)+","+em2px(0.023)+" "+em2px(-0.55)+","+em2px(0.165)
@@ -5331,10 +5331,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
 //              var lc = l*Math.cos(10*Math.PI/180+Math.atan2(0.165, 0.55));
 //              var ls = l*Math.sin(10*Math.PI/180+Math.atan2(0.165, 0.55));
 //              console.log("l:"+l, ", l cos 10:"+lc+", l sin 10:"+ls)
-//              box = {l:0.24, r:lc-0.24, d:ls, u:ls};
-              box = {l:0.24, r:0.273, d:0.258, u:0.258};
-              var gu = g.createGroup(g.transformBuilder().translate(-0.24,0).rotateDegree(10)); 
-              var gd = g.createGroup(g.transformBuilder().translate(-0.24,0).rotateDegree(-10));
+//              box = {l:0, r:lc, d:ls, u:ls};
+              box = {l:0, r:0.513, d:0.258, u:0.258};
+              var gu = g.createGroup(g.transformBuilder().rotateDegree(10)); 
+              var gd = g.createGroup(g.transformBuilder().rotateDegree(-10));
               gu.createSVGElement("path", {
                 d:"M0,0 Q"+em2px(0.25)+","+em2px(-0.023)+" "+em2px(0.55)+","+em2px(-0.165)
               });
@@ -5347,15 +5347,15 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
 //              var lc = l*Math.cos(15*Math.PI/180+Math.atan2(0.165, 0.55));
 //              var ls = l*Math.sin(15*Math.PI/180+Math.atan2(0.165, 0.55));
 //              console.log("l:"+l, ", l cos 15:"+lc+", l sin 15:"+ls)
-//              box = {l:0.33, r:0.24, d:ls, u:ls};
-              box = {l:0.33, r:0.24, d:0.3017, u:0.3017};
-            	var gu = g.createGroup(g.transformBuilder().translate(-0.33,0).rotateDegree(15));
-            	var gd = g.createGroup(g.transformBuilder().translate(-0.33,0).rotateDegree(-15));
+//              box = {l:0, r:0.57, d:ls, u:ls};
+              box = {l:0, r:0.57, d:0.302, u:0.302};
+            	var gu = g.createGroup(g.transformBuilder().rotateDegree(15));
+            	var gd = g.createGroup(g.transformBuilder().rotateDegree(-15));
               gu.createSVGElement("path", {
                 d:"M0,0 Q"+em2px(0.25)+","+em2px(-0.023)+" "+em2px(0.55)+","+em2px(-0.165)
               });
               g.createSVGElement("line", {
-              	x1:em2px(-0.33), y1:0, x2:em2px(0.24), y2:0
+              	x1:em2px(0), y1:0, x2:em2px(0.57), y2:0
               });
               gd.createSVGElement("path", {
                 d:"M0,0 Q"+em2px(0.25)+","+em2px(0.023)+" "+em2px(0.55)+","+em2px(0.165)
