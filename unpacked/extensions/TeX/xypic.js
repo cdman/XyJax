@@ -86,7 +86,10 @@ MathJax.Extension.xypic = {
   }
 }
 
+// "TeX Xy-pic" depends "Functional Programming library" and "TeX Jax".
 MathJax.Extension.xypic.signalHandler.chainSignal("TeX Xy-pic Require", ["Functional Programming library Ready", "TeX Jax Ready"]);
+
+// "HTML-CSS Xy-pic" depends "TeX Xy-pic" and "HTML-CSS Jax".
 MathJax.Extension.xypic.signalHandler.chainSignal("HTML-CSS Xy-pic Require", ["TeX Xy-pic Ready", "HTML-CSS Jax Ready"]);
 
 MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
