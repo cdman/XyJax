@@ -173,6 +173,24 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       return "-(" + this.coord + ")";
     }
   });
+  // <pos2> ::= '!' <coord>
+  AST.Pos.Skew = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return "!(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= '.' <coord>
+  AST.Pos.Cover = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return ".(" + this.coord + ")";
+    }
+  });
   // <pos2> ::= ',' <coord>
   AST.Pos.Then = MathJax.Object.Subclass({
     Init: function (coord) {
@@ -960,6 +978,8 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     
     // <pos2> ::= '+' <coord>
     //        |   '-' <coord>
+    //        |   '!' <coord>
+    //        |   '.' <coord>
     //        |   ',' <coord>
     //        |   ';' <coord>
     //        |   '::' <coord>
@@ -974,14 +994,16 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     //        |   '@i'
     //        |   '@('
     //        |   '@)'
-    // <pos2> ::= '=:' '"' <id> '"'
-    // <pos2> ::= '=@' '"' <id> '"'
-    // <pos2> ::= '=' '"' <id> '"'
-    // <pos2> ::= '=' <nonemptyCoord> '"' <id> '"'
+    //        |   '=:' '"' <id> '"'
+    //        |   '=@' '"' <id> '"'
+    //        |   '=' '"' <id> '"'
+    //        |   '=' <nonemptyCoord> '"' <id> '"'
     pos2: memo(function () {
       return or(
         lit('+').andr(p.coord).to(function (c) { return AST.Pos.Plus(c); }),
         lit('-').andr(p.coord).to(function (c) { return AST.Pos.Minus(c); }),
+        lit('!').andr(p.coord).to(function (c) { return AST.Pos.Skew(c); }),
+        lit('.').andr(p.coord).to(function (c) { return AST.Pos.Cover(c); }),
         lit(',').andr(p.coord).to(function (c) { return AST.Pos.Then(c); }),
         lit(';').andr(p.coord).to(function (c) { return AST.Pos.SwapPAndC(c); }),
         lit('::').andr(p.coord).to(function (c) { return AST.Pos.SetYBase(c); }),
@@ -4646,6 +4668,21 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   	draw: function (svg, env) {
     	var pos = this.coord.position(svg, env);
     	env.c = pos.move(env.c.x-pos.x, env.c.y-pos.y);
+    }
+  });
+  
+  AST.Pos.Skew.Augment({
+  	draw: function (svg, env) {
+    	var pos = this.coord.position(svg, env);
+      var rp = xypic.Frame.Point(pos.x + env.c.x, pos.y + env.c.y);
+    	env.c = rp.combineRect(env.c);
+    }
+  });
+  
+  AST.Pos.Cover.Augment({
+  	draw: function (svg, env) {
+    	var pos = this.coord.position(svg, env);
+    	env.c = env.c.combineRect(pos);
     }
   });
   
