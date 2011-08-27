@@ -180,6 +180,24 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       return ";(" + this.coord + ")";
     }
   });
+  // <pos2> ::= ':' <coord>
+  AST.Pos.SetBase = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return ":(" + this.coord + ")";
+    }
+  });
+  // <pos2> ::= '::' <coord>
+  AST.Pos.SetYBase = MathJax.Object.Subclass({
+    Init: function (coord) {
+      this.coord = coord;
+    },
+    toString: function () {
+      return "::(" + this.coord + ")";
+    }
+  });
   // <pos2> ::= '**' <object>
   AST.Pos.ConnectObject = MathJax.Object.Subclass({
     Init: function (object) {
@@ -810,7 +828,12 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       });
     }),
     
-    // <pos2> ::= ';' <coord>
+    // <pos2> ::= '+' <coord>
+    //        |   '-' <coord>
+    //        |   ',' <coord>
+    //        |   ';' <coord>
+    //        |   '::' <coord>
+    //        |   ':' <coord>
     //        |   '**' <object>
     //        |   '*' <object>
     //        |   '?' <place>
@@ -821,6 +844,8 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         lit('-').andr(p.coord).to(function (c) { return AST.Pos.Minus(c); }),
         lit(',').andr(p.coord).to(function (c) { return AST.Pos.Then(c); }),
         lit(';').andr(p.coord).to(function (c) { return AST.Pos.SwapPAndC(c); }),
+        lit('::').andr(p.coord).to(function (c) { return AST.Pos.SetYBase(c); }),
+        lit(':').andr(p.coord).to(function (c) { return AST.Pos.SetBase(c); }),
         lit('**').andr(p.object).to(function (o) { return AST.Pos.ConnectObject(o); }),
         lit('*').andr(p.object).to(function (o) { return AST.Pos.DropObject(o); }),
         lit('?').andr(p.place).to(function (o) { return AST.Pos.Place(o); }),
@@ -885,7 +910,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
             return AST.Vector.Dir(dd.head, dd.tail);
           }
         ),
-        lit('0').to(function (x) { return AST.Vector.InCurBase(0, 0); }),
+        lit('0').to(function (x) { return AST.Vector.Abs("0mm", "0mm"); }),
         function () { return p.corner().and(fun(FP.Parsers.opt(
         	fun(lit('(').andr(p.factor).andl(flit(')')))).to(function (f) {
           	return f.getOrElse(1);
@@ -1587,7 +1612,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     jot: HTMLCSS.length2em("3pt"),
     objectmargin: HTMLCSS.length2em("3pt"),
     objectwidth: HTMLCSS.length2em("0pt"),
-    objectheight: HTMLCSS.length2em("0pt"),
+    objectheight: HTMLCSS.length2em("0pt")
   });
   
   xypic.Util = MathJax.Object.Subclass({}, {
@@ -4219,7 +4244,11 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   xypic.Env = MathJax.Object.Subclass({
     Init: function () {
+      var onemm = HTMLCSS.length2em("1mm");
       this.boundingBox = undefined;
+      this.origin = {x:0, y:0};
+      this.xBase = {x:onemm, y:0};
+      this.yBase = {x:0, y:onemm};
     	this.savedPosition = {};
       this.angle = 0; // radian
       this.mostRecentLine = xypic.MostRecentLine.none;
@@ -4238,7 +4267,24 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       newEnv.mostRecentLine = this.mostRecentLine;
       newEnv.p = this.p;
       newEnv.c = this.c;
+      newEnv.origin = this.origin;
+      newEnv.xBase = this.xBase;
+      newEnv.yBase = this.yBase;
       return newEnv;
+    },
+    absVector: function (x, y) {
+      var ax = this.origin.x + x * this.xBase.x + y * this.yBase.x;
+      var ay = this.origin.y + x * this.xBase.y + y * this.yBase.y;
+      return {x:ax, y:ay};
+    },
+    setOrigin: function (x, y) {
+      this.origin = {x:x, y:y};
+    },
+    setXBase: function (x, y) {
+      this.xBase = {x:x, y:y};
+    },
+    setYBase: function (x, y) {
+      this.yBase = {x:x, y:y};
     },
     swapPAndC: function () {
       var t = this.p;
@@ -4311,6 +4357,27 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Pos.SwapPAndC.Augment({
   	draw: function (svg, env) {
     	env.swapPAndC();
+    	env.c = this.coord.position(env);
+      return undefined;
+    }
+  });
+  
+  AST.Pos.SetBase.Augment({
+  	draw: function (svg, env) {
+      var p = env.p;
+      var x = env.c.x - p.x;
+      var y = env.c.y - p.y;
+      env.setOrigin(p.x, p.y);
+      env.setXBase(x, y);
+      env.setYBase(-y, x);
+    	env.c = this.coord.position(env);
+      return undefined;
+    }
+  });
+  
+  AST.Pos.SetYBase.Augment({
+  	draw: function (svg, env) {
+      env.setYBase(env.c.x - env.origin.x, env.c.y - env.origin.y);
     	env.c = this.coord.position(env);
       return undefined;
     }
@@ -5325,7 +5392,6 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         objectForConnect = AST.Object(FP.List.empty, AST.ObjectBox.Dir("", "-"));
       }
       
-      // 多重線の幅、点線・破線の幅の基準
       var thickness = AST.xypic.thickness;
       
       var c = env.c;
@@ -5473,9 +5539,19 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     position: function (env) {
     	var p = env.p;
       var c = env.c;
-      // TODO: 分母が0のときはどうする？ 扱いがComplete Sourceに書いてある。
-      var x = p.x-(c.x-p.x)/(c.y-p.y)*p.y;
-    	return xypic.Frame.Point(x, 0);
+      var o = env.origin;
+      var b = env.xBase;
+      var a0 = c.y - p.y, b0 = p.x - c.x, c0 = c.x * p.y - c.y * p.x;
+      var a1 = b.y, b1 = -b.x, c1 = b.x * o.y - b.y * o.x;
+      var d = a0 * b1 - a1 * b0;
+      
+      if (Math.abs(d) < AST.xypic.machinePrecision) {
+        console.log("there is no intersection point.");
+        return xypic.Frame.Point(0, 0);
+      }
+      var x = -(b1 * c0 - b0 * c1)/d;
+      var y = (a1 * c0 - a0 * c1)/d;
+    	return xypic.Frame.Point(x, y);
     }
   });
   
@@ -5483,9 +5559,19 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     position: function (env) {
     	var p = env.p;
       var c = env.c;
-      // TODO: 分母が0のときはどうする？ 扱いがComplete Sourceに書いてある。
-      var y = p.y-(c.y-p.y)/(c.x-p.x)*p.x;
-    	return xypic.Frame.Point(0, y);
+      var o = env.origin;
+      var b = env.yBase;
+      var a0 = c.y - p.y, b0 = p.x - c.x, c0 = c.x * p.y - c.y * p.x;
+      var a1 = b.y, b1 = -b.x, c1 = b.x * o.y - b.y * o.x;
+      var d = a0 * b1 - a1 * b0;
+      
+      if (Math.abs(d) < AST.xypic.machinePrecision) {
+        console.log("there is no intersection point.");
+        return xypic.Frame.Point(0, 0);
+      }
+      var x = -(b1 * c0 - b0 * c1)/d;
+      var y = (a1 * c0 - a0 * c1)/d;
+    	return xypic.Frame.Point(x, y);
     }
   });
   
@@ -5504,16 +5590,16 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Vector.InCurBase.Augment({
     xy: function (env) {
-    	return {x:this.x, y:this.y};
+    	return env.absVector(this.x, this.y);
     },
     angle: function (env) {
-    	return Math.atan2(this.y, this.x);
+    	var xy = env.absVector(this.x, this.y);
+    	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Vector.Abs.Augment({
     xy: function (env) {
-    	// TODO: 拡大したときに位置がずれないようにする。
     	return {x:HTMLCSS.length2em(this.x), y:HTMLCSS.length2em(this.y)};
     },
     angle: function (env) {
@@ -5525,10 +5611,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Vector.Angle.Augment({
     xy: function (env) {
       var angle = Math.PI/180*this.degree;
-      return {x:Math.cos(angle), y:Math.sin(angle)};
+    	var xy = env.absVector(Math.cos(angle), Math.sin(angle));
+      return xy;
     },
     angle: function (env) {
-    	return Math.PI/180*this.degree;
+      var angle = Math.PI/180*this.degree;
+    	var xy = env.absVector(Math.cos(angle), Math.sin(angle));
+    	return Math.atan2(xy.y, xy.x);
     }
   });
   
