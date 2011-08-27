@@ -5959,7 +5959,15 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Coord.Group.Augment({
     position: function (svg, env) {
+      var origin = env.origin;
+      var xBase = env.xBase;
+      var yBase = env.yBase;
+      var p = env.p;
       this.posDecor.draw(svg, env);
+      env.p = p;
+      env.origin = origin;
+      env.xBase = xBase;
+      env.yBase = yBase;
       return env.c;
     }
   });
