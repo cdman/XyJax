@@ -5962,7 +5962,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
 //          cx:em2px(env.c.x), cy:-em2px(env.c.y), r:em2px(thickness/2)
 //        });
       });
-      console.log("controlPoints:"+controlPoints);
+//      console.log("controlPoints:"+controlPoints);
       
       env.c = c;
       env.p = p;
