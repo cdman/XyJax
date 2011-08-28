@@ -1899,7 +1899,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     isRect: function () { return false; },
     isCircle: function () { return false; },
     edgePoint: function (x, y) { return this; },
-    oppositeEdgePoint: function (x, y) { return this; },
+    proportionalEdgePoint: function (x, y) { return this; },
     grow: function (xMargin, yMargin) {
       var xm = Math.max(0, xMargin);
       var ym = Math.max(0, yMargin);
@@ -1970,34 +1970,64 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         return xypic.Frame.Point(this.x, this.y - this.d);
       }
     },
-    oppositeEdgePoint: function (x, y) {
+    proportionalEdgePoint: function (x, y) {
     	if (this.isPoint()) {
       	return this;
       }
       var dx = x - this.x;
       var dy = y - this.y;
-      if (dx > 0) {
-      	var ey = dy * (-this.l) / dx;
-        if (ey > this.u) {
-        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
-        } else if (ey < -this.d) {
-        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
-        }
-        return xypic.Frame.Point(this.x - this.l, this.y + ey);
-      } else if (dx < 0) {
-      	var ey = dy * this.r / dx;
-        if (ey > this.u) {
-        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
-        } else if (ey < -this.d) {
-        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
-        }
-        return xypic.Frame.Point(this.x + this.r, this.y + ey);
-      } else {
-      	if (dy > 0) {
-        	return xypic.Frame.Point(this.x, this.y - this.d);
-        }
-        return xypic.Frame.Point(this.x, this.y + this.u);
+      if (Math.abs(dx) < AST.xypic.machinePrecision && Math.abs(dy) < AST.xypic.machinePrecision) {
+        return xypic.Frame.Point(this.x - this.l, this.y + this.u);
       }
+      var w = this.l + this.r, h = this.u + this.d;
+      var pi = Math.PI;
+      var angle = Math.atan2(dy, dx);
+      var f;
+      if (-3*pi/4 < angle && angle <= -pi/4) {
+        // d
+        f = (angle + 3*pi/4)/(pi/2);
+        return xypic.Frame.Point(this.x + this.r - f * w, this.y + this.u);
+      } else if (-pi/4 < angle && angle <= pi/4) {
+        // r
+        f = (angle + pi/4)/(pi/2);
+        return xypic.Frame.Point(this.x - this.l, this.y + this.u - f * h);
+      } else if (pi/4 < angle && angle <= 3*pi/4) {
+        // u
+        f = (angle - pi/4)/(pi/2);
+        return xypic.Frame.Point(this.x - this.l + f * w, this.y - this.d);
+      } else {
+        // l
+        f = (angle - (angle > 0? 3*pi/4 : -5*pi/4))/(pi/2);
+        return xypic.Frame.Point(this.x + this.r, this.y - this.d + f * h);
+      }
+      
+//    	if (this.isPoint()) {
+//      	return this;
+//      }
+//      var dx = x - this.x;
+//      var dy = y - this.y;
+//      if (dx > 0) {
+//      	var ey = dy * (-this.l) / dx;
+//        if (ey > this.u) {
+//        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
+//        } else if (ey < -this.d) {
+//        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
+//        }
+//        return xypic.Frame.Point(this.x - this.l, this.y + ey);
+//      } else if (dx < 0) {
+//      	var ey = dy * this.r / dx;
+//        if (ey > this.u) {
+//        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
+//        } else if (ey < -this.d) {
+//        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
+//        }
+//        return xypic.Frame.Point(this.x + this.r, this.y + ey);
+//      } else {
+//      	if (dy > 0) {
+//        	return xypic.Frame.Point(this.x, this.y - this.d);
+//        }
+//        return xypic.Frame.Point(this.x, this.y + this.u);
+//      }
     },
     grow: function (xMargin, yMargin) {
       return this.toRect({
@@ -2068,7 +2098,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
       return xypic.Frame.Point(this.x+this.r*Math.cos(angle), this.y+this.r*Math.sin(angle));
     },
-    oppositeEdgePoint: function (x, y) {
+    proportionalEdgePoint: function (x, y) {
     	if (this.isPoint()) {
       	return this;
       }
@@ -6208,8 +6238,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Corner.PropEdgePoint.Augment({
   	xy: function (env) {
     	var c = env.c;
-      var o = c.oppositeEdgePoint(env.p.x, env.p.y);
-      return {x:o.x-c.x, y:o.y-c.y};	// TODO: calc proportional edge point
+      var e = c.proportionalEdgePoint(env.p.x, env.p.y);
+      return {x:e.x-c.x, y:e.y-c.y};
     },
     angle: function (env) {
     	var xy = this.xy();
