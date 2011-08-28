@@ -53,7 +53,8 @@ MathJax.Extension.xypic = {
     handleChains: function () {
       var i = 0;
       var chains = MathJax.Extension.xypic.signalHandler.chains;
-      var remainings = [];
+      var remainingChains = [];
+      var invokableSignals = [];
       while (i < chains.length) {
         var c = chains[i];
         var pred = c.pred;
@@ -66,13 +67,16 @@ MathJax.Extension.xypic = {
           }
         }
         if (invokable) {
-          MathJax.Hub.Startup.signal.Post(c.succ);
+          invokableSignals.push(c.succ);
         } else {
-          remainings.push(c);
+          remainingChains.push(c);
         }
         i++;
       }
-      MathJax.Extension.xypic.signalHandler.chains = remainings;
+      MathJax.Extension.xypic.signalHandler.chains = remainingChains;
+      for (i = 0; i < invokableSignals.length; i++) {
+        MathJax.Hub.Startup.signal.Post(invokableSignals[i]);
+      }
     },
     listenedSignal: function (signal) {
       var signals = MathJax.Extension.xypic.signalHandler.hookedSignals;
