@@ -685,7 +685,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     dirVariant: function () { return ""; },
     dirMain: function () { return "-"; },
     isDir: function () { return false; },
-    toString: function () { return "\\curve"+this.modifiers.mkString(" ")+"{"+this.objects.mkString(" ")+" "+this.poslist.mkString("&")+"}"; }
+    toString: function () { return "\\curve"+this.modifiers.mkString("")+"{"+this.objects.mkString(" ")+" "+this.poslist.mkString("&")+"}"; }
   });
   // <curve-modifier> ::= ( '~' <curve-option> )*
   // <curve-option> ::= 'p' | 'P' | 'l' | 'L' | 'c' | 'C'
@@ -5957,13 +5957,12 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       var p = env.p;
       var controlPoints = [];
       this.poslist.foreach(function (p) {
-				p.draw(svg, env);
-        controlPoints.push(env.c);
+				p.addPositions(controlPoints, svg, env);
 //        svg.createSVGElement("circle", {
 //          cx:em2px(env.c.x), cy:-em2px(env.c.y), r:em2px(thickness/2)
 //        });
       });
-//      console.log("controlPoints:"+controlPoints);
+      console.log("controlPoints:"+controlPoints);
       
       env.c = c;
       env.p = p;
@@ -6064,20 +6063,23 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.ObjectBox.Curve.PosList.CurPos.Augment({
-  	draw: function (svg, env) {
-    	return undefined;
+  	addPositions: function (controlPoints, svg, env) {
+      controlPoints.push(env.c);
     }
   });
   
   AST.ObjectBox.Curve.PosList.Pos.Augment({
-  	draw: function (svg, env) {
-    	return this.pos.draw(svg, env);
+  	addPositions: function (controlPoints, svg, env) {
+    	this.pos.draw(svg, env);
+      controlPoints.push(env.c);
     }
   });
   
   AST.ObjectBox.Curve.PosList.AddStack.Augment({
-  	draw: function (svg, env) {
-    	// TODO: impl pick control points from the stack
+  	addPositions: function (controlPoints, svg, env) {
+    	env.stack.reverse().foreach(function (p) {
+        controlPoints.push(p);
+      });
     }
   });
   
