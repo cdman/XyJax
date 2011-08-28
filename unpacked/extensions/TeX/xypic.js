@@ -1962,10 +1962,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       } else {
       	if (dy > 0) {
         	return xypic.Frame.Point(this.x, this.y + this.u);
-        } else if (dy < 0) {
-        	return xypic.Frame.Point(this.x, this.y - this.d);
         }
-      	return undefined;	// TODO: 存在しない点を表すオプジェクトを作る？MayBeモナドでよい。
+        return xypic.Frame.Point(this.x, this.y - this.d);
       }
     },
     oppositeEdgePoint: function (x, y) {
@@ -1991,12 +1989,10 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         }
         return xypic.Frame.Point(this.x + this.r, this.y + ey);
       } else {
-      	if (dy < 0) {
-        	return xypic.Frame.Point(this.x, this.y + this.u);
-        } else if (dy > 0) {
+      	if (dy > 0) {
         	return xypic.Frame.Point(this.x, this.y - this.d);
         }
-      	return undefined;	// TODO: 存在しない点を表すオプジェクトを作る？MayBeモナドでよい。
+        return xypic.Frame.Point(this.x, this.y + this.u);
       }
     },
     grow: function (xMargin, yMargin) {
@@ -2060,12 +2056,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
       var dx = x - this.x;
       var dy = y - this.y;
-      if (Math.sqrt(dx*dx+dy*dy) < this.r) {
-      	return undefined;	// TODO: 存在しない点を表すオプジェクトを作る？MayBeモナドでよい。
+      var angle;
+      if (Math.abs(dx) < AST.xypic.machinePrecision && Math.abs(dy) < AST.xypic.machinePrecision) {
+        angle = -Math.PI/2;
       } else {
-      	var angle = Math.atan2(dy, dx);
-        return xypic.Frame.Point(this.x+this.r*Math.cos(angle), this.y+this.r*Math.sin(angle));
+        angle = Math.atan2(dy, dx);
       }
+      return xypic.Frame.Point(this.x+this.r*Math.cos(angle), this.y+this.r*Math.sin(angle));
     },
     oppositeEdgePoint: function (x, y) {
     	if (this.isPoint()) {
@@ -2073,12 +2070,12 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
       var dx = x - this.x;
       var dy = y - this.y;
-      if (Math.sqrt(dx*dx+dy*dy) < this.r) {
-      	return undefined;	// TODO: 存在しない点を表すオプジェクトを作る？MayBeモナドでよい。
+      if (Math.abs(dx) < AST.xypic.machinePrecision && Math.abs(dy) < AST.xypic.machinePrecision) {
+        angle = -Math.PI/2;
       } else {
-      	var angle = Math.atan2(dy, dx);
-        return xypic.Frame.Point(this.x-this.r*Math.cos(angle), this.y-this.r*Math.sin(angle));
+        angle = Math.atan2(dy, dx);
       }
+      return xypic.Frame.Point(this.x-this.r*Math.cos(angle), this.y-this.r*Math.sin(angle));
     },
     grow: function (xMargin, yMargin) {
       return xypic.Frame.Circle(this.x, this.y, Math.max(0, this.r+xMargin));
@@ -4634,7 +4631,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
           savedPositionDesc += id.toString()+":"+this.savedPosition[id];
         }
       }
-      return "Env(p:"+this.p+", c:"+this.c+", angle:"+this.angle+", mostRecentLine:"+this.mostRecentLine+", savedPosition:{"+savedPositionDesc+"})";
+      return "Env\n  p:"+this.p+"\n  c:"+this.c+"\n  angle:"+this.angle+"\n  mostRecentLine:"+this.mostRecentLine+"\n  savedPosition:{"+savedPositionDesc+"}\n  origin:{x:"+this.origin.x+", y:"+this.origin.y+"}\n  xBase:{x:"+this.xBase.x+", y:"+this.xBase.y+"}\n  yBase:{x:"+this.yBase.x+", y:"+this.yBase.y+"}\n  stackFrames:"+this.stackFrames+"\n  stack:"+this.stack+"\n  shouldCapturePos:"+this.shouldCapturePos+"\n  capturedPositions:"+this.capturedPositions;
     }
   }, {
     originPosition: xypic.Frame.Point(0, 0)
@@ -4651,9 +4648,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Pos.Coord.Augment({
   	draw: function (svg, env) {
       env.c = this.coord.position(svg, env);
-      this.pos2s.foreach(function (p) {
-        p.draw(svg, env);
-      });
+      this.pos2s.foreach(function (p) { p.draw(svg, env); });
     }
   });
   
@@ -5074,7 +5069,6 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       var halfHD = (H+D)/2;
       var halfW = W/2;
     	
-      // TODO: Zoomしたときにレイアウトが崩れないようにする。
       fo.setAttribute("x", em2px(env.c.x - halfW));
       fo.setAttribute("y", em2px(-env.c.y) - spanHeight/2);
       fo.setAttribute("width", em2px(W));
@@ -5111,7 +5105,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     connect: function (svg, env, modifiers) {
       var s = env.p.edgePoint(env.c.x, env.c.y);
       var e = env.c.edgePoint(env.p.x, env.p.y);
-      if (s !== undefined && e !== undefined && (s.x !== e.x || s.y !== e.y)) {
+      if (s.x !== e.x || s.y !== e.y) {
         var objectBBox = this.boundingBox(svg, env, modifiers);
         if (objectBBox == undefined) {
           env.angle = 0;
@@ -5546,7 +5540,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       var t = AST.xypic.thickness;
       var s = env.p.edgePoint(env.c.x, env.c.y);
       var e = env.c.edgePoint(env.p.x, env.p.y);
-      if (s !== undefined && e !== undefined && (s.x !== e.x || s.y !== e.y)) {
+      if (s.x !== e.x || s.y !== e.y) {
         var dx = e.x-s.x;
         var dy = e.y-s.y;
         var angle = Math.atan2(dy, dx);
@@ -6198,7 +6192,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Corner.NearestEdgePoint.Augment({
   	xy: function (env) {
     	var c = env.c;
-      var e = c.edgePoint() || xypic.Frame.Point(0, 0);  
+      var e = c.edgePoint(env.p.x, env.p.y);  
       return {x:e.x-c.x, y:e.y-c.y};
     },
     angle: function (env) {
@@ -6210,7 +6204,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Corner.PropEdgePoint.Augment({
   	xy: function (env) {
     	var c = env.c;
-      return {x:e.x-c.x, y:e.y-c.y};	// TODO: calc proportional edge point
+      var o = c.oppositeEdgePoint(env.p.x, env.p.y);
+      return {x:o.x-c.x, y:o.y-c.y};	// TODO: calc proportional edge point
     },
     angle: function (env) {
     	var xy = this.xy();
@@ -6221,7 +6216,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Corner.Axis.Augment({
   	xy: function (env) {
     	var c = env.c;
-      return {x:0, y:(c.u-c.d)/2};	// TODO: align to Math axis
+      return {x:0, y:(c.u-c.d)/2};
     },
     angle: function (env) {
     	var xy = this.xy();
