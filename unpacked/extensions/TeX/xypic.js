@@ -156,7 +156,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       this.pos2s = pos2s;
     },
     toString: function () {
-      return "Pos(" + this.coord + ", " + this.pos2s.mkString(", ") + ")";
+      return this.coord.toString() + " " + this.pos2s.mkString(" ");
     }
   });
   // <pos2> ::= '+' <coord>
@@ -997,6 +997,266 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       return "\\ignore{" + this.pos + " " + this.decor + "}";
     }
   });
+  // <command> ::= '\xyshowAST' '{' <pos> <decor> '}'
+  AST.Command.ShowAST = MathJax.Object.Subclass({
+    Init: function (pos, decor) {
+      this.pos = pos;
+      this.decor = decor;
+    },
+    toString: function () {
+      return "\\xyshowAST{" + this.pos + " " + this.decor + "}";
+    }
+  });
+  
+  // <command> ::= '\PATH' <path>
+  AST.Command.Path = MathJax.Object.Subclass({
+    Init: function (path) {
+      this.path = path;
+    },
+    toString: function () {
+      return "\\PATH " + this.path;
+    }
+  });
+  // <command> ::= '\afterPATH' '{' <decor> '}' <path>
+  AST.Command.AfterPath = MathJax.Object.Subclass({
+    Init: function (decor, path) {
+      this.decor = decor;
+      this.path = path;
+    },
+    toString: function () {
+      return "\\afterPATH{" + this.decor + "} " + this.path;
+    }
+  });
+  
+  // <path> ::= <path2>(Nil)
+  AST.Command.Path.Path = MathJax.Object.Subclass({
+    Init: function (pathElements) {
+      this.pathElements = pathElements;
+    },
+    toString: function () {
+      return this.pathElements.mkString("[", ", ", "]");
+    }
+  });
+  // <path2> ::= '~' <action> '{' <pos> <decor> '}' <path2>(fc)
+  // <action> ::= '=' | '/'
+  AST.Command.Path.SetBeforeAction = MathJax.Object.Subclass({
+    Init: function (posDecor) {
+      this.posDecor = posDecor;
+    },
+    toString: function () {
+      return "~={" + this.posDecor + "}";
+    }
+  });
+  AST.Command.Path.SetAfterAction = MathJax.Object.Subclass({
+    Init: function (posDecor) {
+      this.stuff = posDecor;
+    },
+    toString: function () {
+      return "~/{" + this.stuff + "}";
+    }
+  });
+  // <path2> ::= '~' <which> '{' <labels> '}' <path2>(fc)
+  // <which> ::= '<' | '>' | '+'
+  AST.Command.Path.AddLabelNextSegmentOnly = MathJax.Object.Subclass({
+    Init: function (labels) {
+      this.labels = labels;
+    },
+    toString: function () {
+      return "~<{" + this.labels + "}";
+    }
+  });
+  AST.Command.Path.AddLabelLastSegmentOnly = MathJax.Object.Subclass({
+    Init: function (labels) {
+      this.labels = labels;
+    },
+    toString: function () {
+      return "~>{" + this.labels + "}";
+    }
+  });
+  AST.Command.Path.AddLabelLastEverySegment = MathJax.Object.Subclass({
+    Init: function (labels) {
+      this.labels = labels;
+    },
+    toString: function () {
+      return "~+{" + this.labels + "}";
+    }
+  });
+  // <path2> ::= "'" <segment> <path2>(fc)
+  AST.Command.Path.StraightSegment = MathJax.Object.Subclass({
+    Init: function (segment) {
+      this.segment = segment;
+    },
+    toString: function () {
+      return "'" + this.segment;
+    }
+  });
+  // <path2> ::= '`' <turn> <segment> <path2>(fc)
+  AST.Command.Path.TurningSegment = MathJax.Object.Subclass({
+    Init: function (turn, segment) {
+      this.turn = turn;
+      this.segment = segment;
+    },
+    toString: function () {
+      return "`" + this.turn + " " + this.segment;
+    }
+  });
+  // <path2> ::= <segment>
+  AST.Command.Path.LastSegment = MathJax.Object.Subclass({
+    Init: function (segment) {
+      this.segment = segment;
+    },
+    toString: function () {
+      return this.segment.toString();
+    }
+  });
+  
+  // <turn> ::= <diag> <turn-radius>
+  AST.Command.Path.Turn = MathJax.Object.Subclass({});
+  AST.Command.Path.Turn.Diag = MathJax.Object.Subclass({
+    Init: function (diag, radius) {
+      this.diag = diag;
+      this.radius = radius;
+    },
+    toString: function () {
+      return this.diag.toString() + " " + this.radius;
+    }
+  });
+  // <turn> ::= <cir> <turnradius>
+  AST.Command.Path.Turn.Cir = MathJax.Object.Subclass({
+    Init: function (cir, radius) {
+      this.cir = cir;
+      this.radius = radius;
+    },
+    toString: function () {
+      return this.cir.toString() + " " + this.radius;
+    }
+  });
+  // <turn-radius> ::= <empty> | '/' <dimen>
+  AST.Command.Path.TurnRadius = MathJax.Object.Subclass({});
+  AST.Command.Path.TurnRadius.Default = MathJax.Object.Subclass({
+    toString: function () {
+      return "";
+    }
+  });
+  AST.Command.Path.TurnRadius.Dimen = MathJax.Object.Subclass({
+    Init: function (dimen) {
+      this.dimen = dimen;
+    },
+    toString: function () {
+      return "/" + this.dimen;
+    }
+  });
+  
+  // <segment> ::= <nonempty-pos> <slide> <labels>
+  AST.Command.Path.Segment = MathJax.Object.Subclass({
+    Init: function (pos, slide, labels) {
+      this.pos = pos;
+      this.slide = slide;
+      this.labels = labels;
+    },
+    toString: function () {
+      return this.pos.toString() + " " + this.slide + " " + this.labels;
+    }
+  });
+  
+  // <labels> ::= <label>*
+  AST.Command.Path.Labels = MathJax.Object.Subclass({
+    Init: function (labels) {
+      this.labels = labels;
+    },
+    toString: function () {
+      return this.labels.mkString(" ");
+    }
+  });
+  // <label> ::= '^' <anchor> <it> <alias>?
+  // <anchor> ::= '-' | <place>
+  AST.Command.Path.LabelAbove = MathJax.Object.Subclass({
+    Init: function (anchor, it, aliasOption) {
+      this.anchor = anchor;
+      this.it = it;
+      this.alias = aliasOption;
+    },
+    toString: function () {
+      return "^" + this.anchor + " " + this.it + " " + this.alias;
+    }
+  });
+  // <label> ::= '_' <anchor> <it> <alias>?
+  AST.Command.Path.LabelBelow = MathJax.Object.Subclass({
+    Init: function (anchor, it, aliasOption) {
+      this.anchor = anchor;
+      this.it = it;
+      this.alias = aliasOption;
+    },
+    toString: function () {
+      return "_" + this.anchor + " " + this.it + " " + this.alias;
+    }
+  });
+  // <label> ::= '|' <anchor> <it> <alias>?
+  AST.Command.Path.LabelAt = MathJax.Object.Subclass({
+    Init: function (anchor, it, aliasOption) {
+      this.anchor = anchor;
+      this.it = it;
+      this.alias = aliasOption;
+    },
+    toString: function () {
+      return "|" + this.anchor + " " + this.it + " " + this.alias;
+    }
+  });
+  
+  // <it> ::= ( '[' <shape> ']' )* <it2>
+  AST.Command.Path.It = MathJax.Object.Subclass({
+    Init: function (shapes, it) {
+      this.shapes = shapes;
+      this.it = it;
+    },
+    toString: function () {
+      return this.shapes.mkString("") + this.it;
+    }
+  });
+  AST.Command.Path.It.Shape = MathJax.Object.Subclass({
+    Init: function (shape) {
+      this.shape = shape;
+    },
+    toString: function () {
+      return "[" + this.shape + "]";
+    }
+  });
+  // <it2> ::= <digit> | <letter>
+  AST.Command.Path.It.Char = MathJax.Object.Subclass({
+    Init: function (char) {
+      this.char = char;
+    },
+    toString: function () {
+      return this.char.toString();
+    }
+  });
+  // <it2> ::= '{' <text> '}'
+  AST.Command.Path.It.Text = MathJax.Object.Subclass({
+    Init: function (text) {
+      this.text = text;
+    },
+    toString: function () {
+      return "{" + this.text + "}";
+    }
+  });
+  // <it2> ::= '*' <object>
+  AST.Command.Path.It.Object = MathJax.Object.Subclass({
+    Init: function (object) {
+      this.object = object;
+    },
+    toString: function () {
+      return "*" + this.object;
+    }
+  });
+  // <it2> ::= '@' <dir>
+  AST.Command.Path.It.Dir = MathJax.Object.Subclass({
+    Init: function (dir) {
+      this.dir = dir;
+    },
+    toString: function () {
+      return "@" + this.dir;
+    }
+  });
   
   
   var fun = FP.Parsers.fun;
@@ -1009,6 +1269,8 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   var seq = FP.Parsers.seq;
   var or = FP.Parsers.or;
   var rep = function (x) { return FP.Parsers.lazyParser(x)().rep(); }
+  var opt = function (x) { return FP.Parsers.lazyParser(x)().opt(); }
+  var success = FP.Parsers.success;
   var memo = function (parser) {
     return function () {
       var m = parser.memo;
@@ -1089,9 +1351,9 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         lit('@-').andr(p.coord).to(function (c) { return AST.Pos.EvalCoordThenPop(c); }),
         lit('@=').andr(p.coord).to(function (c) { return AST.Pos.LoadStack(c); }),
         lit('@@').andr(p.coord).to(function (c) { return AST.Pos.DoCoord(c); }),
-        lit('@i').to(function (c) { return AST.Pos.InitStack(); }),
-        lit('@(').to(function (c) { return AST.Pos.EnterFrame(); }),
-        lit('@)').to(function (c) { return AST.Pos.LeaveFrame(); }),
+        lit('@i').to(function () { return AST.Pos.InitStack(); }),
+        lit('@(').to(function () { return AST.Pos.EnterFrame(); }),
+        lit('@)').to(function () { return AST.Pos.LeaveFrame(); }),
         lit('=:').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SaveBase(id); }),
         lit('=@').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SaveStack(id); }),
         lit('=').andr(p.nonemptyCoord).andl(flit('"')).and(p.id).andl(felem('"')).to(function (mid) { return AST.Pos.SaveMacro(mid.head, mid.tail); }),
@@ -1103,7 +1365,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     coord: memo(function () {
       return or(
         p.nonemptyCoord,
-        FP.Parsers.success('empty').to(function () { return AST.Coord.C(); })
+        success('empty').to(function () { return AST.Coord.C(); })
       );
     }),
     
@@ -1234,7 +1496,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         lit('/').andr(p.dimen).andl(flit('/')).to(function (d) {
           return AST.Slide(d);
         }),
-        FP.Parsers.success("no slide").to(function () {
+        success("no slide").to(function () {
           return AST.Slide(undefined);
         })
       );
@@ -1302,16 +1564,8 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     //          | '\cir' <radius> '{' <cir> '}'
     //          | <curve>
     objectbox: memo(function () {
-      return or(lit("{").andr(p.text).andl(felem("}")).to(function (math) {
-          var mml = TEX.Parse(math).mml();
-          if (mml.inferred) {
-            mml = MML.apply(MathJax.ElementJax,mml.data);
-          } else {
-            mml = MML(mml);
-          }
-          TEX.combineRelations(mml.root);
-          return AST.ObjectBox.Text(mml.root);
-        }),
+      return or(
+        p.mathText,
         lit("@").andr(p.dir),
         lit("\\dir").andr(p.dir),
         lit("\\cir").andr(p.radius).andl(flit("{")).and(p.cir).andl(flit("}")).to(function (rc) {
@@ -1319,6 +1573,20 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         }),
         p.curve
       );
+    }),
+    
+    // <math-text> ::= '{' <text> '}'
+    mathText: memo(function () {
+      return lit("{").andr(p.text).andl(felem("}")).to(function (math) {
+        var mml = TEX.Parse(math).mml();
+        if (mml.inferred) {
+          mml = MML.apply(MathJax.ElementJax,mml.data);
+        } else {
+          mml = MML(mml);
+        }
+        TEX.combineRelations(mml.root);
+        return AST.ObjectBox.Text(mml.root);
+      });
     }),
     
     // <text> ::= /[^{}]*/ ( '{' <text> '}' /[^{}]*/ )*
@@ -1352,7 +1620,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         p.vector().to(function (v) {
           return AST.ObjectBox.Cir.Radius.Vector(v);
         }),
-        FP.Parsers.success("default").to(function () {
+        success("default").to(function () {
         	return AST.ObjectBox.Cir.Radius.Default();
         })
       );
@@ -1362,13 +1630,16 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     //       | <empty>
     cir: memo(function () {
       return or(
-        p.diag().and(fun(regexLit(/^[_\^]/))).and(p.diag).to(function (dod) {
-          return AST.ObjectBox.Cir.Cir.Segment(dod.head.head, dod.head.tail, dod.tail);
-        }),
-        FP.Parsers.success("full").to(function () {
+        p.nonemptyCir,
+        success("full").to(function () {
         	return AST.ObjectBox.Cir.Cir.Full();
         })
       );
+    }),
+    nonemptyCir: memo(function () {
+      return p.diag().and(fun(regexLit(/^[_\^]/))).and(p.diag).to(function (dod) {
+        return AST.ObjectBox.Cir.Cir.Segment(dod.head.head, dod.head.tail, dod.tail);
+      });
     }),
     
     // <curve> ::= '\crv' <curve-modifier> '{' <curve-object> <poslist> '}'
@@ -1450,7 +1721,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       	p.nonemptyPos().to(function (p) {
         	return FP.List.Cons(AST.ObjectBox.Curve.PosList.Pos(p), FP.List.empty);
         }),
-        FP.Parsers.success("empty").to(function () {
+        success("empty").to(function () {
         	return FP.List.empty;
         })
       );
@@ -1472,7 +1743,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       	p.nonemptyPos().to(function (p) {
         	return FP.List.Cons(AST.ObjectBox.Curve.PosList.Pos(p), FP.List.empty);
         }),
-        FP.Parsers.success("empty").to(function () {
+        success("empty").to(function () {
         	return FP.List.Cons(AST.ObjectBox.Curve.PosList.CurPos(), FP.List.empty);
         })
       );
@@ -1514,7 +1785,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       	function () { return p.vector().to(function (v) {
           return AST.Modifier.AddOp.VactorSize(v);
         }) },
-      	FP.Parsers.success("default size").to(function () {
+      	success("default size").to(function () {
           return AST.Modifier.AddOp.DefaultSize();
         })
       );
@@ -1530,7 +1801,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       	lit("u").to(function () { return AST.Modifier.Shape.U(); }),
       	lit("d").to(function () { return AST.Modifier.Shape.D(); }),
       	lit("c").to(function () { return AST.Modifier.Shape.C(); }),
-      	FP.Parsers.success("rect").to(function () { return AST.Modifier.Shape.Rect(); })
+      	success("rect").to(function () { return AST.Modifier.Shape.Rect(); })
       );
     }),
     
@@ -1580,7 +1851,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       lit('r').to(function (x) { return AST.Diag.Angle('r', 0); }),
       lit('d').to(function (x) { return AST.Diag.Angle('d', -Math.PI/2); }),
       lit('u').to(function (x) { return AST.Diag.Angle('u', Math.PI/2); }),
-      FP.Parsers.success("empty").to(function (x) {
+      success("empty").to(function (x) {
         return AST.Diag.Default();
       })
     ))),
@@ -1596,6 +1867,8 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     //           |   '\restore'
     //           |   '\POS' <pos>
     //           |   '\afterPOS' '{' <decor> '}' <pos>
+    //           |   '\PATH' <path>
+    //           |   '\afterPATH' '{' <decor> '}' <path>
     //           |   '\drop' <object>
     //           |   '\connect' <object>
     //           |   '\relax'
@@ -1614,6 +1887,12 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         lit("\\afterPOS").andr(flit('{')).andr(p.decor).andl(flit('}')).and(p.pos).to(function (dp) {
           return AST.Command.AfterPos(dp.head, dp.tail);
         }),
+        lit("\\PATH").andr(p.path).to(function (path) {
+          return AST.Command.Path(path);
+        }),
+        lit("\\afterPATH").andr(flit('{')).andr(p.decor).andl(flit('}')).and(p.path).to(function (dp) {
+          return AST.Command.AfterPath(dp.head, dp.tail);
+        }),
         lit("\\drop").andr(p.object).to(function (obj) {
           return AST.Command.Drop(obj);
         }),
@@ -1625,8 +1904,173 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         }),
         lit("\\xyignore").andr(flit('{')).andr(p.pos).and(p.decor).andl(flit('}')).to(function (pd) {
           return AST.Command.Ignore(pd.head, pd.tail);
+        }),
+        lit("\\xyshowAST").andr(flit('{')).andr(p.pos).and(p.decor).andl(flit('}')).to(function (pd) {
+          return AST.Command.ShowAST(pd.head, pd.tail);
         })
       );
+    }),
+    
+    // <path> ::= <path2>(Nil)
+    path: memo(function () {
+      return p.path2(FP.List.empty /* initial failure continuation */).to(function (ps) {
+        return AST.Command.Path.Path(ps);
+      })
+    }),
+    
+    // <path2>(fc) ::= '~' <action> '{' <pos> <decor> '}' <path2>(fc)
+    //             |   '~' <which> '{' <labels> '}' <path2>(fc)
+    //             |   "'" <segment> <path2>(fc)
+    //             |   '`' <turn> <segment> <path2>(fc)
+    //             |   '~' '{' <path2 as fc'> '}' <path2>(fc')
+    //             |   <segment>
+    //             |   <empty>
+    // <action> ::= '=' | '/'
+    // <which> ::= '<' | '>' | '+'
+    path2: function (fc) {
+      var q = memo(function () { return p.path2(fc) });
+      return or(
+        p.path3().and(q).to(function (ep) {
+          return FP.List.Cons(ep.head, ep.tail);
+        }),
+        seq('~', '{', q, '}').to(function (newFc) {
+          return newFc.head.tail;
+        }).into(function (newFc) {
+          return p.path2(newFc);
+        }),
+        p.segment().to(function (s) {
+          return FP.List.Cons(AST.Command.Path.LastSegment(s), FP.List.empty);
+        }),
+        success(fc).to(function (fc) {
+          return fc;
+        })
+      );
+    },
+    path3: memo(function () {
+      return or(
+        seq('~', '=', '{', p.posDecor, '}').to(function (pd) {
+          return AST.Command.Path.SetBeforeAction(pd.head.tail);
+        }),
+        seq('~', '/', '{', p.posDecor, '}').to(function (pd) {
+          return AST.Command.Path.SetAfterAction(pd.head.tail);
+        }),
+        seq('~', '<', '{', p.labels, '}').to(function (ls) {
+          return AST.Command.Path.AddLabelNextSegmentOnly(ls.head.tail);
+        }),
+        seq('~', '>', '{', p.labels, '}').to(function (ls) {
+          return AST.Command.Path.AddLabelLastSegmentOnly(ls.head.tail);
+        }),
+        seq('~', '+', '{', p.labels, '}').to(function (ls) {
+          return AST.Command.Path.AddLabelLastEverySegment(ls.head.tail);
+        }),
+        seq("'", p.segment).to(function (s) {
+          return AST.Command.Path.StraightSegment(s.tail);
+        }),
+        seq('`', p.turn, p.segment).to(function (ts) {
+          return AST.Command.Path.TurningSegment(ts.head.tail, ts.tail);
+        })
+      );
+    }),
+    
+    // <turn> ::= <diag> <turn-radius>
+    //        |   <cir> <turnradius>
+    turn: memo(function () {
+      return or(
+        p.nonemptyCir().and(p.turnRadius).to(function (cr) {
+          return AST.Command.Path.Turn.Cir(cr.head, cr.tail);
+        }),
+        p.diag().and(p.turnRadius).to(function (dr) {
+          return AST.Command.Path.Turn.Diag(dr.head, dr.tail);
+        })
+      );
+    }),
+    
+    // <turn-radius> ::= <empty> | '/' <dimen>
+    turnRadius: memo(function () {
+      return or(
+        lit('/').andr(p.dimen).to(function (d) {
+          return AST.Command.Path.TurnRadius.Dimen(d);
+        }),
+        success("default").to(function () {
+          return AST.Command.Path.TurnRadius.Default();
+        })
+      );
+    }),
+    
+    // <segment> ::= <nonempty-pos> <slide> <labels>
+    segment: memo(function () {
+      return p.nonemptyPos().and(p.slide).and(p.labels).to(function (psl) {
+        return AST.Command.Path.Segment(psl.head.head, psl.head.tail, psl.tail);
+      });
+    }),
+    
+    // <labels> ::= <label>*
+    labels: memo(function () {
+      return p.label().rep().to(function (ls) {
+        return AST.Command.Path.Labels(ls);
+      });
+    }),
+    
+    // <label> ::= '^' <anchor> <it> <alias>?
+    // <label> ::= '_' <anchor> <it> <alias>?
+    // <label> ::= '|' <anchor> <it> <alias>?
+    label: memo(function () {
+      return or(
+        seq('^', p.anchor, p.it, p.alias).to(function (aia) {
+          return AST.Command.Path.LabelAbove(aia.head.head.tail, aia.head.tail, aia.tail);
+        }),
+        seq('_', p.anchor, p.it, p.alias).to(function (aia) {
+          return AST.Command.Path.LabelBelow(aia.head.head.tail, aia.head.tail, aia.tail);
+        }),
+        seq('|', p.anchor, p.it, p.alias).to(function (aia) {
+          return AST.Command.Path.LabelAt(aia.head.head.tail, aia.head.tail, aia.tail);
+        })
+      );
+    }),
+    
+    // <anchor> ::= '-' <anchor> | <place>
+    anchor: memo(function () {
+      return or(
+        lit('-').andr(p.anchor).to(function (a) {
+          return AST.Place(1, 1, 0.5, undefined).compound(a);
+        }),
+        p.place
+      );
+    }),
+    
+    // <it> ::= ( '[' <shape> ']' )* <it2>
+    it: memo(function () {
+      return rep(lit('[').andr(p.shape).andl(flit(']'))).and(p.it2).to(function (si) {
+        return AST.Command.Path.It(si.head, si.tail);
+      });
+    }),
+    
+    // <it2> ::= <digit> | <letter>
+    //       |   '{' <text> '}'
+    //       |   '*' <object>
+    //       |   '@' <dir>
+    it2: memo(function () {
+      return or(
+        regexLit(/^[0-9a-zA-Z]/).to(function (c) {
+          return AST.Command.Path.It.Char(c);
+        }),
+        p.mathText().to(function (t) {
+          return AST.Command.Path.It.Text(t);
+        }),
+        lit('*').andr(p.object).to(function (obj) {
+          return AST.Command.Path.It.Object(obj);
+        }),
+        lit('@').andr(p.dir).to(function (dir) {
+          return AST.Command.Path.It.Dir(dir);
+        })
+      );
+    }),
+    
+    // <alias> ::= '=' '"' <id> '"'
+    alias: memo(function () {
+      return seq('=', '"', p.id, '"').opt().to(function (optId) {
+        return optId.map(function (id) { return id.head.tail; });
+      });
     }),
   })();
   
@@ -6626,6 +7070,79 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Command.Ignore.Augment({
     draw: function (svg, env) {
+    }
+  });
+  
+  AST.Command.ShowAST.Augment({
+    draw: function (svg, env) {
+      console.log(this.pos.toString() + " " + this.decor);
+    }
+  });
+  
+  AST.Command.Path.Augment({
+    draw: function (svg, env) {
+      this.path.draw(svg, env);
+    }
+  });
+  
+  AST.Command.AfterPath.Augment({
+    draw: function (svg, env) {
+      this.path.draw(svg, env);
+      this.decor.draw(svg, env);
+    }
+  });
+  
+  AST.Command.Path.Path.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
+    }
+  });
+  
+  AST.Command.Path.SetBeforeAction.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
+    }
+  });
+  
+  AST.Command.Path.SetAfterAction.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
+    }
+  });
+  
+  AST.Command.Path.AddLabelNextSegmentOnly.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
+    }
+  });
+  
+  AST.Command.Path.AddLabelLastSegmentOnly.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
+    }
+  });
+  
+  AST.Command.Path.AddLabelLastEverySegment.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
+    }
+  });
+  
+  AST.Command.Path.StraightSegment.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
+    }
+  });
+  
+  AST.Command.Path.TurningSegment.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
+    }
+  });
+  
+  AST.Command.Path.LastSegment.Augment({
+    draw: function (svg, env) {
+      // TODO: impl
     }
   });
   

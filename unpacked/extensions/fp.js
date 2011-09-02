@@ -64,6 +64,15 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
     isEmpty: false,
     isDefined: true,
     getOrElse: function (ignore) { return this.get; },
+    flatMap: function (k) {
+      return k(this.get);
+    },
+    map: function (f) {
+      return FP.Option.Some(f(this.get));
+    },
+    foreach: function (f) {
+      f(this.get);
+    },
     toString: function () {
       return "Some(" + this.get + ")";
     }
@@ -76,6 +85,9 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
     isEmpty: true,
     isDefined: false,
     getOrElse: function (value) { return value; },
+    flatMap: function (k) { return this; },
+    foreach: function (f) {},
+    map: function (k) { return this; },
     toString: function () { return "None"; }
   }, {
     unapply: function (x) { return FP.Option.Some(x); }
@@ -114,6 +126,20 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
       }
       return l;
     },
+    append: function (element) {
+      var result = FP.List.Cons(element, FP.List.empty);
+      this.reverse().foreach(function (e) {
+        result = FP.List.Cons(e, result);
+      });
+      return result;
+    },
+    concat: function (that) {
+      var result = that;
+      this.reverse().foreach(function (e) {
+        result = FP.List.Cons(e, result);
+      });
+      return result;
+    },
     foldLeft: function (x0, f) {
       var r, c;
       r = f(x0, this.head);
@@ -130,6 +156,12 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
       } else {
         return f(this.head, this.tail.foldRight(x0, f));
       }
+    },
+    map: function (f) {
+      return FP.List.Cons(f(this.head), this.tail.map(f));
+    },
+    flatMap: function (k) {
+      return k(this.head).concat(this.tail.flatMap(k));
     },
     foreach: function (f) {
       var e = this;
@@ -189,8 +221,16 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
       throw Error("cannot get element from an empty list.");
     },
     length: function () { return 0; },
+    append: function (element) {
+      return FP.List.Cons(element, FP.List.empty);
+    },
+    concat: function (that) {
+      return that;
+    },
     foldLeft: function (x0, f) { return x0; },
     foldRight: function (x0, f) { return x0; },
+    flatMap: function (f) { return this; },
+    map: function (f) { return this; },
     foreach: function (f) {},
     reverse: function () { return this; },
     mkString: function () {
@@ -657,7 +697,6 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
       return parser;
     },
     or: function () {
-      // TODO: バグ？バックトラックしないようだ。
       var count, parser, i;
       count = arguments.length;
       if (count === 0) { return FP.Parsers.err("at least one element must be specified"); }
@@ -738,10 +777,6 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
     Init: function (msg, next) {
       this.msg = msg;
       this.next = next;
-  //		if (!(PARSERS.lastNoSuccess != null && 
-  //			this.next.pos().isLessThan(PARSERS.lastNoSuccess.next.pos()))) {
-  //			PARSERS.lastNoSuccess = this;
-  //		}
     },
     append: function (/*lazy*/ a) {
       var alt = a();
@@ -769,10 +804,6 @@ MathJax.Hub.Register.StartupHook("End Extensions",function () {
     Init: function (msg, next) {
       this.msg = msg;
       this.next = next;
-  //		if (!(PARSERS.lastNoSuccess != null && 
-  //			this.next.pos().isLessThan(PARSERS.lastNoSuccess.next.pos()))) {
-  //			PARSERS.lastNoSuccess = this;
-  //		}
     },
     append: function (/*lazy*/ a) { return this; },
     toString: function () { return ('[' + this.next.pos() + '] error: ' + 

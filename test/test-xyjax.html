@@ -11,7 +11,6 @@
     extensions: ["tex2jax.js", "fp.js"],
     jax: ["input/TeX","output/HTML-CSS"],
     "HTML-CSS": {
-//      availableFonts:[],
       styles: {".MathJax_Preview": {visibility: "hidden"}}
     },
     tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]},
@@ -32,6 +31,41 @@
 
 Xy-picの例$(\begin{xy}(0,0);<1cm,0mm>**@{-} ?>*@{>} ?<>*!/_2mm/{\scriptstyle f}\end{xy})$です。
 Xy-picの例$(\begin{xy}(0,0);<1cm,10mm>**@{} ?>*@3{>}\end{xy})$です。
+
+\[
+\begin{xy}
+\xyshowAST{
+<4pc,0pc>:(0,0)
+*+{base}="base"
+\PATH ~={**@{-} ?>*@{>}}
+`l (-1,-1)*{A} ^a="a"
+` (1,-1)*{B} ^b
+`_ul (1,0)*{C} ^c
+`ul^l "base" ^d
+"base" ^e
+}
+\end{xy}
+\]
+
+\[
+\begin{xy}
+\xyshowAST{
+*+{0} \PATH
+~={**@{-}}
+'(10,1)*+{1} '(20,-2)*+{2} (30,0)*+{3}
+}
+\end{xy}
+\]
+
+\[
+\begin{xy}
+\xyshowAST{
+*+{0} \PATH
+~={**@{-}}
+~{~{(30,0)*+{3}} '(20,-2)*+{2}} '(10,1)*+{1} 
+}
+\end{xy}
+\]
 
 \[
 \begin{xy}
