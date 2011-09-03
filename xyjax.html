@@ -711,6 +711,98 @@ Source code:
 [[Samples]]
 </pre>
 </div>
+<div title="DeterministicFiniteAutomata" creator="isao" modifier="isao" created="201109031827" modified="201109031916" tags="Sample" changecount="107">
+<pre>\[
+\begin{xy}
+&lt;3pc,0pc&gt;:(0,0),
+(1,0) *+{0} *\cir&lt;.6pc&gt;{}=&quot;0&quot;,
+(2,0) *+{1} *\cir&lt;.6pc&gt;{}=&quot;1&quot;,
+(3,0) *+{2} *\cir&lt;.6pc&gt;{}=&quot;2&quot;,
+(4,0) *+{3} *\cir&lt;.45pc&gt;{}*\cir&lt;.6pc&gt;{}=&quot;3&quot;,
+0*+{start}=&quot;start&quot;,
+
+\PATH ~={**@{-}} ~+{|&gt;*@{&gt;}}
+'&quot;0&quot;
+'&quot;1&quot; _A
+'&quot;2&quot; ^B
+&quot;3&quot; ^B
+
+\POS &quot;3&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`ru^l &quot;0&quot; &lt;-1pt&gt;
+`^rd &quot;0&quot; _B
+&quot;0&quot;
+
+\POS &quot;3&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`rd_l &quot;1&quot; &lt;1pt&gt;
+`_ru &quot;1&quot;
+&quot;1&quot;
+
+\POS &quot;2&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`rd_l &quot;1&quot; &lt;1pt&gt;
+`_ru &quot;1&quot; _A
+&quot;1&quot;
+
+\POS &quot;0&quot;+/ru 1.2pc/*{\scriptstyle B}, &quot;0&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`r^d/.7pc &quot;0&quot; &lt;1pt&gt;
+&quot;0&quot;
+
+\POS &quot;1&quot;+/rd 1.2pc/*{\scriptstyle A}, &quot;1&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`r_u/.7pc &quot;1&quot; &lt;-1pt&gt;
+&quot;1&quot;
+\end{xy}
+\]
+
+Source Code:
+{{{
+\begin{xy}
+&lt;3pc,0pc&gt;:(0,0),
+(1,0) *+{0} *\cir&lt;.6pc&gt;{}=&quot;0&quot;,
+(2,0) *+{1} *\cir&lt;.6pc&gt;{}=&quot;1&quot;,
+(3,0) *+{2} *\cir&lt;.6pc&gt;{}=&quot;2&quot;,
+(4,0) *+{3} *\cir&lt;.45pc&gt;{}*\cir&lt;.6pc&gt;{}=&quot;3&quot;,
+0*+{start}=&quot;start&quot;,
+
+\PATH ~={**@{-}} ~+{|&gt;*@{&gt;}}
+'&quot;0&quot;
+'&quot;1&quot; _A
+'&quot;2&quot; ^B
+&quot;3&quot; ^B
+
+\POS &quot;3&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`ru^l &quot;0&quot; &lt;-1pt&gt;
+`^rd &quot;0&quot; _B
+&quot;0&quot;
+
+\POS &quot;3&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`rd_l &quot;1&quot; &lt;1pt&gt;
+`_ru &quot;1&quot;
+&quot;1&quot;
+
+\POS &quot;2&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`rd_l &quot;1&quot; &lt;1pt&gt;
+`_ru &quot;1&quot; _A
+&quot;1&quot;
+
+\POS &quot;0&quot;+/ru 1.2pc/*{\scriptstyle B}, &quot;0&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`r^d/.7pc &quot;0&quot; &lt;1pt&gt;
+&quot;0&quot;
+
+\POS &quot;1&quot;+/rd 1.2pc/*{\scriptstyle A}, &quot;1&quot;
+\PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
+`r_u/.7pc &quot;1&quot; &lt;-1pt&gt;
+&quot;1&quot;
+\end{xy}
+}}}</pre>
+</div>
 <div title="Download" creator="isao" modifier="isao" created="201108081329" modified="201108111426" changecount="2">
 <pre>See https://github.com/sonoisa/XyJax
 </pre>
@@ -1039,6 +1131,49 @@ Source code:
 {{{
 \begin{xy}
 (0,0)*{}ABC}
+\end{xy}
+}}}</pre>
+</div>
+<div title="PathFeature" creator="isao" modifier="isao" created="201109031819" modified="201109031823" tags="Sample" changecount="7">
+<pre>\[
+\begin{xy}
+&lt;0.3pc,0pc&gt;:(0,0)
+*+{0}
+\PATH ~={**@{-}} ~&lt;{|&lt;*@{&lt;}} ~&gt;{|&gt;*@{&gt;}}
+'(10,1)*+{1}^{A} '(20,-2)*+{2}^{B} (30,0)*+{3}^{C}
+\end{xy}
+\]
+\[
+\begin{xy}
+&lt;4pc,0pc&gt;:(0,0)
+*+{base}=&quot;base&quot;
+\PATH ~={**@{-} ?&gt;*@{&gt;}}
+`l    (-1,-1)*{A} ^A
+`     (1,-1) *{B} ^B
+`_ul  (1,0)  *{C} ^C
+`ul^l &quot;base&quot;      ^D
+&quot;base&quot;            ^E
+\end{xy}
+\]
+
+Source Code:
+{{{
+\begin{xy}
+&lt;0.3pc,0pc&gt;:(0,0)
+*+{0}
+\PATH ~={**@{-}} ~&lt;{|&lt;*@{&lt;}} ~&gt;{|&gt;*@{&gt;}}
+'(10,1)*+{1}^{A} '(20,-2)*+{2}^{B} (30,0)*+{3}^{C}
+\end{xy}
+
+\begin{xy}
+&lt;4pc,0pc&gt;:(0,0)
+*+{base}=&quot;base&quot;
+\PATH ~={**@{-} ?&gt;*@{&gt;}}
+`l    (-1,-1)*{A} ^A
+`     (1,-1) *{B} ^B
+`_ul  (1,0)  *{C} ^C
+`ul^l &quot;base&quot;      ^D
+&quot;base&quot;            ^E
 \end{xy}
 }}}</pre>
 </div>
@@ -1667,7 +1802,7 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 /*}}}*/
 </pre>
 </div>
-<div title="ToDo" creator="isao" modifier="isao" created="201108061802" modified="201108281506" changecount="14">
+<div title="ToDo" creator="isao" modifier="isao" created="201108061802" modified="201109031818" changecount="22">
 <pre>* general
 ** combine XyJax with [[SVG Output Jax|https://sites.google.com/site/mathjaxproject/design-documents/mathjax-1-1-specification/mathjax-1-2-specification]]
 ** support VML
@@ -1687,12 +1822,10 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 *** use shape
 *** define shape
 *** set current direction
-** decorations
 
 * implement kernel library
 ** directionals
 *** constructed tips
-** circle segments
 ** text
 
 * implement extensions
@@ -1707,9 +1840,10 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 ** import graphics
 
 * implement features
-** ''arrows/paths''
-** two-cells
+** ''--paths--''(done)
+** ''arrows''
 ** ''xy-matrices''
+** two-cells
 ** xy-graphs
 ** (polygons)
 ** (lattice/web)

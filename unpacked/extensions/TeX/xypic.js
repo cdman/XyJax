@@ -907,11 +907,63 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   });
   // <diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
   AST.Diag.Angle = MathJax.Object.Subclass({
-  	Init: function (symbol, angle) {
-    	this.symbol = symbol;
-      this.ang = angle;
-    },
   	toString: function () { return this.symbol; }
+  });
+  AST.Diag.LD = AST.Diag.Angle.Subclass({
+    symbol: 'ld',
+    ang: -3*Math.PI/4,
+    turn: function (orient) {
+      return (orient === "^"? AST.Diag.RD() : AST.Diag.LU());
+    }
+  });
+  AST.Diag.RD = AST.Diag.Angle.Subclass({
+    symbol: 'rd',
+    ang: -Math.PI/4,
+    turn: function (orient) {
+      return (orient === "^"? AST.Diag.RU() : AST.Diag.LD());
+    }
+  });
+  AST.Diag.LU = AST.Diag.Angle.Subclass({
+    symbol: 'lu',
+    ang: 3*Math.PI/4,
+    turn: function (orient) {
+      return (orient === "^"? AST.Diag.LD() : AST.Diag.RU());
+    }
+  });
+  AST.Diag.RU = AST.Diag.Angle.Subclass({
+    symbol: 'ru',
+    ang: Math.PI/4,
+    turn: function (orient) {
+      return (orient === "^"? AST.Diag.LU() : AST.Diag.RD());
+    }
+  });
+  AST.Diag.L = AST.Diag.Angle.Subclass({
+    symbol: 'l',
+    ang: Math.PI,
+    turn: function (orient) {
+      return (orient === "^"? AST.Diag.D() : AST.Diag.U());
+    }
+  });
+  AST.Diag.R = AST.Diag.Angle.Subclass({
+    symbol: 'r',
+    ang: 0,
+    turn: function (orient) {
+      return (orient === "^"? AST.Diag.U() : AST.Diag.D());
+    }
+  });
+  AST.Diag.D = AST.Diag.Angle.Subclass({
+    symbol: 'd',
+    ang: -Math.PI/2,
+    turn: function (orient) {
+      return (orient === "^"? AST.Diag.R() : AST.Diag.L());
+    }
+  });
+  AST.Diag.U = AST.Diag.Angle.Subclass({
+    symbol: 'u',
+    ang: Math.PI/2,
+    turn: function (orient) {
+      return (orient === "^"? AST.Diag.L() : AST.Diag.R());
+    }
   });
   
   // <decor> ::= <command>*
@@ -1298,8 +1350,8 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         lit('@)').to(function () { return AST.Pos.LeaveFrame(); }),
         lit('=:').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SaveBase(id); }),
         lit('=@').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SaveStack(id); }),
-        lit('=').andr(p.nonemptyCoord).andl(flit('"')).and(p.id).andl(felem('"')).to(function (mid) { return AST.Pos.SaveMacro(mid.head, mid.tail); }),
-        lit('=').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SavePos(id); })
+        lit('=').andr(flit('"')).andr(p.id).andl(felem('"')).to(function (id) { return AST.Pos.SavePos(id); }),
+        lit('=').andr(p.nonemptyCoord).andl(flit('"')).and(p.id).andl(felem('"')).to(function (mid) { return AST.Pos.SaveMacro(mid.head, mid.tail); })
       );
     }),
     
@@ -1786,14 +1838,14 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     // <diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
     //        | <empty>
     diag: memo(fun(or(
-      regexLit(/^(ld|dl)/).to(function (x) { return AST.Diag.Angle('ld', -3*Math.PI/4); }),
-      regexLit(/^(rd|dr)/).to(function (x) { return AST.Diag.Angle('rd', -Math.PI/4); }),
-      regexLit(/^(lu|ul)/).to(function (x) { return AST.Diag.Angle('lu', 3*Math.PI/4); }),
-      regexLit(/^(ru|ur)/).to(function (x) { return AST.Diag.Angle('ru', Math.PI/4); }),
-      lit('l').to(function (x) { return AST.Diag.Angle('l', Math.PI); }),
-      lit('r').to(function (x) { return AST.Diag.Angle('r', 0); }),
-      lit('d').to(function (x) { return AST.Diag.Angle('d', -Math.PI/2); }),
-      lit('u').to(function (x) { return AST.Diag.Angle('u', Math.PI/2); }),
+      regexLit(/^(ld|dl)/).to(function (x) { return AST.Diag.LD(); }),
+      regexLit(/^(rd|dr)/).to(function (x) { return AST.Diag.RD(); }),
+      regexLit(/^(lu|ul)/).to(function (x) { return AST.Diag.LU(); }),
+      regexLit(/^(ru|ur)/).to(function (x) { return AST.Diag.RU(); }),
+      lit('l').to(function (x) { return AST.Diag.L(); }),
+      lit('r').to(function (x) { return AST.Diag.R(); }),
+      lit('d').to(function (x) { return AST.Diag.D(); }),
+      lit('u').to(function (x) { return AST.Diag.U(); }),
       success("empty").to(function (x) {
         return AST.Diag.Default();
       })
@@ -1976,7 +2028,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
           return AST.Command.Path.Label.Above(AST.Pos.Place(aia.head.head.tail), aia.head.tail, aia.tail);
         }),
         seq('_', p.anchor, p.it, p.alias).to(function (aia) {
-          return AST.Command.Path.Label.Below(aAST.Pos.Place(aia.head.head.tail), aia.head.tail, aia.tail);
+          return AST.Command.Path.Label.Below(AST.Pos.Place(aia.head.head.tail), aia.head.tail, aia.tail);
         }),
         seq('|', p.anchor, p.it, p.alias).to(function (aia) {
           return AST.Command.Path.Label.At(AST.Pos.Place(aia.head.head.tail), aia.head.tail, aia.tail);
@@ -2320,14 +2372,15 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   }, {
   	lengthResolution: 128,
   	interpolationResolution: 5,
-    machinePrecision: 1e-15,
+    machinePrecision: 1e-12,
     strokeWidth: HTMLCSS.length2em("0.05em"),
     thickness: HTMLCSS.length2em("0.15em"),
     jot: HTMLCSS.length2em("3pt"),
     objectmargin: HTMLCSS.length2em("3pt"),
     objectwidth: HTMLCSS.length2em("0pt"),
     objectheight: HTMLCSS.length2em("0pt"),
-    labelmargin: HTMLCSS.length2em("4pt"),
+    labelmargin: HTMLCSS.length2em("5pt"),
+    turnradius: HTMLCSS.length2em("10pt"),
   });
   
   xypic.Util = MathJax.Object.Subclass({}, {
@@ -2508,34 +2561,6 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         f = (angle - (angle > 0? 3*pi/4 : -5*pi/4))/(pi/2);
         return xypic.Frame.Point(this.x + this.r, this.y - this.d + f * h);
       }
-      
-//    	if (this.isPoint()) {
-//      	return this;
-//      }
-//      var dx = x - this.x;
-//      var dy = y - this.y;
-//      if (dx > 0) {
-//      	var ey = dy * (-this.l) / dx;
-//        if (ey > this.u) {
-//        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
-//        } else if (ey < -this.d) {
-//        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
-//        }
-//        return xypic.Frame.Point(this.x - this.l, this.y + ey);
-//      } else if (dx < 0) {
-//      	var ey = dy * this.r / dx;
-//        if (ey > this.u) {
-//        	return xypic.Frame.Point(this.x + this.u * dx / dy, this.y + this.u);
-//        } else if (ey < -this.d) {
-//        	return xypic.Frame.Point(this.x - this.d * dx / dy, this.y - this.d);
-//        }
-//        return xypic.Frame.Point(this.x + this.r, this.y + ey);
-//      } else {
-//      	if (dy > 0) {
-//        	return xypic.Frame.Point(this.x, this.y - this.d);
-//        }
-//        return xypic.Frame.Point(this.x, this.y + this.u);
-//      }
     },
     grow: function (xMargin, yMargin) {
       return this.toRect({
@@ -5729,6 +5754,9 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       var x = env.c.x;
       var y = env.c.y;
       c = this.cir.draw(svg, env, x, y, r);
+      if (!hidden) {
+        svg.extendBoundingBox(c);
+      }
       
     	// modification
     	// TODO: '!'に対応させる。objectの大きさを元に、描画の位置を調整することになるため、ここでは遅い。
@@ -5756,22 +5784,16 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   AST.ObjectBox.Cir.Cir.Segment.Augment({
     draw: function (svg, env, x, y, r) {
-      var sd = this.startDiag.toString();
-      var ed = this.endDiag.toString();
+      var sa = this.startPointDegree(svg, env);
+      var ea = this.endPointDegree(svg, env, sa);
+      var da = ea - sa;
+      da = (da < 0? da + 360 : da);
       
-      var sa, ea, large, da, flip;
+      var large, flip;
       if (this.orient === "^") {
-        sa = this.diagToAngleACW(sd);
-        ea = this.diagToAngleACW(ed, sa);
-        da = ea - sa;
-        da = (da < 0? da + 360 : da);
         large = (da > 180? "1" : "0");
         flip = "0";
       } else {
-        sa = this.diagToAngleCW(sd);
-        ea = this.diagToAngleCW(ed, sa);
-        da = ea - sa;
-        da = (da < 0? da + 360 : da);
         large = (da > 180? "0" : "1");
         flip = "1";
       }
@@ -5785,6 +5807,26 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         d:"M"+em2px(sx)+","+em2px(-sy)+" A"+em2px(r)+","+em2px(r)+" 0 "+large+","+flip+" "+em2px(ex)+","+em2px(-ey)
       });
       return xypic.Frame.Circle(x, y, r);
+    },
+    startPointDegree: function (svg, env) {
+      var sd = this.startDiag.toString();
+      var sa;
+      if (this.orient === "^") {
+        sa = this.diagToAngleACW(sd);
+      } else {
+        sa = this.diagToAngleCW(sd);
+      }
+      return sa;
+    },
+    endPointDegree: function (svg, env, startAngle) {
+      var ed = this.endDiag.toString();
+      var ea;
+      if (this.orient === "^") {
+        ea = this.diagToAngleACW(ed, startAngle);
+      } else {
+        ea = this.diagToAngleCW(ed, startAngle);
+      }
+      return ea;
     },
     diagToAngleACW: function (diag, angle) {
       switch (diag) {
@@ -6083,6 +6125,9 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
       
       var c = env.c.toRect(box).rotate(env.angle);
+      if (!hidden) {
+        svg.extendBoundingBox(c);
+      }
 //      svg.createSVGElement("rect", {
 //        x:em2px(c.x-c.l), y:em2px(-c.y-c.u), width:em2px(c.l+c.r), height:em2px(c.u+c.d),
 //        "stroke-width":"0.02em", stroke:"green"
@@ -6959,12 +7004,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.Diag.Default.Augment({
+    isEmpty: true,
   	angle: function (env) {
     	return env.angle;
     }
   });
     
   AST.Diag.Angle.Augment({
+    isEmpty: false,
   	angle: function (env) {
     	return this.ang;
     }
@@ -7034,7 +7081,28 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Command.Path.Augment({
     draw: function (svg, env) {
+      var origin = env.origin;
+      var xBase = env.xBase;
+      var yBase = env.yBase;
+      var p = env.p;
+      var c = env.c;
+      
+      env.pathActionForBeforeSegment = FP.Option.empty;
+      env.pathActionForAfterSegment = FP.Option.empty;
+      env.labelsForNextSegmentOnly = FP.Option.empty;
+      env.labelsForLastSegmentOnly = FP.Option.empty;
+      env.labelsForEverySegment = FP.Option.empty;
+      env.segmentSlideEm = FP.Option.empty;
+      env.lastTurnDiag = FP.Option.empty;
+      env.prevSegmentEndPoint = env.c;
+      
       this.path.draw(svg, env);
+      
+      env.c = c;
+      env.p = p;
+      env.origin = origin;
+      env.xBase = xBase;
+      env.yBase = yBase;
     }
   });
   
@@ -7047,14 +7115,6 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Command.Path.Path.Augment({
     draw: function (svg, env) {
-      env.pathActionForBeforeSegment = FP.Option.empty;
-      env.pathActionForAfterSegment = FP.Option.empty;
-      env.labelsForNextSegmentOnly = FP.Option.empty;
-      env.labelsForLastSegmentOnly = FP.Option.empty;
-      env.labelsForEverySegment = FP.Option.empty;
-      env.segmentSlideEm = 0;
-      env.prevSegmentEndPoint = env.c;
-      
       this.pathElements.foreach(function (e) {
         e.draw(svg, env);
       });
@@ -7094,18 +7154,21 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Command.Path.StraightSegment.Augment({
     draw: function (svg, env) {
       this.segment.setupPositions(svg, env);
+      this.segment.drawLabels(svg, env);
+      var c = env.c;
       env.pathActionForBeforeSegment.foreach(function (action) {
         action.draw(svg, env);
       });
-      env.pathActionForAfterSegment.foreach(function (action) {
-        action.draw(svg, env);
-      });
       env.labelsForNextSegmentOnly.foreach(function (labels) {
-        labels.draw(svg, env)
+        labels.draw(svg, env);
         env.labelsForNextSegmentOnly = FP.Option.empty;
       });
       env.labelsForEverySegment.foreach(function (labels) {
-        labels.draw(svg, env)
+        labels.draw(svg, env);
+      });
+      env.c = c;
+      env.pathActionForAfterSegment.foreach(function (action) {
+        action.draw(svg, env);
       });
     }
   });
@@ -7113,29 +7176,171 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.Command.Path.LastSegment.Augment({
     draw: function (svg, env) {
       this.segment.setupPositions(svg, env);
+      this.segment.drawLabels(svg, env);
+      var c = env.c;
       env.pathActionForBeforeSegment.foreach(function (action) {
         action.draw(svg, env);
       });
-      env.pathActionForAfterSegment.foreach(function (action) {
-        action.draw(svg, env);
-      });
       env.labelsForNextSegmentOnly.foreach(function (labels) {
-        labels.draw(svg, env)
+        labels.draw(svg, env);
         env.labelsForNextSegmentOnly = FP.Option.empty;
       });
       env.labelsForLastSegmentOnly.foreach(function (labels) {
-        labels.draw(svg, env)
+        labels.draw(svg, env);
         env.labelsForNextSegmentOnly = FP.Option.empty;
       });
       env.labelsForEverySegment.foreach(function (labels) {
-        labels.draw(svg, env)
+        labels.draw(svg, env);
+      });
+      env.c = c;
+      env.pathActionForAfterSegment.foreach(function (action) {
+        action.draw(svg, env);
       });
     }
   });
   
   AST.Command.Path.TurningSegment.Augment({
     draw: function (svg, env) {
-      // TODO: impl
+      var p = env.prevSegmentEndPoint;
+      this.segment.pos.draw(svg, env);
+      env.p = p;
+      var circle = this.turn.explicitizedCircle(svg, env);
+      var r = this.turn.radius.radius(svg, env);
+      env.lastTurnDiag = FP.Option.Some(circle.endDiag);
+      
+      var sv = circle.startVector(svg, env);
+      var ev = circle.endVector(svg, env);
+      
+      var slideEm = env.segmentSlideEm.getOrElse(0);
+      this.segment.slide.dimen.foreach(function (d) {
+        slideEm = HTMLCSS.length2em(d);
+        if (slideEm !== 0 && !env.segmentSlideEm.isDefined) {
+          env.p = env.p.move(
+            env.p.x - slideEm * sv.y,
+            env.p.y + slideEm * sv.x);
+        }
+        env.segmentSlideEm = FP.Option.Some(slideEm);
+      });
+      if (slideEm !== 0) {
+        env.c = env.c.move(
+          env.c.x - slideEm * ev.y,
+          env.c.y + slideEm * ev.x);
+        if (circle.orient === "^") {
+          r = Math.max(0, r - slideEm);
+        } else {
+          r = Math.max(0, r + slideEm);
+        }
+      }
+      
+      var s = env.p.edgePoint(env.p.x + sv.x, env.p.y + sv.y);
+      var e = env.c;
+      
+      var ds = circle.relativeStartPoint(svg, env, r);
+      var de = circle.relativeEndPoint(svg, env, r);
+      
+      var t;
+      var det = sv.x * ev.y - sv.y * ev.x;
+      if (Math.abs(det) < AST.xypic.machinePrecision) {
+        t = 0;
+      } else {
+        var dx = e.x - s.x + ds.x - de.x;
+        var dy = e.y - s.y + ds.y - de.y;
+        t = (ev.y * dx - ev.x * dy)/det;
+        if (t < 0) { t = 0; }
+      }
+      var x = s.x - ds.x + t * sv.x;
+      var y = s.y - ds.y + t * sv.y;
+      svg.extendBoundingBox(circle.draw(svg, env, x, y, r));
+      
+      var c = xypic.Frame.Point(x + de.x, y + de.y);
+      env.prevSegmentEndPoint = c;
+      
+      env.c = xypic.Frame.Point(x + ds.x, y + ds.y);
+      env.pathActionForBeforeSegment.foreach(function (action) {
+        action.draw(svg, env);
+      });
+      env.labelsForNextSegmentOnly.foreach(function (labels) {
+        labels.draw(svg, env);
+        env.labelsForNextSegmentOnly = FP.Option.empty;
+      });
+      env.labelsForEverySegment.foreach(function (labels) {
+        labels.draw(svg, env);
+      });
+      env.c = c;
+      env.pathActionForAfterSegment.foreach(function (action) {
+        action.draw(svg, env);
+      });
+      
+      this.segment.drawLabels(svg, env);
+    }
+  });
+  
+  AST.Command.Path.Turn.Cir.Augment({
+    explicitizedCircle: function (svg, env) {
+      var startDiag, orient, endDiag;
+      if (this.cir.startDiag.isEmpty) {
+        startDiag = env.lastTurnDiag.getOrElse(AST.Diag.R());
+      } else {
+        startDiag = this.cir.startDiag;
+      }
+      orient = this.cir.orient;
+      if (this.cir.endDiag.isEmpty) {
+        endDiag = startDiag.turn(orient);
+      } else {
+        endDiag = this.cir.endDiag;
+      }
+      return AST.ObjectBox.Cir.Cir.Segment(startDiag, orient, endDiag);
+    }
+  });
+  
+  AST.ObjectBox.Cir.Cir.Segment.Augment({
+    startVector: function (svg, env) {
+      var angle = this.startDiag.angle(svg, env);
+      return {x:Math.cos(angle), y:Math.sin(angle)};
+    },
+    endVector: function (svg, env) {
+      var angle = this.endDiag.angle(svg, env);
+      return {x:Math.cos(angle), y:Math.sin(angle)};
+    },
+    relativeStartPointAngle: function (svg, env) {
+      return this.startPointDegree(svg, env)/180*Math.PI;
+    },
+    relativeStartPoint: function (svg, env, r) {
+      var angle = this.startPointDegree(svg, env)/180*Math.PI;
+      return {x:r*Math.cos(angle), y:r*Math.sin(angle)};
+    },
+    relativeEndPoint: function (svg, env, r) {
+      var angle;
+      angle = this.endPointDegree(svg, env, this.relativeStartPointAngle(svg, env))/180*Math.PI;
+      return {x:r*Math.cos(angle), y:r*Math.sin(angle)};
+    }
+  });
+  
+  AST.Command.Path.Turn.Diag.Augment({
+    explicitizedCircle: function (svg, env) {
+      var startDiag, orient, endDiag;
+      if (this.diag.isEmpty) {
+        startDiag = env.lastTurnDiag.getOrElse(AST.Diag.R());
+      } else {
+        startDiag = this.diag;
+      }
+      var angle = startDiag.angle(svg, env);
+      var det = (env.c.x - env.p.x) * Math.sin(angle) - (env.c.y - env.p.y) * Math.cos(angle);
+      orient = (det < 0? "^" : "_");
+      endDiag = startDiag.turn(orient);
+      return AST.ObjectBox.Cir.Cir.Segment(startDiag, orient, endDiag);
+    }
+  });
+  
+  AST.Command.Path.TurnRadius.Default.Augment({
+    radius: function (svg, env) {
+      return AST.xypic.turnradius;
+    }
+  });
+  
+  AST.Command.Path.TurnRadius.Dimen.Augment({
+    radius: function (svg, env) {
+      return HTMLCSS.length2em(this.dimen);
     }
   });
   
@@ -7145,30 +7350,34 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       this.pos.draw(svg, env);
       var c = env.c;
       
+      var tx = c.x - p.x;
+      var ty = c.y - p.y;
+      var angle = Math.atan2(ty, tx) + Math.PI/2;
+      var slideEm = env.segmentSlideEm.getOrElse(0);
       this.slide.dimen.foreach(function (d) {
-        env.segmentSlideEm = HTMLCSS.length2em(d);
+        slideEm = HTMLCSS.length2em(d);
+        if (slideEm !== 0 && !env.segmentSlideEm.isDefined) {
+          p = p.move(p.x + slideEm * Math.cos(angle), p.y + slideEm * Math.sin(angle));
+        }
+        env.segmentSlideEm = FP.Option.Some(slideEm);
       });
-      if (env.segmentSlideEm !== 0) {
-        tx = c.x - p.x;
-        ty = c.y - p.y;
-        var angle = Math.atan2(ty, tx) + Math.PI/2;
-        var px = env.segmentSlideEm * Math.cos(angle);
-        var py = env.segmentSlideEm * Math.sin(angle);
-        p = p.move(p.x + px, p.y + py);
-        c = c.move(c.x + px, c.y + py);
+      if (slideEm !== 0) {
+        c = c.move(c.x + slideEm * Math.cos(angle), c.y + slideEm * Math.sin(angle));
       }
       
       env.p = p;
       env.c = c;
+      env.prevSegmentEndPoint = c;
       var s = env.p.edgePoint(c.x, c.y);
       var e = env.c.edgePoint(p.x, p.y);
       env.mostRecentLine = xypic.MostRecentLine.Line(s, e, p, c);
-      
-      this.labels.draw(svg, env)
-      
-      env.p = p;
+      env.angle = Math.atan2(c.y - p.y, c.x - p.x);
+    },
+    drawLabels: function (svg, env) {
+      var c = env.c, p = env.p;
+      this.labels.draw(svg, env);
       env.c = c;
-      env.prevSegmentEndPoint = c;
+      env.p = p;
     }
   });
   
@@ -7196,6 +7405,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       });
     }
   });
+  
   AST.Command.Path.Label.Above.Augment({
     labelmargin: AST.xypic.labelmargin
   });
