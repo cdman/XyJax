@@ -324,7 +324,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       this.id = id;
     },
     toString: function () {
-      return "=(" + this.id + ")";
+      return '="' + this.id + '"';
     }
   });
   // <pos2> ::= '=' <coord> '"' <id> '"'
@@ -334,7 +334,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       this.id = id;
     },
     toString: function () {
-      return "=(" + this.id + ")";
+      return "=(" + this.macro + ' "' + this.id + '")';
     }
   });
   // <pos2> ::= '=:' '"' <id> '"'
@@ -343,7 +343,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       this.id = id;
     },
     toString: function () {
-      return "=:(" + this.id + ")";
+      return '=:"' + this.id + '"';
     }
   });
   // <pos2> ::= '=@' '"' <id> '"'
@@ -352,7 +352,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       this.id = id;
     },
     toString: function () {
-      return "=:(" + this.id + ")";
+      return '=@"' + this.id + '"';
     }
   });
   
@@ -542,7 +542,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     	return AST.Place(
       	this.shaveP + that.shaveP,
         this.shaveC + that.shaveC,
-        (that.factor === undefined? this.factor : that.factor),
+        that.factor === undefined? this.factor : that.factor,
         that.slide);
     },
     toString: function () {
@@ -556,9 +556,9 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       if (this.factor !== undefined) {
       	desc += "(" + this.factor + ")";
       }
-      if (this.slide.dimen !== undefined) {
-      	desc += "/" + this.slide.dimen + "/";
-      }
+      this.slide.dimen.foreach(function (d) {
+        desc += "/" + d + "/";
+      });
       return desc;
     }
   });
@@ -588,11 +588,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     	this.dimen = dimen;
     },
     toString: function () {
-    	if (this.dimen === undefined) {
-      	return "";
-      } else {
-      	return dimen;
-      }
+      return this.dimen.getOrElse("");
     }
   });
   
@@ -1049,10 +1045,10 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   });
   AST.Command.Path.SetAfterAction = MathJax.Object.Subclass({
     Init: function (posDecor) {
-      this.stuff = posDecor;
+      this.posDecor = posDecor;
     },
     toString: function () {
-      return "~/{" + this.stuff + "}";
+      return "~/{" + this.posDecor + "}";
     }
   });
   // <path2> ::= '~' <which> '{' <labels> '}' <path2>(fc)
@@ -1073,7 +1069,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       return "~>{" + this.labels + "}";
     }
   });
-  AST.Command.Path.AddLabelLastEverySegment = MathJax.Object.Subclass({
+  AST.Command.Path.AddLabelEverySegment = MathJax.Object.Subclass({
     Init: function (labels) {
       this.labels = labels;
     },
@@ -1170,91 +1166,33 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   });
   // <label> ::= '^' <anchor> <it> <alias>?
   // <anchor> ::= '-' | <place>
-  AST.Command.Path.LabelAbove = MathJax.Object.Subclass({
+  // <it> ::= ( '[' <shape> ']' )* <it2>
+  // <it2> ::= <digit> | <letter>
+  //       |   '{' <text> '}'
+  //       |   '*' <object>
+  //       |   '@' <dir>
+  AST.Command.Path.Label = MathJax.Object.Subclass({
     Init: function (anchor, it, aliasOption) {
       this.anchor = anchor;
       this.it = it;
-      this.alias = aliasOption;
-    },
+      this.aliasOption = aliasOption;
+    }
+  });
+  AST.Command.Path.Label.Above = AST.Command.Path.Label.Subclass({
     toString: function () {
-      return "^" + this.anchor + " " + this.it + " " + this.alias;
+      return "^(" + this.anchor + " " + this.it + " " + this.aliasOption + ")";
     }
   });
   // <label> ::= '_' <anchor> <it> <alias>?
-  AST.Command.Path.LabelBelow = MathJax.Object.Subclass({
-    Init: function (anchor, it, aliasOption) {
-      this.anchor = anchor;
-      this.it = it;
-      this.alias = aliasOption;
-    },
+  AST.Command.Path.Label.Below = AST.Command.Path.Label.Subclass({
     toString: function () {
-      return "_" + this.anchor + " " + this.it + " " + this.alias;
+      return "_(" + this.anchor + " " + this.it + " " + this.aliasOption + ")";
     }
   });
   // <label> ::= '|' <anchor> <it> <alias>?
-  AST.Command.Path.LabelAt = MathJax.Object.Subclass({
-    Init: function (anchor, it, aliasOption) {
-      this.anchor = anchor;
-      this.it = it;
-      this.alias = aliasOption;
-    },
+  AST.Command.Path.Label.At = AST.Command.Path.Label.Subclass({
     toString: function () {
-      return "|" + this.anchor + " " + this.it + " " + this.alias;
-    }
-  });
-  
-  // <it> ::= ( '[' <shape> ']' )* <it2>
-  AST.Command.Path.It = MathJax.Object.Subclass({
-    Init: function (shapes, it) {
-      this.shapes = shapes;
-      this.it = it;
-    },
-    toString: function () {
-      return this.shapes.mkString("") + this.it;
-    }
-  });
-  AST.Command.Path.It.Shape = MathJax.Object.Subclass({
-    Init: function (shape) {
-      this.shape = shape;
-    },
-    toString: function () {
-      return "[" + this.shape + "]";
-    }
-  });
-  // <it2> ::= <digit> | <letter>
-  AST.Command.Path.It.Char = MathJax.Object.Subclass({
-    Init: function (char) {
-      this.char = char;
-    },
-    toString: function () {
-      return this.char.toString();
-    }
-  });
-  // <it2> ::= '{' <text> '}'
-  AST.Command.Path.It.Text = MathJax.Object.Subclass({
-    Init: function (text) {
-      this.text = text;
-    },
-    toString: function () {
-      return "{" + this.text + "}";
-    }
-  });
-  // <it2> ::= '*' <object>
-  AST.Command.Path.It.Object = MathJax.Object.Subclass({
-    Init: function (object) {
-      this.object = object;
-    },
-    toString: function () {
-      return "*" + this.object;
-    }
-  });
-  // <it2> ::= '@' <dir>
-  AST.Command.Path.It.Dir = MathJax.Object.Subclass({
-    Init: function (dir) {
-      this.dir = dir;
-    },
-    toString: function () {
-      return "@" + this.dir;
+      return "|(" + this.anchor + " " + this.it + " " + this.aliasOption + ")";
     }
   });
   
@@ -1269,6 +1207,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   var seq = FP.Parsers.seq;
   var or = FP.Parsers.or;
   var rep = function (x) { return FP.Parsers.lazyParser(x)().rep(); }
+  var rep1 = function (x) { return FP.Parsers.lazyParser(x)().rep1(); }
   var opt = function (x) { return FP.Parsers.lazyParser(x)().opt(); }
   var success = FP.Parsers.success;
   var memo = function (parser) {
@@ -1307,7 +1246,10 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     
     // <nonemptyPos> ::= <coord> <pos2>*
     nonemptyPos: memo(function () {
-      return seq(p.nonemptyCoord, rep(p.pos2)).to(function (cps) {
+      return or(
+        seq(p.nonemptyCoord, rep(p.pos2)),
+        seq(p.coord, rep1(p.pos2))
+      ).to(function (cps) {
         return AST.Pos.Coord(cps.head, cps.tail);
       });
     }),
@@ -1494,10 +1436,10 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     slide: memo(function () {
       return or(
         lit('/').andr(p.dimen).andl(flit('/')).to(function (d) {
-          return AST.Slide(d);
+          return AST.Slide(FP.Option.Some(d));
         }),
         success("no slide").to(function () {
-          return AST.Slide(undefined);
+          return AST.Slide(FP.Option.empty);
         })
       );
     }),
@@ -1577,17 +1519,18 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     
     // <math-text> ::= '{' <text> '}'
     mathText: memo(function () {
-      return lit("{").andr(p.text).andl(felem("}")).to(function (math) {
-        var mml = TEX.Parse(math).mml();
-        if (mml.inferred) {
-          mml = MML.apply(MathJax.ElementJax,mml.data);
-        } else {
-          mml = MML(mml);
-        }
-        TEX.combineRelations(mml.root);
-        return AST.ObjectBox.Text(mml.root);
-      });
+      return lit("{").andr(p.text).andl(felem("}")).to(p.toMath);
     }),
+    toMath: function (math) {
+      var mml = TEX.Parse(math).mml();
+      if (mml.inferred) {
+        mml = MML.apply(MathJax.ElementJax, mml.data);
+      } else {
+        mml = MML(mml);
+      }
+      TEX.combineRelations(mml.root);
+      return AST.ObjectBox.Text(mml.root);
+    },
     
     // <text> ::= /[^{}]*/ ( '{' <text> '}' /[^{}]*/ )*
     text: memo(function () {
@@ -1961,7 +1904,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
           return AST.Command.Path.AddLabelLastSegmentOnly(ls.head.tail);
         }),
         seq('~', '+', '{', p.labels, '}').to(function (ls) {
-          return AST.Command.Path.AddLabelLastEverySegment(ls.head.tail);
+          return AST.Command.Path.AddLabelEverySegment(ls.head.tail);
         }),
         seq("'", p.segment).to(function (s) {
           return AST.Command.Path.StraightSegment(s.tail);
@@ -1999,9 +1942,22 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     
     // <segment> ::= <nonempty-pos> <slide> <labels>
     segment: memo(function () {
-      return p.nonemptyPos().and(p.slide).and(p.labels).to(function (psl) {
+      return p.nonemptyPos().and(p.pathSlide).and(p.labels).to(function (psl) {
         return AST.Command.Path.Segment(psl.head.head, psl.head.tail, psl.tail);
       });
+    }),
+    
+    // <slide> ::= '<' <dimen> '>'
+    //         | <empty>
+    pathSlide: memo(function () {
+      return or(
+        lit('<').andr(p.dimen).andl(flit('>')).to(function (d) {
+          return AST.Slide(FP.Option.Some(d));
+        }),
+        success("no slide").to(function () {
+          return AST.Slide(FP.Option.empty);
+        })
+      );
     }),
     
     // <labels> ::= <label>*
@@ -2017,13 +1973,13 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     label: memo(function () {
       return or(
         seq('^', p.anchor, p.it, p.alias).to(function (aia) {
-          return AST.Command.Path.LabelAbove(aia.head.head.tail, aia.head.tail, aia.tail);
+          return AST.Command.Path.Label.Above(AST.Pos.Place(aia.head.head.tail), aia.head.tail, aia.tail);
         }),
         seq('_', p.anchor, p.it, p.alias).to(function (aia) {
-          return AST.Command.Path.LabelBelow(aia.head.head.tail, aia.head.tail, aia.tail);
+          return AST.Command.Path.Label.Below(aAST.Pos.Place(aia.head.head.tail), aia.head.tail, aia.tail);
         }),
         seq('|', p.anchor, p.it, p.alias).to(function (aia) {
-          return AST.Command.Path.LabelAt(aia.head.head.tail, aia.head.tail, aia.tail);
+          return AST.Command.Path.Label.At(AST.Pos.Place(aia.head.head.tail), aia.head.tail, aia.tail);
         })
       );
     }),
@@ -2032,7 +1988,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     anchor: memo(function () {
       return or(
         lit('-').andr(p.anchor).to(function (a) {
-          return AST.Place(1, 1, 0.5, undefined).compound(a);
+          return AST.Place(1, 1, AST.Place.Factor(0.5), undefined).compound(a);
         }),
         p.place
       );
@@ -2040,8 +1996,10 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     
     // <it> ::= ( '[' <shape> ']' )* <it2>
     it: memo(function () {
-      return rep(lit('[').andr(p.shape).andl(flit(']'))).and(p.it2).to(function (si) {
-        return AST.Command.Path.It(si.head, si.tail);
+      return rep(lit('[').andr(p.shape).andl(flit(']')).to(function (s) {
+        return AST.Modifier.Shape(s);
+      })).and(p.it2).to(function (si) {
+        return AST.Object(si.head.concat(si.tail.modifiers), si.tail.object);
       });
     }),
     
@@ -2052,16 +2010,14 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     it2: memo(function () {
       return or(
         regexLit(/^[0-9a-zA-Z]/).to(function (c) {
-          return AST.Command.Path.It.Char(c);
+          return AST.Object(FP.List.empty, p.toMath("\\scriptstyle "+c));
         }),
-        p.mathText().to(function (t) {
-          return AST.Command.Path.It.Text(t);
+        lit("{").andr(p.text).andl(felem("}")).to(function (t) {
+          return AST.Object(FP.List.empty, p.toMath("\\scriptstyle "+t));
         }),
-        lit('*').andr(p.object).to(function (obj) {
-          return AST.Command.Path.It.Object(obj);
-        }),
+        lit('*').andr(p.object),
         lit('@').andr(p.dir).to(function (dir) {
-          return AST.Command.Path.It.Dir(dir);
+          return AST.Object(FP.List.empty, dir);
         })
       );
     }),
@@ -2370,7 +2326,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     jot: HTMLCSS.length2em("3pt"),
     objectmargin: HTMLCSS.length2em("3pt"),
     objectwidth: HTMLCSS.length2em("0pt"),
-    objectheight: HTMLCSS.length2em("0pt")
+    objectheight: HTMLCSS.length2em("0pt"),
+    labelmargin: HTMLCSS.length2em("4pt"),
   });
   
   xypic.Util = MathJax.Object.Subclass({}, {
@@ -5217,24 +5174,17 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   }, {
     originPosition: xypic.Frame.Point(0, 0),
     copyFields: function (from, to) {
-      to.origin = from.origin;
-      to.xBase = from.xBase;
-      to.yBase = from.yBase;
+      for (var attr in from) {
+        if (from.hasOwnProperty(attr)) {
+          to[attr] = from[attr];
+        }
+      }
       to.savedPosition = {};
       for (var id in from.savedPosition) {
         if (from.savedPosition.hasOwnProperty(id)) {
           to.savedPosition[id] = from.savedPosition[id];
         }
       }
-      to.stateStack = from.stateStack;
-      to.stackFrames = from.stackFrames;
-      to.stack = from.stack;
-      to.angle = from.angle;
-      to.mostRecentLine = from.mostRecentLine;
-      to.p = from.p;
-      to.c = from.c;
-      to.shouldCapturePos = from.shouldCapturePos;
-      to.capturedPositions = from.capturedPositions;
     },
   });
   
@@ -5354,7 +5304,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
           }
         }
         
-        dimen = HTMLCSS.length2em(place.slide.dimen || "0");
+        dimen = HTMLCSS.length2em(place.slide.dimen.getOrElse("0"));
         var jot = AST.xypic.jot;
         var slideEm = dimen + (jotP - jotC) * jot;
         var posAngle = env.mostRecentLine.posAngle(shouldShaveP, shouldShaveC, f, slideEm);
@@ -5767,7 +5717,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.ObjectBox.Cir.Augment({
-  	drop: function (svg, env, modifiers) {
+  	drop: function (svg, env, modifiers, hidden) {
       if (env.c === undefined) {
         return undefined;
       }
@@ -5783,6 +5733,9 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     	// modification
     	// TODO: '!'に対応させる。objectの大きさを元に、描画の位置を調整することになるため、ここでは遅い。
       modifiers.foreach(function (m) { c = m.postprocess(c, env); });
+      if (!hidden) {
+        env.c = c;
+      }
       return c;
     },
   	connect: function (svg, env, modifiers) {
@@ -5896,7 +5849,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.ObjectBox.Dir.Augment({
-  	drop: function (svg, env, modifiers) {
+  	drop: function (svg, env, modifiers, hidden) {
       if (env.c === undefined) {
         return undefined;
       }
@@ -7094,43 +7047,89 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Command.Path.Path.Augment({
     draw: function (svg, env) {
-      // TODO: impl
+      env.pathActionForBeforeSegment = FP.Option.empty;
+      env.pathActionForAfterSegment = FP.Option.empty;
+      env.labelsForNextSegmentOnly = FP.Option.empty;
+      env.labelsForLastSegmentOnly = FP.Option.empty;
+      env.labelsForEverySegment = FP.Option.empty;
+      env.segmentSlideEm = 0;
+      env.prevSegmentEndPoint = env.c;
+      
+      this.pathElements.foreach(function (e) {
+        e.draw(svg, env);
+      });
     }
   });
   
   AST.Command.Path.SetBeforeAction.Augment({
     draw: function (svg, env) {
-      // TODO: impl
+      env.pathActionForBeforeSegment = FP.Option.Some(this.posDecor);
     }
   });
   
   AST.Command.Path.SetAfterAction.Augment({
     draw: function (svg, env) {
-      // TODO: impl
+      env.pathActionForAfterSegment = FP.Option.Some(this.posDecor);
     }
   });
   
   AST.Command.Path.AddLabelNextSegmentOnly.Augment({
     draw: function (svg, env) {
-      // TODO: impl
+      env.labelsForNextSegmentOnly = FP.Option.Some(this.labels);
     }
   });
   
   AST.Command.Path.AddLabelLastSegmentOnly.Augment({
     draw: function (svg, env) {
-      // TODO: impl
+      env.labelsForLastSegmentOnly = FP.Option.Some(this.labels);
     }
   });
   
-  AST.Command.Path.AddLabelLastEverySegment.Augment({
+  AST.Command.Path.AddLabelEverySegment.Augment({
     draw: function (svg, env) {
-      // TODO: impl
+      env.labelsForEverySegment = FP.Option.Some(this.labels);
     }
   });
   
   AST.Command.Path.StraightSegment.Augment({
     draw: function (svg, env) {
-      // TODO: impl
+      this.segment.setupPositions(svg, env);
+      env.pathActionForBeforeSegment.foreach(function (action) {
+        action.draw(svg, env);
+      });
+      env.pathActionForAfterSegment.foreach(function (action) {
+        action.draw(svg, env);
+      });
+      env.labelsForNextSegmentOnly.foreach(function (labels) {
+        labels.draw(svg, env)
+        env.labelsForNextSegmentOnly = FP.Option.empty;
+      });
+      env.labelsForEverySegment.foreach(function (labels) {
+        labels.draw(svg, env)
+      });
+    }
+  });
+  
+  AST.Command.Path.LastSegment.Augment({
+    draw: function (svg, env) {
+      this.segment.setupPositions(svg, env);
+      env.pathActionForBeforeSegment.foreach(function (action) {
+        action.draw(svg, env);
+      });
+      env.pathActionForAfterSegment.foreach(function (action) {
+        action.draw(svg, env);
+      });
+      env.labelsForNextSegmentOnly.foreach(function (labels) {
+        labels.draw(svg, env)
+        env.labelsForNextSegmentOnly = FP.Option.empty;
+      });
+      env.labelsForLastSegmentOnly.foreach(function (labels) {
+        labels.draw(svg, env)
+        env.labelsForNextSegmentOnly = FP.Option.empty;
+      });
+      env.labelsForEverySegment.foreach(function (labels) {
+        labels.draw(svg, env)
+      });
     }
   });
   
@@ -7140,10 +7139,73 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     }
   });
   
-  AST.Command.Path.LastSegment.Augment({
-    draw: function (svg, env) {
-      // TODO: impl
+  AST.Command.Path.Segment.Augment({
+    setupPositions: function (svg, env) {
+      var p = env.prevSegmentEndPoint;
+      this.pos.draw(svg, env);
+      var c = env.c;
+      
+      this.slide.dimen.foreach(function (d) {
+        env.segmentSlideEm = HTMLCSS.length2em(d);
+      });
+      if (env.segmentSlideEm !== 0) {
+        tx = c.x - p.x;
+        ty = c.y - p.y;
+        var angle = Math.atan2(ty, tx) + Math.PI/2;
+        var px = env.segmentSlideEm * Math.cos(angle);
+        var py = env.segmentSlideEm * Math.sin(angle);
+        p = p.move(p.x + px, p.y + py);
+        c = c.move(c.x + px, c.y + py);
+      }
+      
+      env.p = p;
+      env.c = c;
+      var s = env.p.edgePoint(c.x, c.y);
+      var e = env.c.edgePoint(p.x, p.y);
+      env.mostRecentLine = xypic.MostRecentLine.Line(s, e, p, c);
+      
+      this.labels.draw(svg, env)
+      
+      env.p = p;
+      env.c = c;
+      env.prevSegmentEndPoint = c;
     }
+  });
+  
+  AST.Command.Path.Labels.Augment({
+    draw: function (svg, env) {
+      this.labels.foreach(function (label) {
+        label.draw(svg, env);
+      });
+    }
+  });
+  
+  AST.Command.Path.Label.Augment({
+    draw: function (svg, env) {
+      var p = env.p;
+      var c = env.c;
+      this.anchor.draw(svg, env);
+      var labelmargin = this.labelmargin;
+      if (labelmargin !== 0) {
+        var angle = Math.atan2(c.y - p.y, c.x - p.x) + Math.PI/2;
+        env.c = env.c.move(env.c.x + labelmargin * Math.cos(angle), env.c.y + labelmargin * Math.sin(angle));
+      }
+      this.it.drop(svg, env);
+      this.aliasOption.foreach(function (alias) {
+        env.savePos(alias, xypic.Saving.Position(env.c));
+      });
+    }
+  });
+  AST.Command.Path.Label.Above.Augment({
+    labelmargin: AST.xypic.labelmargin
+  });
+  
+  AST.Command.Path.Label.Below.Augment({
+    labelmargin: -AST.xypic.labelmargin
+  });
+  
+  AST.Command.Path.Label.At.Augment({
+    labelmargin: 0
   });
   
   MathJax.Hub.Startup.signal.Post("HTML-CSS Xy-pic Ready");
