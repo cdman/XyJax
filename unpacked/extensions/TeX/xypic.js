@@ -855,6 +855,14 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
   	toString: function () { return "c"; }
   });
   
+  // <modifier> ::= <nonempty-direction>
+  AST.Modifier.Direction = MathJax.Object.Subclass({
+    Init: function (direction) {
+      this.direction = direction;
+    },
+  	toString: function () { return this.direction.toString(); }
+  });
+  
   // <direction>
   AST.Direction = MathJax.Object.Subclass({});
   // <direction> ::= <direction0> <direction1>*
@@ -880,6 +888,13 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     	this.vector = vector;
     },
     toString: function () { return "v" + this.vector.toString(); }
+  });
+  // <direction0> ::= 'q' '{' <pos> <decor> '}'
+  AST.Direction.ConstructVector = MathJax.Object.Subclass({
+  	Init: function (posDecor) {
+    	this.posDecor = posDecor;
+    },
+    toString: function () { return "q{" + this.posDecor.toString() + "}"; }
   });
   // <direction1> ::= ':' <vector>
   AST.Direction.RotVector = MathJax.Object.Subclass({
@@ -1747,6 +1762,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     // <modifier> ::= '!' <vector>
     //            |   '[' <shape> ']'
     //            |   <add-op> <size>
+    //            |   <nonemptyDirection>
     modifier: memo(function () {
     	return or(
         lit("!").andr(p.vector).to(function (v) {
@@ -1755,11 +1771,12 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         lit("[").andr(p.shape).andl(flit("]")).to(function (s) {
         	return AST.Modifier.Shape(s);
         }),
-        function () {
-          return p.addOp().and(p.size).to(function (os) {
-            return AST.Modifier.AddOp(os.head, os.tail);
-          })
-        }
+        p.addOp().and(p.size).to(function (os) {
+          return AST.Modifier.AddOp(os.head, os.tail);
+        }),
+        p.nonemptyDirection().to(function (d) {
+          return AST.Modifier.Direction(d);
+        })
       );
     }),
     
@@ -1801,11 +1818,13 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     }),
     
     // <direction> ::= <direction0> <direction1>*
-    // <direction0> ::= <diag>
-    //              | 'v' <vector>
+    // <direction0> ::= <direction2>
+    //              |   <diag>
     // <direction1> | ':' <vector>
     //              | '_'
     //              | '^'
+    // <direction2> ::= 'v' <vector>
+    //              |   'q' '{' <pos> <decor> '}'
     direction: memo(function () {
       return seq(p.direction0, rep(p.direction1)).to(function (drs){
         return AST.Direction.Compound(drs.head, drs.tail);
@@ -1813,9 +1832,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
     }),
     direction0: memo(function () {
       return or(
-        lit('v').andr(p.vector).to(function (v) {
-          return AST.Direction.Vector(v);
-        }),
+        p.direction2,
         p.diag().to(function (d) {
           return AST.Direction.Diag(d);
         })
@@ -1834,22 +1851,60 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         })
       );
     }),
+    direction2: memo(function () {
+      return or(
+        lit('v').andr(p.vector).to(function (v) {
+          return AST.Direction.Vector(v);
+        }),
+        lit('q').andr(flit('{')).andr(p.posDecor).andl(flit('}')).to(function (pd) {
+          return AST.Direction.ConstructVector(pd);
+        })
+      );
+    }),
     
-    // <diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
-    //        | <empty>
-    diag: memo(fun(or(
-      regexLit(/^(ld|dl)/).to(function (x) { return AST.Diag.LD(); }),
-      regexLit(/^(rd|dr)/).to(function (x) { return AST.Diag.RD(); }),
-      regexLit(/^(lu|ul)/).to(function (x) { return AST.Diag.LU(); }),
-      regexLit(/^(ru|ur)/).to(function (x) { return AST.Diag.RU(); }),
-      lit('l').to(function (x) { return AST.Diag.L(); }),
-      lit('r').to(function (x) { return AST.Diag.R(); }),
-      lit('d').to(function (x) { return AST.Diag.D(); }),
-      lit('u').to(function (x) { return AST.Diag.U(); }),
-      success("empty").to(function (x) {
-        return AST.Diag.Default();
-      })
-    ))),
+    // <nonempty-direction> ::= <nonempty-direction0> <direction1>*
+    //                      |   <direction0> <direction1>+
+    // <nonempty-direction0> ::= <nonempty-diag>
+    //                       |   <direction2>
+    nonemptyDirection: memo(function () {
+      return or(
+        seq(p.nonemptyDirection0, rep(p.direction1)),
+        seq(p.direction0, rep1(p.direction1))
+      ).to(function (drs){
+        return AST.Direction.Compound(drs.head, drs.tail);
+      });
+    }),
+    nonemptyDirection0: memo(function () {
+      return or(
+        p.direction2,
+        p.nonemptyDiag().to(function (d) {
+          return AST.Direction.Diag(d);
+        })
+      );
+    }),
+    
+    // <diag> ::= <nonempty-diag> | <empty>
+    // <nonempty-diag> ::= 'l' | 'r' | 'd' | 'u' | 'ld' | 'rd' | 'lu' | 'ru'
+    diag: memo(function () {
+      return or(
+        p.nonemptyDiag,
+        success("empty").to(function (x) {
+          return AST.Diag.Default();
+        })
+      );
+    }),
+    nonemptyDiag: memo(function () {
+      return or(
+        regexLit(/^(ld|dl)/).to(function (x) { return AST.Diag.LD(); }),
+        regexLit(/^(rd|dr)/).to(function (x) { return AST.Diag.RD(); }),
+        regexLit(/^(lu|ul)/).to(function (x) { return AST.Diag.LU(); }),
+        regexLit(/^(ru|ur)/).to(function (x) { return AST.Diag.RU(); }),
+        lit('l').to(function (x) { return AST.Diag.L(); }),
+        lit('r').to(function (x) { return AST.Diag.R(); }),
+        lit('d').to(function (x) { return AST.Diag.D(); }),
+        lit('u').to(function (x) { return AST.Diag.U(); })
+      );
+    }),
     
     // <decor> ::= <command>*
     decor: memo(function () {
@@ -5597,7 +5652,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   AST.ObjectBox.Text.Augment({
   	drop: function (svg, env, modifiers, hidden) {
     	// modification
-      modifiers.foreach(function (m) { m.preprocess(env); });
+      modifiers.foreach(function (m) { m.preprocess(svg, env); });
       
     	var span, stack, base, math;
       math = this.math;
@@ -5675,7 +5730,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
     	// modification
     	// TODO: '!'に対応させる。objectの大きさを元に、描画の位置を調整することになるため、ここでは遅い。
-      modifiers.foreach(function (m) { c = m.postprocess(c, env); });
+      modifiers.foreach(function (m) { c = m.postprocess(c, svg, env); });
       if (!hidden) {
         env.c = c;
       }
@@ -5748,9 +5803,9 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
       
     	// modification
-      modifiers.foreach(function (m) { m.preprocess(env); });
+      modifiers.foreach(function (m) { m.preprocess(svg, env); });
       
-      var r = this.radius.radius(env);
+      var r = this.radius.radius(svg, env);
       var x = env.c.x;
       var y = env.c.y;
       c = this.cir.draw(svg, env, x, y, r);
@@ -5760,7 +5815,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       
     	// modification
     	// TODO: '!'に対応させる。objectの大きさを元に、描画の位置を調整することになるため、ここでは遅い。
-      modifiers.foreach(function (m) { c = m.postprocess(c, env); });
+      modifiers.foreach(function (m) { c = m.postprocess(c, svg, env); });
       if (!hidden) {
         env.c = c;
       }
@@ -5773,12 +5828,12 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.ObjectBox.Cir.Radius.Vector.Augment({
-    radius: function (env) {
-      return this.vector.xy(env).x;
+    radius: function (svg, env) {
+      return this.vector.xy(svg, env).x;
     }
   });
   AST.ObjectBox.Cir.Radius.Default.Augment({
-    radius: function (env) {
+    radius: function (svg, env) {
       return env.c.r;
     }
   });
@@ -5896,7 +5951,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         return undefined;
       }
       
-      modifiers.foreach(function (m) { m.preprocess(env); });
+      modifiers.foreach(function (m) { m.preprocess(svg, env); });
       
       var t = AST.xypic.thickness;
       var g = svg.createGroup(svg.transformBuilder().translate(env.c.x,env.c.y).rotateRadian(env.angle));
@@ -6134,7 +6189,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
 //      })
       
     	// modification
-      modifiers.foreach(function (m) { c = m.postprocess(c, env); });
+      modifiers.foreach(function (m) { c = m.postprocess(c, svg, env); });
       return c;
     },
     connect: function (svg, env, modifiers) {
@@ -6579,7 +6634,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Coord.Vector.Augment({
     position: function (svg, env) {
-    	var xy = this.vector.xy(env);
+    	var xy = this.vector.xy(svg, env);
     	return xypic.Frame.Point(xy.x, xy.y);
     }
   });
@@ -6612,32 +6667,32 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.Vector.InCurBase.Augment({
-    xy: function (env) {
+    xy: function (svg, env) {
     	return env.absVector(this.x, this.y);
     },
-    angle: function (env) {
+    angle: function (svg, env) {
     	var xy = env.absVector(this.x, this.y);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Vector.Abs.Augment({
-    xy: function (env) {
+    xy: function (svg, env) {
     	return {x:HTMLCSS.length2em(this.x), y:HTMLCSS.length2em(this.y)};
     },
-    angle: function (env) {
-    	var xy = this.xy(env);
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Vector.Angle.Augment({
-    xy: function (env) {
+    xy: function (svg, env) {
       var angle = Math.PI/180*this.degree;
     	var xy = env.absVector(Math.cos(angle), Math.sin(angle));
       return xy;
     },
-    angle: function (env) {
+    angle: function (svg, env) {
       var angle = Math.PI/180*this.degree;
     	var xy = env.absVector(Math.cos(angle), Math.sin(angle));
     	return Math.atan2(xy.y, xy.x);
@@ -6645,211 +6700,211 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.Vector.Dir.Augment({
-    xy: function (env) {
+    xy: function (svg, env) {
     	var l = HTMLCSS.length2em(this.dimen);
-      var angle = this.dir.angle(env);
+      var angle = this.dir.angle(svg, env);
       return {x:l*Math.cos(angle), y:l*Math.sin(angle)};
     },
-    angle: function (env) {
-    	return this.dir.angle(env);
+    angle: function (svg, env) {
+    	return this.dir.angle(svg, env);
     }
   });
   
   AST.Vector.Corner.Augment({
-    xy: function (env) {
-    	var xy = this.corner.xy(env);
+    xy: function (svg, env) {
+    	var xy = this.corner.xy(svg, env);
       return {x:xy.x*this.factor, y:xy.y*this.factor};
     },
-    angle: function (env) {
-    	return this.corner.angle(env);
+    angle: function (svg, env) {
+    	return this.corner.angle(svg, env);
     }
   });
   
   AST.Corner.L.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:-c.l, y:0};
     },
-    angle: function (env) {
+    angle: function (svg, env) {
     	return Math.PI;
     }
   });
   
   AST.Corner.R.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:c.r, y:0};
     },
-    angle: function (env) {
+    angle: function (svg, env) {
     	return 0;
     }
   });
   
   AST.Corner.D.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:0, y:-c.d};
     },
-    angle: function (env) {
+    angle: function (svg, env) {
     	return -Math.PI/2;
     }
   });
   
   AST.Corner.U.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:0, y:c.u};
     },
-    angle: function (env) {
+    angle: function (svg, env) {
     	return Math.PI/2;
     }
   });
   
   AST.Corner.CL.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:-c.l, y:(c.u-c.d)/2};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.CR.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:c.r, y:(c.u-c.d)/2};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.CD.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:(c.r-c.l)/2, y:-c.d};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.CU.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:(c.r-c.l)/2, y:c.u};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.LU.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:-c.l, y:c.u};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.LD.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:-c.l, y:-c.d};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.RU.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:c.r, y:c.u};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.RD.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:c.r, y:-c.d};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.NearestEdgePoint.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       var e = c.edgePoint(env.p.x, env.p.y);  
       return {x:e.x-c.x, y:e.y-c.y};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.PropEdgePoint.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       var e = c.proportionalEdgePoint(env.p.x, env.p.y);
       return {x:e.x-c.x, y:e.y-c.y};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.atan2(xy.y, xy.x);
     }
   });
   
   AST.Corner.Axis.Augment({
-  	xy: function (env) {
+  	xy: function (svg, env) {
     	var c = env.c;
       return {x:0, y:(c.u-c.d)/2};
     },
-    angle: function (env) {
-    	var xy = this.xy();
+    angle: function (svg, env) {
+    	var xy = this.xy(svg, env);
     	return Math.PI/2;
     }
   });
   
   AST.Modifier.Vector.Augment({
-  	preprocess: function (env) {
-    	var d = this.vector.xy(env);
+  	preprocess: function (svg, env) {
+    	var d = this.vector.xy(svg, env);
       env.c = env.c.move(env.c.x - d.x, env.c.y - d.y);
     },
-    postprocess: function (c, env) {
+    postprocess: function (c, svg, env) {
     	return c;
     }
   });
   
   AST.Modifier.Shape.Augment({
-  	preprocess: function (env) {
-    	this.shape.preprocess(env);
+  	preprocess: function (svg, env) {
+    	this.shape.preprocess(svg, env);
     },
-    postprocess: function (c, env) {
-    	return this.shape.postprocess(c, env);
+    postprocess: function (c, svg, env) {
+    	return this.shape.postprocess(c, svg, env);
     }
   });
   
   AST.Modifier.Shape.Point.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
     	var mc = xypic.Frame.Point(c.x, c.y);
       env.c = mc;
       return mc;
@@ -6857,108 +6912,117 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.Modifier.Shape.Rect.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
     	return c;
     }
   });
   
   AST.Modifier.Shape.Circle.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
     	return xypic.Frame.Circle(c.x, c.y, Math.max(c.l, c.r, c.u, c.d));
     }
   });
   
   AST.Modifier.Shape.L.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
     	// TODO: impl [l]
     	return c;
     }
   });
   
   AST.Modifier.Shape.R.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
     	// TODO: impl [r]
     	return c;
     }
   });
   
   AST.Modifier.Shape.U.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
     	// TODO: impl [u]
     	return c;
     }
   });
   
   AST.Modifier.Shape.D.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
     	// TODO: impl [d]
     	return c;
     }
   });
   
   AST.Modifier.Shape.C.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
     	// TODO: impl [c]
     	return c;
     }
   });
   
+  AST.Modifier.Direction.Augment({
+  	preprocess: function (svg, env) {
+      env.angle = this.direction.angle(svg, env);
+    },
+    postprocess: function (c, svg, env) {
+    	return c;
+    }
+  });
+  
   AST.Modifier.AddOp.Augment({
-  	preprocess: function (env) {},
-    postprocess: function (c, env) {
-    	return this.op.postprocess(this.size, c, env);
+  	preprocess: function (svg, env) {},
+    postprocess: function (c, svg, env) {
+    	return this.op.postprocess(this.size, c, svg, env);
     }
   });
   AST.Modifier.AddOp.Grow.Augment({
-    postprocess: function (size, c, env) {
+    postprocess: function (size, c, svg, env) {
       var margin = (size.isDefault?
         {x:2*AST.xypic.objectmargin, y:2*AST.xypic.objectmargin}:
-        size.vector.xy(env));
+        size.vector.xy(svg, env));
     	var xMargin = Math.abs(margin.x/2);
     	var yMargin = Math.abs(margin.y/2);
       return c.grow(xMargin, yMargin);
     }
   });
   AST.Modifier.AddOp.Shrink.Augment({
-    postprocess: function (size, c, env) {
+    postprocess: function (size, c, svg, env) {
       var margin = (size.isDefault?
         {x:2*AST.xypic.objectmargin, y:2*AST.xypic.objectmargin}:
-        size.vector.xy(env));
+        size.vector.xy(svg, env));
     	var xMargin = -Math.abs(margin.x/2);
     	var yMargin = -Math.abs(margin.y/2);
       return c.grow(xMargin, yMargin);
     }
   });
   AST.Modifier.AddOp.Set.Augment({
-    postprocess: function (size, c, env) {
+    postprocess: function (size, c, svg, env) {
       var margin = (size.isDefault?
         {x:AST.xypic.objectwidth, y:AST.xypic.objectheight}:
-        size.vector.xy(env));
+        size.vector.xy(svg, env));
     	var width = Math.abs(margin.x);
     	var height = Math.abs(margin.y);
       return c.toSize(width, height);
     }
   });
   AST.Modifier.AddOp.GrowTo.Augment({
-    postprocess: function (size, c, env) {
+    postprocess: function (size, c, svg, env) {
       var l = Math.max(c.l+c.r, c.u+c.d);
-      var margin = (size.isDefault? {x:l, y:l} : size.vector.xy(env));
+      var margin = (size.isDefault? {x:l, y:l} : size.vector.xy(svg, env));
     	var width = Math.abs(margin.x);
     	var height = Math.abs(margin.y);
       return c.growTo(width, height);
     }
   });
   AST.Modifier.AddOp.ShrinkTo.Augment({
-    postprocess: function (size, c, env) {
+    postprocess: function (size, c, svg, env) {
       var l = Math.min(c.l+c.r, c.u+c.d);
-      var margin = (size.isDefault? {x:l, y:l} : size.vector.xy(env));
+      var margin = (size.isDefault? {x:l, y:l} : size.vector.xy(svg, env));
     	var width = Math.abs(margin.x);
     	var height = Math.abs(margin.y);
       return c.shrinkTo(width, height);
@@ -6966,28 +7030,46 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   
   AST.Direction.Compound.Augment({
-  	angle: function (env) {
-    	var angle = this.dir.angle(env);
+  	angle: function (svg, env) {
+    	var angle = this.dir.angle(svg, env);
       this.rots.foreach(function (rot) { angle = rot.rotate(angle, env); });
       return angle;
     }
   });
   
   AST.Direction.Diag.Augment({
-  	angle: function (env) {
-    	return this.diag.angle(env);
+  	angle: function (svg, env) {
+    	return this.diag.angle(svg, env);
     }
   });
   
   AST.Direction.Vector.Augment({
-  	angle: function (env) {
-    	return this.vector.angle(env);
+  	angle: function (svg, env) {
+    	return this.vector.angle(svg, env);
+    }
+  });
+  
+  AST.Direction.ConstructVector.Augment({
+  	angle: function (svg, env) {
+      var origin = env.origin;
+      var xBase = env.xBase;
+      var yBase = env.yBase;
+      var p = env.p;
+      var c = env.c;
+      this.posDecor.draw(svg, env);
+      var angle = Math.atan2(env.c.y - env.p.y, env.c.x - env.p.x);
+      env.c = c;
+      env.p = p;
+      env.origin = origin;
+      env.xBase = xBase;
+      env.yBase = yBase;
+      return angle;
     }
   });
   
   AST.Direction.RotVector.Augment({
   	rotate: function (angle, env) {
-      return angle + this.vector.angle(env);
+      return angle + this.vector.angle(svg, env);
     }
   });
   
@@ -7005,14 +7087,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   AST.Diag.Default.Augment({
     isEmpty: true,
-  	angle: function (env) {
+  	angle: function (svg, env) {
     	return env.angle;
     }
   });
     
   AST.Diag.Angle.Augment({
     isEmpty: false,
-  	angle: function (env) {
+  	angle: function (svg, env) {
     	return this.ang;
     }
   });

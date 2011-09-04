@@ -39,39 +39,43 @@ Xy-picの例$(\begin{xy}(0,0);<1cm,10mm>**@{} ?>*@3{>}\end{xy})$です。
 (2,0) *+{1} *\cir<.6pc>{}="1",
 (3,0) *+{2} *\cir<.6pc>{}="2",
 (4,0) *+{3} *\cir<.45pc>{}*\cir<.6pc>{}="3",
-0*+{start}="start",
 
+0*+{start}="start"
 \PATH ~={**@{-}} ~+{|>*@{>}}
-'"0" ^{\varepsilon}
+'"0"
 '"1" _A
 '"2" ^B
-"3" ^A
- 
-\POS "0"+/ru 1em/*{B}, "0"
-\PATH ~={**@{-}} ~>{|>*@{>}}
-`r^d/.7pc "0" <1pt>
-"0"
+"3" ^B
 
 \POS "3"
 \PATH ~={**@{-}} ~>{|>*@{>}}
-`ru^l "0" <-2pt>
+`ru^l "0" <-1pt>
 `^rd "0" _B
 "0"
 
 \POS "3"
 \PATH ~={**@{-}} ~>{|>*@{>}}
-`rd_l "1" <2pt>
+`rd_l "1" <1pt>
 `_ru "1"
 "1"
 
 \POS "2"
 \PATH ~={**@{-}} ~>{|>*@{>}}
-`rd_l "1" <2pt>
+`rd_l "1" <1pt>
 `_ru "1" _A
 "1"
+
+\POS "0"+/ru 1.2pc/*{\scriptstyle B}, "0"
+\PATH ~={**@{-}}
+`r^d/.7pc "0" <1pt>
+"0" |>*@{>}
+
+\POS "1"+/rd 1.2pc/*{\scriptstyle A}, "1"
+\PATH ~={**@{-}}
+`r_u/.7pc "1" <-1pt>
+"1" |>*u@{>}
 \end{xy}
 \]
-
 
 \[
 \begin{xy}
@@ -99,26 +103,11 @@ Xy-picの例$(\begin{xy}(0,0);<1cm,10mm>**@{} ?>*@3{>}\end{xy})$です。
 
 \[
 \begin{xy}
-\xyshowAST{
-<4pc,0pc>:(0,0)
-*+{base}="base"
-\PATH ~={**@{-} ?>*@{>}}
-`l (-1,-1)*{A} ^a="a"
-` (1,-1)*{B} ^b
-`_ul (1,0)*{C} ^c
-`ul^l "base" ^d
-"base" ^e
-}
-\end{xy}
-\]
-
-\[
-\begin{xy}
 *+{A} *\cir<10pt>{}="me"
 \PATH
 ~={**@{-}}
 `ul^ur/12pt, "me" <3pt>
-"me" |>*@{>}
+"me" |>*v(1,1)@{>}
 \end{xy}
 \]
 

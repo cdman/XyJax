@@ -711,7 +711,7 @@ Source code:
 [[Samples]]
 </pre>
 </div>
-<div title="DeterministicFiniteAutomata" creator="isao" modifier="isao" created="201109031827" modified="201109031916" tags="Sample" changecount="107">
+<div title="DeterministicFiniteAutomata" creator="isao" modifier="isao" created="201109031827" modified="201109040606" tags="Sample" changecount="108">
 <pre>\[
 \begin{xy}
 &lt;3pc,0pc&gt;:(0,0),
@@ -719,8 +719,8 @@ Source code:
 (2,0) *+{1} *\cir&lt;.6pc&gt;{}=&quot;1&quot;,
 (3,0) *+{2} *\cir&lt;.6pc&gt;{}=&quot;2&quot;,
 (4,0) *+{3} *\cir&lt;.45pc&gt;{}*\cir&lt;.6pc&gt;{}=&quot;3&quot;,
-0*+{start}=&quot;start&quot;,
 
+0*+{start}=&quot;start&quot;
 \PATH ~={**@{-}} ~+{|&gt;*@{&gt;}}
 '&quot;0&quot;
 '&quot;1&quot; _A
@@ -765,8 +765,8 @@ Source Code:
 (2,0) *+{1} *\cir&lt;.6pc&gt;{}=&quot;1&quot;,
 (3,0) *+{2} *\cir&lt;.6pc&gt;{}=&quot;2&quot;,
 (4,0) *+{3} *\cir&lt;.45pc&gt;{}*\cir&lt;.6pc&gt;{}=&quot;3&quot;,
-0*+{start}=&quot;start&quot;,
 
+0*+{start}=&quot;start&quot;
 \PATH ~={**@{-}} ~+{|&gt;*@{&gt;}}
 '&quot;0&quot;
 '&quot;1&quot; _A
@@ -1802,7 +1802,7 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 /*}}}*/
 </pre>
 </div>
-<div title="ToDo" creator="isao" modifier="isao" created="201108061802" modified="201109031818" changecount="22">
+<div title="ToDo" creator="isao" modifier="isao" created="201108061802" modified="201109040802" changecount="27">
 <pre>* general
 ** combine XyJax with [[SVG Output Jax|https://sites.google.com/site/mathjaxproject/design-documents/mathjax-1-1-specification/mathjax-1-2-specification]]
 ** support VML
@@ -1813,6 +1813,7 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 *** evaluate user-defined macros
 
 * implement kernel language
+** --positions-- (done)
 ** objects
 *** TeX box
 *** composite object
@@ -1821,11 +1822,13 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 *** hidden/invisible object
 *** use shape
 *** define shape
-*** set current direction
+** --decorations-- (done)
+*** limited: TeX commands, xyverbose, xytracing, xyquiet, xycompile, xycompileto does not work.
 
 * implement kernel library
 ** directionals
 *** constructed tips
+** --circle segments-- (done)
 ** text
 
 * implement extensions
@@ -1835,12 +1838,12 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 ** quadratic splines
 ** frames/brackets
 ** line styles
-** rotate/scale (limited)
+** rotate/scale
 ** color
 ** import graphics
 
 * implement features
-** ''--paths--''(done)
+** ''--paths--'' (done)
 ** ''arrows''
 ** ''xy-matrices''
 ** two-cells
