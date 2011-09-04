@@ -2179,7 +2179,7 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
         if (supportGraphics) {
           this.Push(AST.xypic(result.result));
         } else {
-          this.Push(MML.merror("Unsupported Browser. Please open with Firefox/Safari/Chrome"));
+          this.Push(MML.merror("Unsupported Browser. Please open with Firefox/Safari/Chrome/Opera"));
         }
       } else {
         throw FP.Parsers.ParseError(result);
@@ -2198,6 +2198,9 @@ MathJax.Hub.Register.StartupHook("TeX Xy-pic Require",function () {
       supportGraphics = true;
     },
     Chrome: function (browser) {
+      supportGraphics = true;
+    },
+    Opera: function (browser) {
       supportGraphics = true;
     }
   });
@@ -2260,6 +2263,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   });
   xypic.Graphics.SVG.World = xypic.Graphics.SVG.Subclass({
     Init: function (stack, height, depth, width, strokeWidth, color, def) {
+      this._stack = stack;
       var svg = document.createElementNS(SVGNS, "svg");
       svg.setAttribute("xmlns", SVGNS);
       svg.setAttribute("version", "1.1");
@@ -2288,6 +2292,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       this.svg = svg;
       this.bbox = undefined;
     },
+    stack: function () { return this._stack; },
     setHeight: function (height) {
       this.svg.style.height = HTMLCSS.Em(height);
     },
@@ -2327,6 +2332,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       this.drawArea = parent.createSVGElement("g", 
         transform === undefined? {} : {transform:transform.toString()});
     },
+    stack: function () { return this.parent.stack(); },
     remove: function () {
       this.drawArea.parentNode.removeChild(this.drawArea);
     },
@@ -2340,8 +2346,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     }
   });
   
-  // for WebKit SVG
-  var foreignObjects;
+  var textObjects;
   
   AST.xypic.Augment({
     toHTML: function (span) {
@@ -2363,8 +2368,8 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       var svg;
       var color = "black";
       if (HTMLCSS.useVML) {
-      	// TODO: to support VML or not ...
-      } else {
+      	// TODO: to support VML
+      } else if (HTMLCSS.useSVG) {
         svg = xypic.Graphics.createSVG(stack, H, D, W, t, color, {
           viewBox:[0, -em2px(H+D), em2px(W), em2px(H+D)].join(" "),
           overflow:"visible"
@@ -2373,9 +2378,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
         var scale = HTMLCSS.createBox(stack);
         scale.appendChild(svg.svg);
         
-        if (HTMLCSS.webkitSVGProblem) {
-        	foreignObjects = [];
-        }
+        textObjects = [];
         
         var xypicData = this.cmd;
         if (xypicData) {
@@ -2386,15 +2389,13 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
             svg.setWidth(box.l+box.r+2*p);
             svg.setHeight(box.u+box.d+2*p);
             svg.setAttribute("viewBox", [em2px(box.x-box.l-p), -em2px(box.y+box.u+p), em2px(box.l+box.r+2*p), em2px(box.u+box.d+2*p)].join(" "));
-            if (HTMLCSS.webkitSVGProblem) {
-            	var c = foreignObjects.length;
-              for (var i = 0; i < c; i++) {
-              	var fo = foreignObjects[i];
-                var x = parseFloat(fo.getAttribute("x"));
-                var y = parseFloat(fo.getAttribute("y"));
-                fo.setAttribute("x", x-em2px(box.x-box.l-p));
-                fo.setAttribute("y", y+em2px(box.y+box.u+p));
-              }
+            var c = textObjects.length;
+            for (var i = 0; i < c; i++) {
+              var to = textObjects[i];
+              var x = parseFloat(to.getAttribute("x"));
+              var y = parseFloat(to.getAttribute("y"));
+              to.style.left = (x - (box.x - box.l - p)) + "em";
+              to.style.top = (y + (box.y - box.d - p)) + "em";
             }
             
             bbox = {h:(box.u+box.d+p), d:p, w:(box.l+box.r+2*p), lw:0, rw:(box.l+box.r+2*p)}
@@ -2459,6 +2460,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
   
   HUB.Browser.Select({
     MSIE: function (browser) {
+      HTMLCSS.supportGraphics = false;
 //      HTMLCSS.useVML = true;
 //      if (!document.namespaces[vmlns]) {
 //        document.namespaces.add(vmlns, VMLNS);
@@ -2468,15 +2470,20 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
     },
     Firefox: function (browser) {
       HTMLCSS.supportGraphics = true;
+      HTMLCSS.useSVG = true;
     },
     Safari: function (browser) {
       HTMLCSS.supportGraphics = true;
-    	HTMLCSS.webkitSVGProblem = true;
+      HTMLCSS.useSVG = true;
     },
     Chrome: function (browser) {
       HTMLCSS.supportGraphics = true;
-    	HTMLCSS.webkitSVGProblem = true;
-    }
+      HTMLCSS.useSVG = true;
+    },
+    Opera: function (browser) {
+      HTMLCSS.supportGraphics = true;
+      HTMLCSS.useSVG = true;
+    },
   });
   
   xypic.Frame = MathJax.Object.Subclass({
@@ -5660,12 +5667,9 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       
       // padding
       var p = HTMLCSS.length2em("0.1em");
-      var span = HTMLCSS.Element("span", {className:"MathJax", style:{width:"100%", "text-align":"center", role:"textbox", "aria-readonly":"true", position:"relative"}});
+      var mathSpan = HTMLCSS.Element("span", {className:"MathJax", style:{"text-align":"center", role:"textbox", "aria-readonly":"true", position:"absolute"}});
       
-      fo = svg.createSVGElement("foreignObject", {
-        x:em2px(env.c.x), y:em2px(env.c.y), width:0, height:0, overflow:"visible"
-      });
-      fo.appendChild(span);
+      svg.stack().appendChild(mathSpan);
       
       // clear spanID for connecting objects.
       var clearSpanId = function (mml) {
@@ -5680,7 +5684,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       }
       
       clearSpanId(math);
-      span = math.HTMLcreateSpan(span);
+      var span = math.HTMLcreateSpan(mathSpan);
       stack = HTMLCSS.createStack(span);
       base = HTMLCSS.createBox(stack);
       math.HTMLmeasureChild(0, base);
@@ -5699,15 +5703,14 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
       var spanHeight = span.offsetHeight;
       var halfHD = (H+D)/2;
       var halfW = W/2;
-    	
-      fo.setAttribute("x", em2px(env.c.x - halfW));
-      fo.setAttribute("y", em2px(-env.c.y) - spanHeight/2);
-      fo.setAttribute("width", em2px(W));
-      fo.setAttribute("height", em2px(H+D));
-      if (HTMLCSS.webkitSVGProblem) {
-      	foreignObjects.push(fo);
-      }
       
+      mathSpan.setAttribute("x", env.c.x - halfW);
+      mathSpan.setAttribute("y", -env.c.y + (H - D - spanHeight/HTMLCSS.em)/2);
+      if (!hidden) {
+        textObjects.push(mathSpan);
+      } else {
+        svg.stack().removeChild(mathSpan);
+      }
 //      svg.createSVGElement("rect",{
 //        x:em2px(env.c.x - W/2),
 //        y:-em2px(env.c.y) - spanHeight/2,
@@ -5718,7 +5721,7 @@ MathJax.Hub.Register.StartupHook("HTML-CSS Xy-pic Require",function () {
 //      
 //      svg.createSVGElement("rect",{
 //        x:em2px(env.c.x - halfW),
-//        y:-em2px(env.c.y) - em2px(halfHD),
+//        y:-em2px(env.c.y + halfHD),
 //        width:em2px(W),
 //        height:em2px(H+D),
 //        stroke:"green", "stroke-width":0.5

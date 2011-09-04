@@ -711,7 +711,7 @@ Source code:
 [[Samples]]
 </pre>
 </div>
-<div title="DeterministicFiniteAutomata" creator="isao" modifier="isao" created="201109031827" modified="201109040606" tags="Sample" changecount="108">
+<div title="DeterministicFiniteAutomata" creator="isao" modifier="isao" created="201109031827" modified="201109041015" tags="Sample" changecount="109">
 <pre>\[
 \begin{xy}
 &lt;3pc,0pc&gt;:(0,0),
@@ -723,14 +723,14 @@ Source code:
 0*+{start}=&quot;start&quot;
 \PATH ~={**@{-}} ~+{|&gt;*@{&gt;}}
 '&quot;0&quot;
-'&quot;1&quot; _A
-'&quot;2&quot; ^B
-&quot;3&quot; ^B
+'&quot;1&quot; _a
+'&quot;2&quot; ^b
+&quot;3&quot; ^b
 
 \POS &quot;3&quot;
 \PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
 `ru^l &quot;0&quot; &lt;-1pt&gt;
-`^rd &quot;0&quot; _B
+`^rd &quot;0&quot; _b
 &quot;0&quot;
 
 \POS &quot;3&quot;
@@ -742,15 +742,15 @@ Source code:
 \POS &quot;2&quot;
 \PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
 `rd_l &quot;1&quot; &lt;1pt&gt;
-`_ru &quot;1&quot; _A
+`_ru &quot;1&quot; _a
 &quot;1&quot;
 
-\POS &quot;0&quot;+/ru 1.2pc/*{\scriptstyle B}, &quot;0&quot;
+\POS &quot;0&quot;+/ru 1.2pc/*{\scriptstyle b}, &quot;0&quot;
 \PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
 `r^d/.7pc &quot;0&quot; &lt;1pt&gt;
 &quot;0&quot;
 
-\POS &quot;1&quot;+/rd 1.2pc/*{\scriptstyle A}, &quot;1&quot;
+\POS &quot;1&quot;+/rd 1.2pc/*{\scriptstyle a}, &quot;1&quot;
 \PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
 `r_u/.7pc &quot;1&quot; &lt;-1pt&gt;
 &quot;1&quot;
@@ -769,14 +769,14 @@ Source Code:
 0*+{start}=&quot;start&quot;
 \PATH ~={**@{-}} ~+{|&gt;*@{&gt;}}
 '&quot;0&quot;
-'&quot;1&quot; _A
-'&quot;2&quot; ^B
-&quot;3&quot; ^B
+'&quot;1&quot; _a
+'&quot;2&quot; ^b
+&quot;3&quot; ^b
 
 \POS &quot;3&quot;
 \PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
 `ru^l &quot;0&quot; &lt;-1pt&gt;
-`^rd &quot;0&quot; _B
+`^rd &quot;0&quot; _b
 &quot;0&quot;
 
 \POS &quot;3&quot;
@@ -788,15 +788,15 @@ Source Code:
 \POS &quot;2&quot;
 \PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
 `rd_l &quot;1&quot; &lt;1pt&gt;
-`_ru &quot;1&quot; _A
+`_ru &quot;1&quot; _a
 &quot;1&quot;
 
-\POS &quot;0&quot;+/ru 1.2pc/*{\scriptstyle B}, &quot;0&quot;
+\POS &quot;0&quot;+/ru 1.2pc/*{\scriptstyle b}, &quot;0&quot;
 \PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
 `r^d/.7pc &quot;0&quot; &lt;1pt&gt;
 &quot;0&quot;
 
-\POS &quot;1&quot;+/rd 1.2pc/*{\scriptstyle A}, &quot;1&quot;
+\POS &quot;1&quot;+/rd 1.2pc/*{\scriptstyle a}, &quot;1&quot;
 \PATH ~={**@{-}} ~&gt;{|&gt;*@{&gt;}}
 `r_u/.7pc &quot;1&quot; &lt;-1pt&gt;
 &quot;1&quot;
@@ -1134,13 +1134,13 @@ Source code:
 \end{xy}
 }}}</pre>
 </div>
-<div title="PathFeature" creator="isao" modifier="isao" created="201109031819" modified="201109031823" tags="Sample" changecount="7">
+<div title="PathFeature" creator="isao" modifier="isao" created="201109031819" modified="201109041014" tags="Sample" changecount="8">
 <pre>\[
 \begin{xy}
 &lt;0.3pc,0pc&gt;:(0,0)
 *+{0}
 \PATH ~={**@{-}} ~&lt;{|&lt;*@{&lt;}} ~&gt;{|&gt;*@{&gt;}}
-'(10,1)*+{1}^{A} '(20,-2)*+{2}^{B} (30,0)*+{3}^{C}
+'(10,1)*+{1}^{a} '(20,-2)*+{2}^{b} (30,0)*+{3}^{c}
 \end{xy}
 \]
 \[
@@ -1148,11 +1148,11 @@ Source code:
 &lt;4pc,0pc&gt;:(0,0)
 *+{base}=&quot;base&quot;
 \PATH ~={**@{-} ?&gt;*@{&gt;}}
-`l    (-1,-1)*{A} ^A
-`     (1,-1) *{B} ^B
-`_ul  (1,0)  *{C} ^C
-`ul^l &quot;base&quot;      ^D
-&quot;base&quot;            ^E
+`l    (-1,-1)*{A} ^a
+`     (1,-1) *{B} ^b
+`_ul  (1,0)  *{C} ^c
+`ul^l &quot;base&quot;      ^d
+&quot;base&quot;            ^e
 \end{xy}
 \]
 
@@ -1162,22 +1162,22 @@ Source Code:
 &lt;0.3pc,0pc&gt;:(0,0)
 *+{0}
 \PATH ~={**@{-}} ~&lt;{|&lt;*@{&lt;}} ~&gt;{|&gt;*@{&gt;}}
-'(10,1)*+{1}^{A} '(20,-2)*+{2}^{B} (30,0)*+{3}^{C}
+'(10,1)*+{1}^{a} '(20,-2)*+{2}^{b} (30,0)*+{3}^{c}
 \end{xy}
 
 \begin{xy}
 &lt;4pc,0pc&gt;:(0,0)
 *+{base}=&quot;base&quot;
 \PATH ~={**@{-} ?&gt;*@{&gt;}}
-`l    (-1,-1)*{A} ^A
-`     (1,-1) *{B} ^B
-`_ul  (1,0)  *{C} ^C
-`ul^l &quot;base&quot;      ^D
-&quot;base&quot;            ^E
+`l    (-1,-1)*{A} ^a
+`     (1,-1) *{B} ^b
+`_ul  (1,0)  *{C} ^c
+`ul^l &quot;base&quot;      ^d
+&quot;base&quot;            ^e
 \end{xy}
 }}}</pre>
 </div>
-<div title="PluginMathJax" modifier="YourName" created="201009232141" modified="201108211448" tags="systemConfig" changecount="33" server.type="file" server.host="http://www.almapater.org/courses/mat-521-001-2011-spring/mat-521-001-2011-spring.html" server.page.revision="201012021914">
+<div title="PluginMathJax" modifier="YourName" created="201009232141" modified="201108211448" tags="systemConfig" server.page.revision="201012021914" server.host="http://www.almapater.org/courses/mat-521-001-2011-spring/mat-521-001-2011-spring.html" server.type="file" changecount="33">
 <pre>/***
 |''Name''|PluginMathJax|
 |''Description''|Displays TeX math using MathJax|
@@ -1859,7 +1859,7 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 <pre>&gt; Xy-pic is a package for typesetting graphs and diagrams using the principle of &quot;logical composition of visual components.&quot;
 Please visit [[Xy-pic's home page|http://www.tug.org/applications/Xy-pic/]]</pre>
 </div>
-<div title="XyJax" creator="isao" modifier="isao" created="201108061630" modified="201108211503" changecount="82">
+<div title="XyJax" creator="isao" modifier="isao" created="201108061630" modified="201109041016" changecount="83">
 <pre>!About XyJax
 XyJax is a [[Xy-pic]] compatible package for MathJax.
 This software is under development, so this release is alpha-quality (often buggy).
@@ -1895,9 +1895,9 @@ This diagram was drawn by the code:
 
 !Limitation
 * Supported Browsers
-** Firefox (&gt;=5), Safari (&gt;=5), Chrome
+** Firefox, Safari, Chrome, Opera
 * Unsupported Browsers
-** Internet Explorer, Opera, etc...</pre>
+** Internet Explorer, etc...</pre>
 </div>
 </div>
 <!--POST-STOREAREA-->

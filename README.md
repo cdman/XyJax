@@ -37,8 +37,8 @@ I'm trying to separate XyJax package from the original MathJax's code.
 
 ## Limitation
 
-- Supported Browsers: Firefox, Safari, Chrome
-- Unsupported Browsers: Internet Explorer, Opera, etc...
+- Supported Browsers: Firefox, Safari, Chrome, Opera
+- Unsupported Browsers: Internet Explorer, etc...
 
 ## Contact
 
