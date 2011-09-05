@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" xmlns:fb="http://www.facebook.com/2008/fbml">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <script id="versionArea" type="text/javascript">
 //<![CDATA[
@@ -59,7 +59,6 @@ DAMAGE.
 <!--POST-HEAD-END-->
 </head>
 <body onload="main();" onunload="if(window.unload) unload();">
-<script src="http://connect.facebook.net/en_US/all.js"></script>
 <!--PRE-BODY-START-->
 
 <!--PRE-BODY-END-->
@@ -1177,7 +1176,7 @@ Source Code:
 \end{xy}
 }}}</pre>
 </div>
-<div title="PluginMathJax" modifier="YourName" created="201009232141" modified="201108211448" tags="systemConfig" server.page.revision="201012021914" server.host="http://www.almapater.org/courses/mat-521-001-2011-spring/mat-521-001-2011-spring.html" server.type="file" changecount="33">
+<div title="PluginMathJax" modifier="isao" created="201009232141" modified="201109041249" tags="systemConfig" changecount="34" server.type="file" server.host="http://www.almapater.org/courses/mat-521-001-2011-spring/mat-521-001-2011-spring.html" server.page.revision="201012021914">
 <pre>/***
 |''Name''|PluginMathJax|
 |''Description''|Displays TeX math using MathJax|
@@ -1242,17 +1241,17 @@ if(!version.extensions.PluginMathJax) {
             &quot;tex2jax: {inlineMath: [['$','$']]}&quot; +
             '});' +
             'MathJax.Hub.Startup.onload();'+
-            'MathJax.Hub.Register.LoadHook(&quot;[MathJax]/extensions/TeX/AMSmath.js&quot;, function () {MathJax.Hub.Startup.signal.Post(&quot;*** AMSmath Loaded ***&quot;)});'+
-            'MathJax.Hub.Register.LoadHook(&quot;[MathJax]/extensions/TeX/xypic.js&quot;, function () {MathJax.Hub.Startup.signal.Post(&quot;*** Xy-pic Loaded ***&quot;)});'+
-            'MathJax.Hub.Startup.signal.Post(&quot;*** In Startup Configuration code ***&quot;);'+
-            'MathJax.Hub.Register.StartupHook(&quot;onLoad&quot;,function () {'+
-            '    window.Message(&quot;*** The onLoad handler has run, page is ready to process ***&quot;);'+
-            '});'+
-            'MathJax.Hub.Queue(function () {window.Message(&quot;*** MathJax is done ***&quot;)});'+
-            'MathJax.Hub.Startup.signal.Interest(function (message) {window.Message(&quot;Startup: &quot;+message)});'+
-            'MathJax.Hub.signal.Interest(function (message) {window.Message(&quot;Hub: &quot;+message)});'+
-            'window.Message(&quot;##### events above this have already occurred #####&quot;);';
-            
+//            'MathJax.Hub.Register.LoadHook(&quot;[MathJax]/extensions/TeX/AMSmath.js&quot;, function () {MathJax.Hub.Startup.signal.Post(&quot;*** AMSmath Loaded ***&quot;)});'+
+//            'MathJax.Hub.Register.LoadHook(&quot;[MathJax]/extensions/TeX/xypic.js&quot;, function () {MathJax.Hub.Startup.signal.Post(&quot;*** Xy-pic Loaded ***&quot;)});'+
+//            'MathJax.Hub.Startup.signal.Post(&quot;*** In Startup Configuration code ***&quot;);'+
+//            'MathJax.Hub.Register.StartupHook(&quot;onLoad&quot;,function () {'+
+//            '    window.Message(&quot;*** The onLoad handler has run, page is ready to process ***&quot;);'+
+//            '});'+
+//            'MathJax.Hub.Queue(function () {window.Message(&quot;*** MathJax is done ***&quot;)});'+
+//            'MathJax.Hub.Startup.signal.Interest(function (message) {window.Message(&quot;Startup: &quot;+message)});'+
+//            'MathJax.Hub.signal.Interest(function (message) {window.Message(&quot;Hub: &quot;+message)});'+
+//            'window.Message(&quot;##### events above this have already occurred #####&quot;);'+
+            '';            
             window.Message = function (message) {
                 console.log(message);
             };
@@ -1859,7 +1858,7 @@ table.listView th, table.listView td, table.listView tr {padding:0px 3px 0px 3px
 <pre>&gt; Xy-pic is a package for typesetting graphs and diagrams using the principle of &quot;logical composition of visual components.&quot;
 Please visit [[Xy-pic's home page|http://www.tug.org/applications/Xy-pic/]]</pre>
 </div>
-<div title="XyJax" creator="isao" modifier="isao" created="201108061630" modified="201109041016" changecount="83">
+<div title="XyJax" creator="isao" modifier="isao" created="201108061630" modified="201109051300" changecount="94">
 <pre>!About XyJax
 XyJax is a [[Xy-pic]] compatible package for MathJax.
 This software is under development, so this release is alpha-quality (often buggy).
@@ -1894,10 +1893,9 @@ This diagram was drawn by the code:
 }}}
 
 !Limitation
-* Supported Browsers
-** Firefox, Safari, Chrome, Opera
-* Unsupported Browsers
-** Internet Explorer, etc...</pre>
+* Supported Browsers: Firefox, Safari, Chrome, Opera, Internet Explorer 9 (IE9 Standards Mode only)
+* Unsupported Browsers: Internet Explorer 8 or lower, etc...
+</pre>
 </div>
 </div>
 <!--POST-STOREAREA-->
