@@ -2,7 +2,7 @@
 
 ## XyJax = MathJax + Xy-pic
 
-XyJax is a Xy-pic compatible language extension for MathJax.
+XyJax is a almost Xy-pic compatible language extension for MathJax.
 
 This extension enable us to draw various graphs and diagrams.
 
